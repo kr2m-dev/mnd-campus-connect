@@ -61,7 +61,7 @@ const Index = () => {
       <main>
         <HeroSection 
           onSelectUniversity={handleSelectUniversity}
-          onStudentExchange={handleStudentExchange}
+          onSupplierAccess={handleSupplierAccess}
         />
         
         {selectedUniversity && (

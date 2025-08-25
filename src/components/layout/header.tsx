@@ -40,21 +40,6 @@ export const Header = ({
         <Users className="w-4 h-4 mr-2" />
         Espace Échange
       </Button>
-      <Button variant="ghost" size="sm">
-        À propos
-      </Button>
-      <Button variant="ghost" size="sm">
-        Contact
-      </Button>
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={onSupplierAccess}
-        className="text-muted-foreground hover:text-foreground"
-      >
-        <Store className="w-4 h-4 mr-2" />
-        Fournisseur
-      </Button>
     </>
   );
 
