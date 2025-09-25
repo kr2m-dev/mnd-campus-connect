@@ -69,9 +69,8 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess }: HeroSectio
             
             <Button
               size="lg"
-              variant="outline"
-              onClick={onSupplierAccess}
-              className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground hover:text-secondary"
+              onClick={() => window.location.href = '/supplier'}
+              className="bg-primary hover:bg-primary-dark text-primary-foreground btn-glow group"
             >
               <Store className="w-5 h-5 mr-2" />
               Devenir Fournisseur
