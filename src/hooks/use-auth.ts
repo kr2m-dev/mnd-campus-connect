@@ -96,10 +96,21 @@ export const useAuth = () => {
       if (error) throw error;
 
       if (authData.user) {
+        // Vérifier si l'utilisateur est un fournisseur
+        const userType = authData.user.user_metadata?.user_type;
+        
         toast({
           title: "Connexion réussie !",
           description: "Vous êtes maintenant connecté",
         });
+
+        // Rediriger vers la page fournisseur si c'est un fournisseur
+        if (userType === 'fournisseur') {
+          navigate('/supplier');
+        } else {
+          navigate('/');
+        }
+
         return { success: true, user: authData.user };
       }
 

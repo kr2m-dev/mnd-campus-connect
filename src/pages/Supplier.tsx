@@ -205,7 +205,7 @@ export default function Supplier() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>
-              {supplier ? "Mon Profil Fournisseur" : "Devenir Fournisseur"}
+              {supplier ? `Mon Profil Fournisseur ${supplier.is_verified ? '✅' : '⏳'}` : "Devenir Fournisseur"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -354,15 +354,19 @@ export default function Supplier() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
-                        <Label htmlFor="image_url">URL de l'image</Label>
-                        <Input
-                          id="image_url"
-                          type="url"
-                          value={productForm.image_url}
-                          onChange={(e) => setProductForm(prev => ({...prev, image_url: e.target.value}))}
-                        />
-                      </div>
+                       <div>
+                         <Label htmlFor="image_url">URL de l'image</Label>
+                         <Input
+                           id="image_url"
+                           type="url"
+                           value={productForm.image_url}
+                           onChange={(e) => setProductForm(prev => ({...prev, image_url: e.target.value}))}
+                           placeholder="https://example.com/image.jpg"
+                         />
+                         <p className="text-xs text-muted-foreground mt-1">
+                           Ajoutez l'URL de l'image de votre produit (optionnel)
+                         </p>
+                       </div>
                       <div>
                         <Label htmlFor="stock_quantity">Stock disponible</Label>
                         <Input
@@ -406,11 +410,26 @@ export default function Supplier() {
                         {product.image_url && (
                           <img src={product.image_url} alt={product.name} className="w-16 h-16 object-cover rounded" />
                         )}
-                        <div>
-                          <h3 className="font-semibold">{product.name}</h3>
-                          <p className="text-sm text-muted-foreground">{product.price}€</p>
-                          <p className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</p>
-                        </div>
+                         <div>
+                           <h3 className="font-semibold">{product.name}</h3>
+                           <p className="text-sm text-muted-foreground">
+                             {product.original_price && product.original_price > product.price ? (
+                               <>
+                                 <span className="line-through text-muted-foreground mr-2">{product.original_price}€</span>
+                                 <span className="text-primary font-medium">{product.price}€</span>
+                               </>
+                             ) : (
+                               <span className="font-medium">{product.price}€</span>
+                             )}
+                           </p>
+                           <p className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</p>
+                           {product.categories && (
+                             <p className="text-xs text-primary">{product.categories.name}</p>
+                           )}
+                           {product.description && (
+                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
+                           )}
+                         </div>
                       </div>
                       <div className="flex gap-2">
                         <Button
