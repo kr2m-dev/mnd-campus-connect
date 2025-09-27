@@ -1,22 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ShoppingBag, 
-  Users, 
-  Truck, 
+import {
+  ShoppingBag,
+  Users,
+  Truck,
   Shield,
   Star,
   ArrowRight,
-  Store
+  Store,
+  Heart,
+  GraduationCap
 } from "lucide-react";
 import heroImage from "@/assets/hero-students.jpg";
+import type { User } from "@supabase/supabase-js";
+import type { University } from "@/data/universities";
 
 interface HeroSectionProps {
   onSelectUniversity: () => void;
   onSupplierAccess: () => void;
+  user?: User | null;
+  userUniversity?: University | null;
 }
 
-export const HeroSection = ({ onSelectUniversity, onSupplierAccess }: HeroSectionProps) => {
+export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUniversity }: HeroSectionProps) => {
   return (
     <section className="relative overflow-hidden">
       {/* Background with gradient overlay */}
@@ -33,48 +39,96 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess }: HeroSectio
       <div className="relative container mx-auto px-4 py-20 lg:py-32">
         <div className="max-w-2xl">
           {/* Badge */}
-          <Badge 
-            variant="secondary" 
+          <Badge
+            variant="secondary"
             className="mb-6 bg-primary/10 text-primary border-primary/20 fade-in"
           >
             <Star className="w-3 h-3 mr-1" />
-            Plateforme #1 pour étudiants
+            {user ? `Bienvenue sur ${userUniversity?.name || 'votre campus'}` : 'Plateforme #1 pour étudiants'}
           </Badge>
-          
+
           {/* Main Title */}
           <h1 className="text-4xl md:text-6xl font-bold mb-6 text-primary-foreground slide-up">
-            Vos produits essentiels
-            <span className="block bg-gradient-primary bg-clip-text text-transparent">
-              livrés sur campus
-            </span>
+            {user ? (
+              <>
+                Bonjour {user.user_metadata?.first_name || 'étudiant'} !
+                <span className="block bg-gradient-primary bg-clip-text text-transparent">
+                  Découvrez vos produits
+                </span>
+              </>
+            ) : (
+              <>
+                Vos produits essentiels
+                <span className="block bg-gradient-primary bg-clip-text text-transparent">
+                  livrés sur campus
+                </span>
+              </>
+            )}
           </h1>
-          
+
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 slide-up" style={{animationDelay: '0.2s'}}>
-            Hygiène, soins, parfums... Tout ce dont vous avez besoin pour votre vie étudiante, 
-            disponible directement sur votre campus universitaire.
+            {user && userUniversity ? (
+              <>
+                Explorez notre sélection de produits d'hygiène, soins et parfums
+                disponibles sur le campus de <span className="font-semibold">{userUniversity.name}</span>.
+              </>
+            ) : (
+              <>
+                Hygiène, soins, parfums... Tout ce dont vous avez besoin pour votre vie étudiante,
+                disponible directement sur votre campus universitaire.
+              </>
+            )}
           </p>
           
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mb-12 bounce-in" style={{animationDelay: '0.4s'}}>
-            <Button
-              size="lg"
-              onClick={onSelectUniversity}
-              className="bg-primary hover:bg-primary-dark text-primary-foreground btn-glow group"
-            >
-              <ShoppingBag className="w-5 h-5 mr-2" />
-              Choisir mon université
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            
-            <Button
-              size="lg"
-              onClick={() => window.location.href = '/supplier'}
-              className="bg-primary hover:bg-primary-dark text-primary-foreground btn-glow group"
-            >
-              <Store className="w-5 h-5 mr-2" />
-              Devenir Fournisseur
-            </Button>
+            {user ? (
+              /* Buttons for authenticated users */
+              <>
+                <Button
+                  size="lg"
+                  onClick={() => document.querySelector('.products-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="bg-primary hover:bg-primary-dark text-primary-foreground btn-glow group"
+                >
+                  <ShoppingBag className="w-5 h-5 mr-2" />
+                  Voir les produits
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={onSelectUniversity}
+                  className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 group"
+                >
+                  <GraduationCap className="w-5 h-5 mr-2" />
+                  Mon Profil
+                </Button>
+              </>
+            ) : (
+              /* Buttons for anonymous users */
+              <>
+                <Button
+                  size="lg"
+                  onClick={onSelectUniversity}
+                  className="bg-primary hover:bg-primary-dark text-primary-foreground btn-glow group"
+                >
+                  <ShoppingBag className="w-5 h-5 mr-2" />
+                  Choisir mon université
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+
+                <Button
+                  size="lg"
+                  onClick={() => window.location.href = '/supplier'}
+                  className="bg-primary hover:bg-primary-dark text-primary-foreground btn-glow group"
+                >
+                  <Store className="w-5 h-5 mr-2" />
+                  Devenir Fournisseur
+                </Button>
+              </>
+            )}
           </div>
           
           {/* Features */}
