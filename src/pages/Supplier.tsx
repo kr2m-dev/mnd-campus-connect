@@ -13,10 +13,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 export default function Supplier() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+
+  // Dummy handlers for Header component
+  const handleUniversityChange = () => {};
+  const handleSupplierAccess = () => navigate('/supplier');
+  const handleStudentExchange = () => {};
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   
@@ -185,13 +192,13 @@ export default function Supplier() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Button onClick={() => navigate("/")} variant="outline">
-            ← Retour à l'accueil
-          </Button>
-        </div>
+      <Header
+        onUniversityChange={handleUniversityChange}
+        onSupplierAccess={handleSupplierAccess}
+        onStudentExchange={handleStudentExchange}
+      />
 
+      <div className="container mx-auto px-4 py-8 pt-24">
         <h1 className="text-3xl font-bold mb-8">Espace Fournisseur</h1>
 
         {/* Profil Fournisseur */}
@@ -429,6 +436,8 @@ export default function Supplier() {
           </Card>
         )}
       </div>
+
+      <Footer />
     </div>
   );
 }

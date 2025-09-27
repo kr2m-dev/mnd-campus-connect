@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import { 
   Star, 
   ShoppingCart,
@@ -124,6 +125,7 @@ interface ProductsShowcaseProps {
 }
 
 export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("Tous");
   const { data: products = [], isLoading } = useProducts(selectedUniversity);
   const { data: categories = [] } = useCategories();
@@ -143,7 +145,7 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
   }
 
   return (
-    <section className="py-16 bg-muted/30">
+    <section className="py-16 bg-muted/30 products-section">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -313,10 +315,11 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
 
         {/* View All Button */}
         <div className="text-center">
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             variant="outline"
             className="interactive-scale hover:bg-primary hover:text-primary-foreground"
+            onClick={() => navigate("/products")}
           >
             Voir tous les produits
             <Package className="w-4 h-4 ml-2" />
