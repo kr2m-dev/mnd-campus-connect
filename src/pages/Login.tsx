@@ -47,14 +47,11 @@ export default function Login() {
       return;
     }
 
-    const result = await login({
+    await login({
       email: formData.email,
       password: formData.password,
     });
-
-    if (result.success) {
-      navigate("/");
-    }
+    // La redirection est gérée automatiquement dans le hook useAuth
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
