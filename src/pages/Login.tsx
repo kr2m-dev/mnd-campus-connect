@@ -142,10 +142,9 @@ export default function Login() {
           </Card>
         </div>
       </div>
-      </div>
-    );
-  
-  
+    </div>
+   );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -267,4 +266,4 @@ export default function Login() {
     </div>
     </div>
   );
-}}
+}
