@@ -11,65 +11,48 @@ import {
   Laptop,
   Gamepad2,
   Clock,
-  MapPin
+  MapPin,
+  Eye
 } from "lucide-react";
-
-const exchangeItems = [
-  {
-    id: "1",
-    title: "MacBook Pro 13\" 2021",
-    description: "Excellent état, utilisé 6 mois. Parfait pour études informatiques.",
-    price: "850 000 CFA",
-    type: "Vente",
-    category: "Électronique",
-    location: "Université de Dakar",
-    timeAgo: "2h",
-    image: "/placeholder.svg",
-    seller: {
-      name: "Amadou K.",
-      rating: 4.8,
-      verified: true
-    }
-  },
-  {
-    id: "2",
-    title: "Livres de médecine 2ème année",
-    description: "Collection complète anatomie + physiologie. Annotations incluses.",
-    price: "Échange contre livres droit",
-    type: "Échange",
-    category: "Livres",
-    location: "Université de Lomé",
-    timeAgo: "5h",
-    image: "/placeholder.svg",
-    seller: {
-      name: "Fatou D.",
-      rating: 5.0,
-      verified: true
-    }
-  },
-  {
-    id: "3",
-    title: "Console PS5 + 3 jeux",
-    description: "Comme neuve, achetée il y a 3 mois. Manette supplémentaire incluse.",
-    price: "420 000 CFA",
-    type: "Vente",
-    category: "Gaming",
-    location: "Université de Cotonou",
-    timeAgo: "1j",
-    image: "/placeholder.svg",
-    seller: {
-      name: "Ibrahim S.",
-      rating: 4.9,
-      verified: false
-    }
-  }
-];
+import { useStudentListings } from "@/hooks/use-student-listings";
 
 interface StudentExchangeProps {
   onAccessExchange: () => void;
+  selectedUniversity?: string;
 }
 
-export const StudentExchange = ({ onAccessExchange }: StudentExchangeProps) => {
+const categoryIcons: Record<string, React.ElementType> = {
+  "Électronique": Laptop,
+  "Livres": BookOpen,
+  "Gaming": Gamepad2
+};
+
+export const StudentExchange = ({ onAccessExchange, selectedUniversity }: StudentExchangeProps) => {
+  const { data: listings = [], isLoading } = useStudentListings(selectedUniversity);
+  
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "À l'instant";
+    if (diffInHours < 24) return `${diffInHours}h`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}j`;
+  };
+
+  const getListingTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      sale: "Vente",
+      exchange: "Échange",
+      free: "Gratuit"
+    };
+    return labels[type] || type;
+  };
+
+  // Show only first 3 listings
+  const displayedListings = listings.slice(0, 3);
+
   return (
     <section className="py-16 config-background">
       <div className="container mx-auto px-4">
@@ -146,90 +129,108 @@ export const StudentExchange = ({ onAccessExchange }: StudentExchangeProps) => {
         <div className="mb-12">
           <h3 className="text-xl font-semibold mb-6 text-center">Annonces récentes</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {exchangeItems.map((item, index) => (
-              <Card 
-                key={item.id} 
-                className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge 
-                          variant={item.type === "Vente" ? "default" : "secondary"}
-                          className="text-xs"
-                        >
-                          {item.type}
-                        </Badge>
-                        {item.seller.verified && (
-                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                            Vérifié
-                          </Badge>
-                        )}
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Chargement des annonces...</p>
+            </div>
+          ) : displayedListings.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Aucune annonce disponible pour le moment</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {displayedListings.map((listing, index) => {
+                const Icon = categoryIcons[listing.category] || Laptop;
+                const imageUrl = listing.image_urls?.[0] || "/placeholder.svg";
+                
+                return (
+                  <Card 
+                    key={listing.id}
+                    className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge 
+                              variant={listing.listing_type === "sale" ? "default" : "secondary"}
+                              className="text-xs"
+                            >
+                              {getListingTypeLabel(listing.listing_type)}
+                            </Badge>
+                            {listing.condition && (
+                              <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                {listing.condition}
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <CardTitle className="text-base line-clamp-2 group-hover:text-primary transition-colors">
+                            {listing.title}
+                          </CardTitle>
+                        </div>
+                        
+                        <div className="text-right text-xs text-muted-foreground">
+                          <div className="flex items-center">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {getTimeAgo(listing.created_at)}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent>
+                      <div className="aspect-video bg-muted rounded-lg mb-4 overflow-hidden">
+                        <img 
+                          src={imageUrl}
+                          alt={listing.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
                       </div>
                       
-                      <CardTitle className="text-base line-clamp-2 group-hover:text-primary transition-colors">
-                        {item.title}
-                      </CardTitle>
-                    </div>
-                    
-                    <div className="text-right text-xs text-muted-foreground">
-                      <div className="flex items-center">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {item.timeAgo}
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                        {listing.description || "Pas de description"}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-semibold text-primary">
+                          {listing.price ? `${listing.price} CFA` : listing.listing_type === "exchange" ? "Échange" : "Gratuit"}
+                        </span>
+                        
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Icon className="w-3 h-3 mr-1" />
+                          {listing.category}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="aspect-video bg-muted rounded-lg mb-4 overflow-hidden">
-                    <img 
-                      src={item.image} 
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {item.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-semibold text-primary">
-                      {item.price}
-                    </span>
-                    
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      {item.category === "Électronique" && <Laptop className="w-3 h-3 mr-1" />}
-                      {item.category === "Livres" && <BookOpen className="w-3 h-3 mr-1" />}
-                      {item.category === "Gaming" && <Gamepad2 className="w-3 h-3 mr-1" />}
-                      {item.category}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
-                    <div className="flex items-center">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {item.location}
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <span className="mr-1">⭐</span>
-                      {item.seller.rating} • {item.seller.name}
-                    </div>
-                  </div>
-                  
-                  <Button size="sm" variant="outline" className="w-full">
-                    <MessageCircle className="w-3 h-3 mr-2" />
-                    Contacter
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+                        {listing.location && (
+                          <div className="flex items-center">
+                            <MapPin className="w-3 h-3 mr-1" />
+                            {listing.location}
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-2">
+                          <Eye className="w-3 h-3" />
+                          <span>{listing.views_count}</span>
+                          {listing.profiles?.full_name && (
+                            <span>• {listing.profiles.full_name}</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <Button size="sm" variant="outline" className="w-full">
+                        <MessageCircle className="w-3 h-3 mr-2" />
+                        Contacter
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* CTA */}

@@ -65,13 +65,11 @@ const Index = () => {
   };
 
   const handleStudentExchange = () => {
-    if (!selectedUniversity) {
+    if (!selectedUniversity && !user) {
       setIsUniversitySelectorOpen(true);
       return;
     }
-    setShowStudentExchange(true);
-    // In a real app, this would navigate to the student exchange page
-    console.log("Navigate to student exchange");
+    window.location.href = '/student-exchange';
   };
 
   const handleSupplierAccess = () => {
@@ -112,13 +110,19 @@ const Index = () => {
           /* Authenticated user - show their university products */
           <>
             <ProductsShowcase selectedUniversity={userUniversity.name} />
-            <StudentExchange onAccessExchange={handleStudentExchange} />
+            <StudentExchange 
+              onAccessExchange={handleStudentExchange} 
+              selectedUniversity={userUniversity.name}
+            />
           </>
         ) : selectedUniversity ? (
           /* Anonymous user with selected university */
           <>
             <ProductsShowcase selectedUniversity={selectedUniversity.name} />
-            <StudentExchange onAccessExchange={handleStudentExchange} />
+            <StudentExchange 
+              onAccessExchange={handleStudentExchange}
+              selectedUniversity={selectedUniversity.name}
+            />
           </>
         ) : !loading && !user ? (
           /* Anonymous user without university selection - encourage selection */

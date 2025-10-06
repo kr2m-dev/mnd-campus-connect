@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string
+          quantity: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id: string
+          quantity: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -34,6 +69,193 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          recipient_id: string
+          sender_id: string
+          subject: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id: string
+          sender_id: string
+          subject?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id?: string
+          sender_id?: string
+          subject?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string
+          product_id: string | null
+          product_name: string
+          product_price: number
+          quantity: number
+          subtotal: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id: string
+          product_id?: string | null
+          product_name: string
+          product_price: number
+          quantity: number
+          subtotal: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          product_id?: string | null
+          product_name?: string
+          product_price?: number
+          quantity?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string | null
+          delivery_address: string | null
+          delivery_phone: string | null
+          id: string
+          notes: string | null
+          status: string
+          supplier_id: string | null
+          total_amount: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_address?: string | null
+          delivery_phone?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          supplier_id?: string | null
+          total_amount: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          delivery_address?: string | null
+          delivery_phone?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          supplier_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -103,31 +325,148 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_role: string | null
+          banned_at: string | null
+          banned_reason: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          is_active: boolean | null
           phone: string | null
           university: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          admin_role?: string | null
+          banned_at?: string | null
+          banned_reason?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean | null
           phone?: string | null
           university?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          admin_role?: string | null
+          banned_at?: string | null
+          banned_reason?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean | null
           phone?: string | null
           university?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          order_id: string | null
+          product_id: string
+          rating: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          product_id: string
+          rating: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          product_id?: string
+          rating?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_listings: {
+        Row: {
+          category: string
+          condition: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_urls: string[] | null
+          is_active: boolean | null
+          is_sold: boolean | null
+          listing_type: string
+          location: string | null
+          price: number | null
+          title: string
+          university: string | null
+          updated_at: string
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          category: string
+          condition?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          is_active?: boolean | null
+          is_sold?: boolean | null
+          listing_type: string
+          location?: string | null
+          price?: number | null
+          title: string
+          university?: string | null
+          updated_at?: string
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          category?: string
+          condition?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          is_active?: boolean | null
+          is_sold?: boolean | null
+          listing_type?: string
+          location?: string | null
+          price?: number | null
+          title?: string
+          university?: string | null
+          updated_at?: string
+          user_id?: string
+          views_count?: number | null
         }
         Relationships: []
       }
@@ -170,12 +509,79 @@ export type Database = {
         }
         Relationships: []
       }
+      universities: {
+        Row: {
+          city: string
+          country: string
+          created_at: string | null
+          flag: string
+          id: string
+          name: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          city: string
+          country: string
+          created_at?: string | null
+          flag: string
+          id: string
+          name: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string | null
+          flag?: string
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_ban_user: {
+        Args: { ban_reason?: string; target_user_id: string }
+        Returns: boolean
+      }
+      admin_unban_user: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      admin_update_user_profile: {
+        Args: {
+          new_admin_role?: string
+          new_full_name?: string
+          new_is_active?: boolean
+          new_phone?: string
+          new_university?: string
+          target_user_id: string
+        }
+        Returns: boolean
+      }
+      get_all_users_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          admin_role: string
+          banned_at: string
+          created_at: string
+          email: string
+          full_name: string
+          is_active: boolean
+          is_supplier: boolean
+          phone: string
+          supplier_name: string
+          university: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

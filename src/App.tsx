@@ -16,6 +16,7 @@ import Cart from "./pages/Cart";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import LegalNotice from "./pages/LegalNotice";
+import StudentExchangePage from "./pages/StudentExchangePage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/supplier" element={<Supplier />} />
+          <Route path="/student-exchange" element={<StudentExchangePage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
