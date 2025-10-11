@@ -40,7 +40,7 @@ export const useProducts = (universityFilter?: string) => {
         .order("created_at", { ascending: false });
 
       if (universityFilter) {
-        query = query.or(`university_filter.eq.${universityFilter},university_filter.is.null`);
+        query = query.or(`university_filter.eq.${universityFilter},university_filter.is.null,university_filter.eq.`);
       }
 
       const { data, error } = await query;
