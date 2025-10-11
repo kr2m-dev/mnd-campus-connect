@@ -27,6 +27,7 @@ import {
 import { useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
 import { useAuth } from "@/hooks/use-auth";
+import { useAddToCart } from "@/hooks/use-cart";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { getUniversityById } from "@/data/universities";
@@ -51,6 +52,15 @@ export default function Products() {
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const addToCart = useAddToCart();
+
+  const handleAddToCart = (productId: string) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    addToCart.mutate({ userId: user.id, productId, quantity: 1 });
+  };
 
   // Dummy handlers for Header component
   const handleUniversityChange = () => {};
@@ -188,15 +198,18 @@ export default function Products() {
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xl font-bold text-primary">
-                      {product.price}€
+                      {product.price} CFA
                     </span>
                     {product.original_price && (
                       <span className="text-sm text-muted-foreground line-through">
-                        {product.original_price}€
+                        {product.original_price} CFA
                       </span>
                     )}
                   </div>
-                  <Button className="bg-primary hover:bg-primary-dark">
+                  <Button 
+                    className="bg-primary hover:bg-primary-dark"
+                    onClick={() => handleAddToCart(product.id)}
+                  >
                     <ShoppingCart className="w-4 h-4 mr-2" />
                     Ajouter au panier
                   </Button>
@@ -286,11 +299,11 @@ export default function Products() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold text-primary">
-                  {product.price}€
+                  {product.price} CFA
                 </span>
                 {product.original_price && (
                   <span className="text-sm text-muted-foreground line-through">
-                    {product.original_price}€
+                    {product.original_price} CFA
                   </span>
                 )}
               </div>
@@ -299,7 +312,10 @@ export default function Products() {
         </CardContent>
 
         <CardFooter className="p-4 pt-0">
-          <Button className="w-full bg-primary hover:bg-primary-dark btn-glow group">
+          <Button 
+            className="w-full bg-primary hover:bg-primary-dark btn-glow group"
+            onClick={() => handleAddToCart(product.id)}
+          >
             <ShoppingCart className="w-4 h-4 mr-2" />
             Ajouter au panier
           </Button>
@@ -426,7 +442,7 @@ export default function Products() {
                 onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
                 className="w-20"
               />
-              <span className="text-sm text-muted-foreground">€</span>
+              <span className="text-sm text-muted-foreground">CFA</span>
             </div>
             {(priceRange.min || priceRange.max) && (
               <Button

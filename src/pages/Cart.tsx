@@ -22,65 +22,14 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-
-interface CartItem {
-  id: string;
-  productId: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  quantity: number;
-  image: string;
-  supplier: string;
-  category: string;
-  maxQuantity: number;
-  isPromo?: boolean;
-}
-
-const sampleCartItems: CartItem[] = [
-  {
-    id: "cart-1",
-    productId: "1",
-    name: "Savon antibactérien Dettol",
-    price: 2500,
-    originalPrice: 3000,
-    quantity: 2,
-    image: "/placeholder.svg",
-    supplier: "Pharmacie Campus",
-    category: "Hygiène",
-    maxQuantity: 10,
-    isPromo: true
-  },
-  {
-    id: "cart-2",
-    productId: "2",
-    name: "Parfum Axe Africa 150ml",
-    price: 8500,
-    quantity: 1,
-    image: "/placeholder.svg",
-    supplier: "Beauty Store",
-    category: "Parfums",
-    maxQuantity: 5
-  },
-  {
-    id: "cart-3",
-    productId: "3",
-    name: "Crème hydratante Nivea",
-    price: 4200,
-    originalPrice: 5000,
-    quantity: 1,
-    image: "/placeholder.svg",
-    supplier: "Cosmetics Plus",
-    category: "Soins",
-    maxQuantity: 8,
-    isPromo: true
-  }
-];
+import { useCart, useUpdateCartQuantity, useRemoveFromCart } from "@/hooks/use-cart";
 
 export default function Cart() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [cartItems, setCartItems] = useState(sampleCartItems);
+  const { data: cartItems = [], isLoading } = useCart(user?.id);
+  const updateQuantity = useUpdateCartQuantity();
+  const removeFromCart = useRemoveFromCart();
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
 
@@ -95,27 +44,20 @@ export default function Cart() {
     return null;
   }
 
-  const updateQuantity = (id: string, newQuantity: number) => {
+  const handleUpdateQuantity = (cartItemId: string, newQuantity: number) => {
     if (newQuantity === 0) {
-      removeItem(id);
+      handleRemoveItem(cartItemId);
       return;
     }
-
-    setCartItems(prev =>
-      prev.map(item => {
-        if (item.id === id) {
-          return {
-            ...item,
-            quantity: Math.min(newQuantity, item.maxQuantity)
-          };
-        }
-        return item;
-      })
-    );
+    if (user) {
+      updateQuantity.mutate({ cartItemId, quantity: newQuantity, userId: user.id });
+    }
   };
 
-  const removeItem = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
+  const handleRemoveItem = (cartItemId: string) => {
+    if (user) {
+      removeFromCart.mutate({ cartItemId, userId: user.id });
+    }
   };
 
   const applyPromoCode = () => {
@@ -136,10 +78,16 @@ export default function Cart() {
   };
 
   // Calculations
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const subtotal = cartItems.reduce((total, item) => {
+    const price = item.products?.price || 0;
+    return total + (price * item.quantity);
+  }, 0);
+  
   const totalSavings = cartItems.reduce((total, item) => {
-    if (item.originalPrice) {
-      return total + ((item.originalPrice - item.price) * item.quantity);
+    const price = item.products?.price || 0;
+    const originalPrice = item.products?.original_price;
+    if (originalPrice) {
+      return total + ((originalPrice - price) * item.quantity);
     }
     return total;
   }, 0);
@@ -147,10 +95,28 @@ export default function Cart() {
   const promoDiscount = appliedPromo === "student20" ? subtotal * 0.2 :
                        appliedPromo === "welcome10" ? subtotal * 0.1 : 0;
 
-  const deliveryFee = subtotal > 10000 ? 0 : 1500; // Free delivery over 100€
+  const deliveryFee = subtotal > 50000 ? 0 : 1500;
   const total = subtotal - promoDiscount + deliveryFee;
 
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header
+          onUniversityChange={handleUniversityChange}
+          onSupplierAccess={handleSupplierAccess}
+          onStudentExchange={handleStudentExchange}
+        />
+        <div className="flex items-center justify-center pt-20 h-[calc(100vh-5rem)]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Chargement du panier...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -208,8 +174,11 @@ export default function Cart() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item) => {
-              const discount = item.originalPrice
-                ? Math.round((1 - item.price / item.originalPrice) * 100)
+              const product = item.products;
+              if (!product) return null;
+              
+              const discount = product.original_price
+                ? Math.round((1 - product.price / product.original_price) * 100)
                 : 0;
 
               return (
@@ -219,11 +188,11 @@ export default function Cart() {
                       {/* Product Image */}
                       <div className="relative w-24 h-24 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
                         <img
-                          src={item.image}
-                          alt={item.name}
+                          src={product.image_url || "/placeholder.svg"}
+                          alt={product.name}
                           className="w-full h-full object-cover"
                         />
-                        {item.isPromo && (
+                        {product.original_price && (
                           <Badge variant="destructive" className="absolute top-1 left-1 text-xs">
                             -{discount}%
                           </Badge>
@@ -234,18 +203,22 @@ export default function Cart() {
                       <div className="flex-1 space-y-2">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-semibold">{item.name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              par {item.supplier}
-                            </p>
-                            <Badge variant="secondary" className="text-xs">
-                              {item.category}
-                            </Badge>
+                            <h3 className="font-semibold">{product.name}</h3>
+                            {product.suppliers && (
+                              <p className="text-sm text-muted-foreground">
+                                par {product.suppliers.business_name}
+                              </p>
+                            )}
+                            {product.categories && (
+                              <Badge variant="secondary" className="text-xs">
+                                {product.categories.name}
+                              </Badge>
+                            )}
                           </div>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => handleRemoveItem(item.id)}
                             className="text-destructive hover:text-destructive"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -256,16 +229,16 @@ export default function Cart() {
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-lg">{item.price}€</span>
-                              {item.originalPrice && (
+                              <span className="font-bold text-lg">{product.price} CFA</span>
+                              {product.original_price && (
                                 <span className="text-sm text-muted-foreground line-through">
-                                  {item.originalPrice}€
+                                  {product.original_price} CFA
                                 </span>
                               )}
                             </div>
-                            {item.isPromo && (
+                            {product.original_price && (
                               <p className="text-xs text-green-600">
-                                Économie: {((item.originalPrice! - item.price) * item.quantity)}€
+                                Économie: {((product.original_price - product.price) * item.quantity)} CFA
                               </p>
                             )}
                           </div>
@@ -275,7 +248,7 @@ export default function Cart() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                               disabled={item.quantity <= 1}
                             >
                               <Minus className="w-3 h-3" />
@@ -286,15 +259,15 @@ export default function Cart() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              disabled={item.quantity >= item.maxQuantity}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                              disabled={item.quantity >= (product.stock_quantity || 0)}
                             >
                               <Plus className="w-3 h-3" />
                             </Button>
                           </div>
                         </div>
 
-                        {item.quantity >= item.maxQuantity && (
+                        {item.quantity >= (product.stock_quantity || 0) && (
                           <p className="text-xs text-orange-600 flex items-center gap-1">
                             <AlertCircle className="w-3 h-3" />
                             Stock maximum atteint
@@ -378,20 +351,20 @@ export default function Cart() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Sous-total ({totalItems} articles)</span>
-                    <span>{subtotal}€</span>
+                    <span>{subtotal} CFA</span>
                   </div>
 
                   {totalSavings > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Économies promotions</span>
-                      <span>-{totalSavings}€</span>
+                      <span>-{totalSavings} CFA</span>
                     </div>
                   )}
 
                   {promoDiscount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Code promo ({appliedPromo?.toUpperCase()})</span>
-                      <span>-{promoDiscount}€</span>
+                      <span>-{promoDiscount} CFA</span>
                     </div>
                   )}
 
@@ -401,13 +374,13 @@ export default function Cart() {
                       Livraison
                     </span>
                     <span className={deliveryFee === 0 ? "text-green-600" : ""}>
-                      {deliveryFee === 0 ? "GRATUITE" : `${deliveryFee}€`}
+                      {deliveryFee === 0 ? "GRATUITE" : `${deliveryFee} CFA`}
                     </span>
                   </div>
 
                   {deliveryFee > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      Livraison gratuite à partir de 100€
+                      Livraison gratuite à partir de 50 000 CFA
                     </p>
                   )}
                 </div>
@@ -416,7 +389,7 @@ export default function Cart() {
 
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>{total}€</span>
+                  <span>{total} CFA</span>
                 </div>
 
                 <div className="space-y-3">

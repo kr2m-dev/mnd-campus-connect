@@ -315,7 +315,7 @@ export default function Supplier() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="price">Prix (€) *</Label>
+                          <Label htmlFor="price">Prix (CFA) *</Label>
                           <Input
                             id="price"
                             type="number"
@@ -326,7 +326,7 @@ export default function Supplier() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="original_price">Prix d'origine (€)</Label>
+                          <Label htmlFor="original_price">Prix d'origine (CFA)</Label>
                           <Input
                             id="original_price"
                             type="number"
@@ -410,16 +410,16 @@ export default function Supplier() {
                         {product.image_url && (
                           <img src={product.image_url} alt={product.name} className="w-16 h-16 object-cover rounded" />
                         )}
-                         <div>
+                           <div>
                            <h3 className="font-semibold">{product.name}</h3>
                            <p className="text-sm text-muted-foreground">
                              {product.original_price && product.original_price > product.price ? (
                                <>
-                                 <span className="line-through text-muted-foreground mr-2">{product.original_price}€</span>
-                                 <span className="text-primary font-medium">{product.price}€</span>
+                                 <span className="line-through text-muted-foreground mr-2">{product.original_price} CFA</span>
+                                 <span className="text-primary font-medium">{product.price} CFA</span>
                                </>
                              ) : (
-                               <span className="font-medium">{product.price}€</span>
+                               <span className="font-medium">{product.price} CFA</span>
                              )}
                            </p>
                            <p className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</p>

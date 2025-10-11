@@ -19,6 +19,8 @@ import {
 import { useState } from "react";
 import { useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
+import { useAddToCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/use-auth";
 
 // Map icon names to actual components
 const iconMap: Record<string, React.ElementType> = {
@@ -126,9 +128,19 @@ interface ProductsShowcaseProps {
 
 export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("Tous");
   const { data: products = [], isLoading } = useProducts(selectedUniversity);
   const { data: categories = [] } = useCategories();
+  const addToCart = useAddToCart();
+
+  const handleAddToCart = (productId: string) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    addToCart.mutate({ userId: user.id, productId, quantity: 1 });
+  };
 
   const filteredProducts = selectedCategory === "Tous" 
     ? products 
@@ -234,7 +246,11 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
                       <Button size="sm" variant="secondary">
                         <Heart className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" className="bg-primary hover:bg-primary-dark">
+                      <Button 
+                        size="sm" 
+                        className="bg-primary hover:bg-primary-dark"
+                        onClick={() => handleAddToCart(product.id)}
+                      >
                         <ShoppingCart className="w-4 h-4" />
                       </Button>
                     </div>
@@ -290,11 +306,11 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-bold text-primary">
-                          {product.price}€
+                          {product.price} CFA
                         </span>
                         {product.original_price && (
                           <span className="text-sm text-muted-foreground line-through">
-                            {product.original_price}€
+                            {product.original_price} CFA
                           </span>
                         )}
                       </div>
@@ -303,7 +319,10 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
                 </CardContent>
                 
                 <CardFooter className="p-4 pt-0">
-                  <Button className="w-full bg-primary hover:bg-primary-dark btn-glow group">
+                  <Button 
+                    className="w-full bg-primary hover:bg-primary-dark btn-glow group"
+                    onClick={() => handleAddToCart(product.id)}
+                  >
                     <ShoppingCart className="w-4 h-4 mr-2" />
                     Ajouter au panier
                   </Button>
