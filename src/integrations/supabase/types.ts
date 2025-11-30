@@ -551,10 +551,7 @@ export type Database = {
         Args: { ban_reason?: string; target_user_id: string }
         Returns: boolean
       }
-      admin_unban_user: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
+      admin_unban_user: { Args: { target_user_id: string }; Returns: boolean }
       admin_update_user_profile: {
         Args: {
           new_admin_role?: string
@@ -567,7 +564,7 @@ export type Database = {
         Returns: boolean
       }
       get_all_users_admin: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           admin_role: string
           banned_at: string

@@ -2,66 +2,21 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MapPin, Users, GraduationCap } from "lucide-react";
+import { senegalUniversities } from "@/data/universities";
 
 interface University {
   id: string;
   name: string;
   city: string;
   country: string;
-  studentsCount: string;
+  studentsCount?: string;
   flag: string;
 }
 
-const universities: University[] = [
-  {
-    id: "dakar",
-    name: "Université Cheikh Anta Diop",
-    city: "Dakar",
-    country: "Sénégal",
-    studentsCount: "45K+",
-    flag: "🇸🇳"
-  },
-  {
-    id: "lome",
-    name: "Université de Lomé",
-    city: "Lomé",
-    country: "Togo",
-    studentsCount: "35K+",
-    flag: "🇹🇬"
-  },
-  {
-    id: "cotonou",
-    name: "Université d'Abomey-Calavi",
-    city: "Cotonou",
-    country: "Bénin",
-    studentsCount: "40K+",
-    flag: "🇧🇯"
-  },
-  {
-    id: "bamako",
-    name: "Université de Bamako",
-    city: "Bamako",
-    country: "Mali",
-    studentsCount: "30K+",
-    flag: "🇲🇱"
-  },
-  {
-    id: "ouaga",
-    name: "Université de Ouagadougou",
-    city: "Ouagadougou",
-    country: "Burkina Faso",
-    studentsCount: "25K+",
-    flag: "🇧🇫"
-  },
-  {
-    id: "abidjan",
-    name: "Université Félix Houphouët-Boigny",
-    city: "Abidjan",
-    country: "Côte d'Ivoire",
-    studentsCount: "50K+",
-    flag: "🇨🇮"
-  }
-];
+const universities: University[] = senegalUniversities.map(uni => ({
+  ...uni,
+  studentsCount: uni.id === 'ucad' ? '45K+' : '15K+'
+}));
 
 interface UniversitySelectorProps {
   isOpen: boolean;
