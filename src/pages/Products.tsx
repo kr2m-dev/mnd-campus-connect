@@ -22,7 +22,8 @@ import {
   Filter,
   ArrowLeft,
   Grid3X3,
-  List
+  List,
+  MessageCircle
 } from "lucide-react";
 import { useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
@@ -31,6 +32,7 @@ import { useAddToCart } from "@/hooks/use-cart";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { getUniversityById } from "@/data/universities";
+import { WhatsAppOrderDialog } from "@/components/whatsapp-order-dialog";
 
 // Map icon names to actual components
 const iconMap: Record<string, React.ElementType> = {
@@ -52,6 +54,8 @@ export default function Products() {
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const addToCart = useAddToCart();
 
   const handleAddToCart = (productId: string) => {
@@ -60,6 +64,11 @@ export default function Products() {
       return;
     }
     addToCart.mutate({ userId: user.id, productId, quantity: 1 });
+  };
+
+  const handleWhatsAppOrder = (product: any) => {
+    setSelectedProduct(product);
+    setWhatsappDialogOpen(true);
   };
 
   // Dummy handlers for Header component
@@ -206,13 +215,23 @@ export default function Products() {
                       </span>
                     )}
                   </div>
-                  <Button 
-                    className="bg-primary hover:bg-primary-dark"
-                    onClick={() => handleAddToCart(product.id)}
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Ajouter au panier
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+                      onClick={() => handleWhatsAppOrder(product)}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      className="bg-primary hover:bg-primary-dark"
+                      onClick={() => handleAddToCart(product.id)}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Ajouter au panier
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -311,9 +330,17 @@ export default function Products() {
           </div>
         </CardContent>
 
-        <CardFooter className="p-4 pt-0">
+        <CardFooter className="p-4 pt-0 flex gap-2">
           <Button 
-            className="w-full bg-primary hover:bg-primary-dark btn-glow group"
+            variant="outline"
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+            onClick={() => handleWhatsAppOrder(product)}
+          >
+            <MessageCircle className="w-4 h-4" />
+          </Button>
+          <Button 
+            className="flex-1 bg-primary hover:bg-primary-dark btn-glow group"
             onClick={() => handleAddToCart(product.id)}
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
@@ -520,6 +547,12 @@ export default function Products() {
           </div>
         )}
       </div>
+
+      <WhatsAppOrderDialog
+        isOpen={whatsappDialogOpen}
+        onClose={() => setWhatsappDialogOpen(false)}
+        product={selectedProduct}
+      />
 
       <Footer />
     </div>
