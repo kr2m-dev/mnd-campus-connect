@@ -17,12 +17,14 @@ import {
   AlertCircle,
   CheckCircle,
   Gift,
-  Percent
+  Percent,
+  MessageCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { useCart, useUpdateCartQuantity, useRemoveFromCart } from "@/hooks/use-cart";
+import { WhatsAppOrderDialog } from "@/components/whatsapp-order-dialog";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ export default function Cart() {
   const removeFromCart = useRemoveFromCart();
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
 
   // Dummy handlers for Header component
   const handleUniversityChange = () => {};
@@ -393,6 +396,15 @@ export default function Cart() {
                 </div>
 
                 <div className="space-y-3">
+                  <Button 
+                    className="w-full bg-green-600 hover:bg-green-700" 
+                    size="lg"
+                    onClick={() => setWhatsappDialogOpen(true)}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Commander via WhatsApp
+                  </Button>
+                  
                   <Button className="w-full bg-gradient-primary" size="lg">
                     <CreditCard className="w-4 h-4 mr-2" />
                     Procéder au paiement
@@ -424,6 +436,12 @@ export default function Cart() {
           </div>
         </div>
       </div>
+
+      <WhatsAppOrderDialog
+        isOpen={whatsappDialogOpen}
+        onClose={() => setWhatsappDialogOpen(false)}
+        cartItems={cartItems}
+      />
 
       <Footer />
     </div>
