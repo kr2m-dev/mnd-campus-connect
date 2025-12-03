@@ -198,8 +198,6 @@ export default function Notifications() {
     <div className="min-h-screen bg-background">
       <Header
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
 
       <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">

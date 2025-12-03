@@ -158,8 +158,6 @@ export default function ResetPassword() {
       <div className="min-h-screen bg-background">
         <Header
           onUniversityChange={handleUniversityChange}
-          onSupplierAccess={handleSupplierAccess}
-          onStudentExchange={handleStudentExchange}
         />
         <div className="flex items-center justify-center pt-20 h-[calc(100vh-5rem)]">
           <div className="text-center">
@@ -176,8 +174,6 @@ export default function ResetPassword() {
       <div className="min-h-screen bg-background">
         <Header
           onUniversityChange={handleUniversityChange}
-          onSupplierAccess={handleSupplierAccess}
-          onStudentExchange={handleStudentExchange}
         />
         <div className="flex items-center justify-center p-4 pt-20">
           <div className="w-full max-w-md text-center space-y-6">
@@ -203,8 +199,6 @@ export default function ResetPassword() {
     <div className="min-h-screen bg-background">
       <Header
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
       <div className="flex items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md space-y-6">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useCurrentSupplier, useCreateSupplier, useUpdateSupplier } from "@/hooks/use-supplier";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, Product } from "@/hooks/use-products";
+import { useSupplierOrders } from "@/hooks/use-orders";
 import { useCategories } from "@/hooks/use-categories";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,17 +9,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus } from "lucide-react";
+import { Trash2, Edit, Plus, BarChart3, Package, ShoppingCart, Star, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { SupplierStats } from "@/components/supplier/supplier-stats";
+import { SupplierOrdersList } from "@/components/supplier-orders-list";
+import { SupplierReviews } from "@/components/supplier/supplier-reviews";
+import { ProductForm, ProductFormData } from "@/components/supplier/product-form";
+import { ImageUpload } from "@/components/image-upload";
 
 export default function Supplier() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Dummy handlers for Header component
   const handleUniversityChange = () => {};
@@ -26,9 +34,10 @@ export default function Supplier() {
   const handleStudentExchange = () => {};
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  
+
   const { data: supplier, isLoading: supplierLoading } = useCurrentSupplier();
   const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: orders, isLoading: ordersLoading } = useSupplierOrders(supplier?.id);
   const { data: categories = [] } = useCategories();
   const createSupplier = useCreateSupplier();
   const updateSupplier = useUpdateSupplier();
@@ -46,9 +55,9 @@ export default function Supplier() {
       }
       setUser(user);
     };
-    
+
     checkUser();
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session?.user) {
         navigate("/");
@@ -56,7 +65,7 @@ export default function Supplier() {
         setUser(session.user);
       }
     });
-    
+
     return () => subscription.unsubscribe();
   }, [navigate]);
 
@@ -65,7 +74,9 @@ export default function Supplier() {
     description: "",
     contact_email: "",
     contact_phone: "",
+    contact_whatsapp: "",
     address: "",
+    logo_url: "",
   });
 
   const [productForm, setProductForm] = useState({
@@ -86,7 +97,9 @@ export default function Supplier() {
         description: supplier.description || "",
         contact_email: supplier.contact_email || "",
         contact_phone: supplier.contact_phone || "",
+        contact_whatsapp: supplier.contact_whatsapp || supplier.contact_phone || "",
         address: supplier.address || "",
+        logo_url: supplier.logo_url || "",
       });
     }
   }, [supplier]);
@@ -129,7 +142,7 @@ export default function Supplier() {
         await createProduct.mutateAsync(productData);
         toast({ title: "Produit créé avec succès" });
       }
-      
+
       setIsProductModalOpen(false);
       setEditingProduct(null);
       setProductForm({
@@ -182,278 +195,416 @@ export default function Supplier() {
   };
 
   if (supplierLoading || !user) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">Chargement...</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Chargement...</p>
+        </div>
+      </div>
+    );
   }
 
   // Filtrer les produits du fournisseur actuel
-  const myProducts = products.filter(product => 
+  const myProducts = products.filter(product =>
     supplier && product.supplier_id === supplier.id
   );
 
+  // Si pas encore fournisseur, afficher le formulaire d'inscription
+  if (!supplier) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header
+          onUniversityChange={handleUniversityChange}
+        />
+        <div className="container mx-auto px-4 py-8 pt-24 max-w-2xl">
+          <h1 className="text-3xl font-bold mb-8 text-center">Devenir Fournisseur</h1>
+          <Card className="shadow-card border-border/50">
+            <CardHeader>
+              <CardTitle>Inscription Fournisseur</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSupplierSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="business_name">Nom de l'entreprise *</Label>
+                  <Input
+                    id="business_name"
+                    value={supplierForm.business_name}
+                    onChange={(e) => setSupplierForm(prev => ({...prev, business_name: e.target.value}))}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={supplierForm.description}
+                    onChange={(e) => setSupplierForm(prev => ({...prev, description: e.target.value}))}
+                    rows={4}
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="contact_email">Email de contact</Label>
+                    <Input
+                      id="contact_email"
+                      type="email"
+                      value={supplierForm.contact_email}
+                      onChange={(e) => setSupplierForm(prev => ({...prev, contact_email: e.target.value}))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="contact_phone">Téléphone</Label>
+                    <Input
+                      id="contact_phone"
+                      value={supplierForm.contact_phone}
+                      onChange={(e) => setSupplierForm(prev => ({...prev, contact_phone: e.target.value}))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="contact_whatsapp">WhatsApp * (pour les commandes)</Label>
+                  <Input
+                    id="contact_whatsapp"
+                    value={supplierForm.contact_whatsapp}
+                    onChange={(e) => setSupplierForm(prev => ({...prev, contact_whatsapp: e.target.value}))}
+                    placeholder="77 123 45 67"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="address">Adresse</Label>
+                  <Input
+                    id="address"
+                    value={supplierForm.address}
+                    onChange={(e) => setSupplierForm(prev => ({...prev, address: e.target.value}))}
+                  />
+                </div>
+                <div>
+                  <Label>Logo de l'entreprise</Label>
+                  <ImageUpload
+                    bucket="supplier-logos"
+                    currentImageUrl={supplierForm.logo_url}
+                    onUploadSuccess={(url) => {
+                      setSupplierForm(prev => ({ ...prev, logo_url: url }));
+                    }}
+                    onDelete={() => {
+                      setSupplierForm(prev => ({ ...prev, logo_url: '' }));
+                    }}
+                    label="Télécharger le logo"
+                    maxSizeMB={2}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Format recommandé : carré (ex: 500x500px), PNG ou JPG
+                  </p>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={createSupplier.isPending}
+                  className="w-full bg-gradient-primary"
+                >
+                  {createSupplier.isPending ? "Inscription..." : "Devenir fournisseur"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Dashboard fournisseur avec onglets
   return (
     <div className="min-h-screen bg-background">
       <Header
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
 
       <div className="container mx-auto px-4 py-8 pt-24">
-        <h1 className="text-3xl font-bold mb-8">Espace Fournisseur</h1>
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            {supplier.logo_url && (
+              <img
+                src={supplier.logo_url}
+                alt={`Logo ${supplier.business_name}`}
+                className="w-20 h-20 rounded-full object-cover border-2 border-primary shadow-lg"
+              />
+            )}
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                Espace Fournisseur
+                {supplier.is_verified && <span className="text-2xl">(Verifié)</span>}
+                {!supplier.is_verified && <span className="text-2xl">(Non Verifié)</span>}
+              </h1>
+              <p className="text-muted-foreground text-lg">{supplier.business_name}</p>
+            </div>
+          </div>
+        </div>
 
-        {/* Profil Fournisseur */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>
-              {supplier ? `Mon Profil Fournisseur ${supplier.is_verified ? '✅' : '⏳'}` : "Devenir Fournisseur"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSupplierSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="business_name">Nom de l'entreprise *</Label>
-                <Input
-                  id="business_name"
-                  value={supplierForm.business_name}
-                  onChange={(e) => setSupplierForm(prev => ({...prev, business_name: e.target.value}))}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={supplierForm.description}
-                  onChange={(e) => setSupplierForm(prev => ({...prev, description: e.target.value}))}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="contact_email">Email de contact</Label>
-                  <Input
-                    id="contact_email"
-                    type="email"
-                    value={supplierForm.contact_email}
-                    onChange={(e) => setSupplierForm(prev => ({...prev, contact_email: e.target.value}))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact_phone">Téléphone</Label>
-                  <Input
-                    id="contact_phone"
-                    value={supplierForm.contact_phone}
-                    onChange={(e) => setSupplierForm(prev => ({...prev, contact_phone: e.target.value}))}
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="address">Adresse</Label>
-                <Input
-                  id="address"
-                  value={supplierForm.address}
-                  onChange={(e) => setSupplierForm(prev => ({...prev, address: e.target.value}))}
-                />
-              </div>
-              <Button 
-                type="submit" 
-                disabled={createSupplier.isPending || updateSupplier.isPending}
-              >
-                {supplier ? "Mettre à jour" : "Devenir fournisseur"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Vue d'ensemble
+            </TabsTrigger>
+            <TabsTrigger value="products" className="flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              Produits ({myProducts.length})
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              Commandes
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="flex items-center gap-2">
+              <Star className="w-4 h-4" />
+              Avis
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Paramètres
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Gestion des Produits */}
-        {supplier && (
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Mes Produits ({myProducts.length})</CardTitle>
-                <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => {
-                      setEditingProduct(null);
-                      setProductForm({
-                        name: "",
-                        description: "",
-                        price: "",
-                        original_price: "",
-                        category_id: "",
-                        image_url: "",
-                        university_filter: "",
-                        stock_quantity: "",
-                      });
-                    }}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Ajouter un produit
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingProduct ? "Modifier le produit" : "Ajouter un produit"}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleProductSubmit} className="space-y-4">
-                      <div>
-                        <Label htmlFor="name">Nom du produit *</Label>
-                        <Input
-                          id="name"
-                          value={productForm.name}
-                          onChange={(e) => setProductForm(prev => ({...prev, name: e.target.value}))}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          value={productForm.description}
-                          onChange={(e) => setProductForm(prev => ({...prev, description: e.target.value}))}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="price">Prix (CFA) *</Label>
-                          <Input
-                            id="price"
-                            type="number"
-                            step="0.01"
-                            value={productForm.price}
-                            onChange={(e) => setProductForm(prev => ({...prev, price: e.target.value}))}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="original_price">Prix d'origine (CFA)</Label>
-                          <Input
-                            id="original_price"
-                            type="number"
-                            step="0.01"
-                            value={productForm.original_price}
-                            onChange={(e) => setProductForm(prev => ({...prev, original_price: e.target.value}))}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="category">Catégorie</Label>
-                        <Select
-                          value={productForm.category_id}
-                          onValueChange={(value) => setProductForm(prev => ({...prev, category_id: value}))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choisir une catégorie" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
-                                {category.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                       <div>
-                         <Label htmlFor="image_url">URL de l'image</Label>
-                         <Input
-                           id="image_url"
-                           type="url"
-                           value={productForm.image_url}
-                           onChange={(e) => setProductForm(prev => ({...prev, image_url: e.target.value}))}
-                           placeholder="https://example.com/image.jpg"
-                         />
-                         <p className="text-xs text-muted-foreground mt-1">
-                           Ajoutez l'URL de l'image de votre produit (optionnel)
-                         </p>
-                       </div>
-                      <div>
-                        <Label htmlFor="stock_quantity">Stock disponible</Label>
-                        <Input
-                          id="stock_quantity"
-                          type="number"
-                          value={productForm.stock_quantity}
-                          onChange={(e) => setProductForm(prev => ({...prev, stock_quantity: e.target.value}))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="university_filter">Université (optionnel)</Label>
-                        <Input
-                          id="university_filter"
-                          value={productForm.university_filter}
-                          onChange={(e) => setProductForm(prev => ({...prev, university_filter: e.target.value}))}
-                          placeholder="Laissez vide pour tous"
-                        />
-                      </div>
-                      <Button 
-                        type="submit" 
-                        disabled={createProduct.isPending || updateProduct.isPending}
-                        className="w-full"
-                      >
-                        {editingProduct ? "Mettre à jour" : "Ajouter"}
+          {/* Onglet Vue d'ensemble */}
+          <TabsContent value="overview">
+            <SupplierStats supplierId={supplier.id} />
+          </TabsContent>
+
+          {/* Onglet Produits */}
+          <TabsContent value="products">
+            <Card className="shadow-card border-border/50">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Mes Produits ({myProducts.length})</CardTitle>
+                  <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button onClick={() => {
+                        setEditingProduct(null);
+                        setProductForm({
+                          name: "",
+                          description: "",
+                          price: "",
+                          original_price: "",
+                          category_id: "",
+                          image_url: "",
+                          university_filter: "",
+                          stock_quantity: "",
+                        });
+                      }}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Ajouter un produit
                       </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {productsLoading ? (
-                <div>Chargement des produits...</div>
-              ) : myProducts.length === 0 ? (
-                <p className="text-muted-foreground">Aucun produit ajouté pour le moment.</p>
-              ) : (
-                <div className="grid gap-4">
-                  {myProducts.map((product) => (
-                    <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        {product.image_url && (
-                          <img src={product.image_url} alt={product.name} className="w-16 h-16 object-cover rounded" />
-                        )}
-                           <div>
-                           <h3 className="font-semibold">{product.name}</h3>
-                           <p className="text-sm text-muted-foreground">
-                             {product.original_price && product.original_price > product.price ? (
-                               <>
-                                 <span className="line-through text-muted-foreground mr-2">{product.original_price} CFA</span>
-                                 <span className="text-primary font-medium">{product.price} CFA</span>
-                               </>
-                             ) : (
-                               <span className="font-medium">{product.price} CFA</span>
-                             )}
-                           </p>
-                           <p className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</p>
-                           {product.categories && (
-                             <p className="text-xs text-primary">{product.categories.name}</p>
-                           )}
-                           {product.description && (
-                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
-                           )}
-                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditProduct(product)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteProduct(product.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>
+                          {editingProduct ? "Modifier le produit" : "Ajouter un produit"}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <ProductForm
+                        editingProduct={editingProduct}
+                        categories={categories}
+                        onSubmit={async (data: ProductFormData) => {
+                          try {
+                            const productData = {
+                              ...data,
+                              price: parseFloat(data.price),
+                              original_price: data.original_price ? parseFloat(data.original_price) : undefined,
+                              stock_quantity: parseInt(data.stock_quantity) || 0,
+                              is_active: true,
+                              rating: 0,
+                            };
+
+                            if (editingProduct) {
+                              await updateProduct.mutateAsync({ id: editingProduct.id, ...productData });
+                              toast({ title: "Produit mis à jour avec succès" });
+                            } else {
+                              await createProduct.mutateAsync(productData);
+                              toast({ title: "Produit créé avec succès" });
+                            }
+
+                            setIsProductModalOpen(false);
+                            setEditingProduct(null);
+                          } catch (error) {
+                            toast({
+                              title: "Erreur",
+                              description: "Une erreur est survenue",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        isSubmitting={createProduct.isPending || updateProduct.isPending}
+                        onClose={() => {
+                          setIsProductModalOpen(false);
+                          setEditingProduct(null);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+              </CardHeader>
+              <CardContent>
+                {productsLoading ? (
+                  <div className="text-center py-8">Chargement des produits...</div>
+                ) : myProducts.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Package className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground">Aucun produit ajouté pour le moment.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {myProducts.map((product) => (
+                      <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-4">
+                          {product.image_url && (
+                            <img src={product.image_url} alt={product.name} className="w-16 h-16 object-cover rounded" />
+                          )}
+                          <div>
+                            <h3 className="font-semibold">{product.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {product.original_price && product.original_price > product.price ? (
+                                <>
+                                  <span className="line-through text-muted-foreground mr-2">{product.original_price} CFA</span>
+                                  <span className="text-primary font-medium">{product.price} CFA</span>
+                                </>
+                              ) : (
+                                <span className="font-medium">{product.price} CFA</span>
+                              )}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</p>
+                            {product.categories && (
+                              <p className="text-xs text-primary">{product.categories.name}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditProduct(product)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteProduct(product.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Onglet Commandes */}
+          <TabsContent value="orders">
+            <SupplierOrdersList orders={orders || []} loading={ordersLoading} />
+          </TabsContent>
+
+          {/* Onglet Avis */}
+          <TabsContent value="reviews">
+            <SupplierReviews supplierId={supplier.id} />
+          </TabsContent>
+
+          {/* Onglet Paramètres */}
+          <TabsContent value="settings">
+            <Card className="shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle>Paramètres du profil fournisseur</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSupplierSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="business_name_settings">Nom de l'entreprise *</Label>
+                    <Input
+                      id="business_name_settings"
+                      value={supplierForm.business_name}
+                      onChange={(e) => setSupplierForm(prev => ({...prev, business_name: e.target.value}))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="description_settings">Description</Label>
+                    <Textarea
+                      id="description_settings"
+                      value={supplierForm.description}
+                      onChange={(e) => setSupplierForm(prev => ({...prev, description: e.target.value}))}
+                      rows={4}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="contact_email_settings">Email de contact</Label>
+                      <Input
+                        id="contact_email_settings"
+                        type="email"
+                        value={supplierForm.contact_email}
+                        onChange={(e) => setSupplierForm(prev => ({...prev, contact_email: e.target.value}))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contact_phone_settings">Téléphone</Label>
+                      <Input
+                        id="contact_phone_settings"
+                        value={supplierForm.contact_phone}
+                        onChange={(e) => setSupplierForm(prev => ({...prev, contact_phone: e.target.value}))}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="contact_whatsapp_settings">WhatsApp * (pour les commandes)</Label>
+                    <Input
+                      id="contact_whatsapp_settings"
+                      value={supplierForm.contact_whatsapp}
+                      onChange={(e) => setSupplierForm(prev => ({...prev, contact_whatsapp: e.target.value}))}
+                      placeholder="77 123 45 67"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="address_settings">Adresse</Label>
+                    <Input
+                      id="address_settings"
+                      value={supplierForm.address}
+                      onChange={(e) => setSupplierForm(prev => ({...prev, address: e.target.value}))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Logo de l'entreprise</Label>
+                    <ImageUpload
+                      bucket="supplier-logos"
+                      currentImageUrl={supplierForm.logo_url}
+                      onUploadSuccess={(url) => {
+                        setSupplierForm(prev => ({ ...prev, logo_url: url }));
+                      }}
+                      onDelete={() => {
+                        setSupplierForm(prev => ({ ...prev, logo_url: '' }));
+                      }}
+                      label="Télécharger le logo"
+                      maxSizeMB={2}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Format recommandé : carré (ex: 500x500px), PNG ou JPG
+                    </p>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={updateSupplier.isPending}
+                    className="bg-gradient-primary"
+                  >
+                    {updateSupplier.isPending ? "Mise à jour..." : "Mettre à jour"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Footer />

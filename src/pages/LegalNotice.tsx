@@ -16,8 +16,6 @@ export default function LegalNotice() {
     <div className="min-h-screen bg-background">
       <Header
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
 
       <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
@@ -33,7 +31,7 @@ export default function LegalNotice() {
             </span>
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Informations légales obligatoires concernant MND Campus Connect
+            Informations légales obligatoires concernant CampusLink
             et l'exploitation de notre plateforme e-commerce.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
@@ -56,7 +54,7 @@ export default function LegalNotice() {
                   <h4 className="font-semibold mb-3">Société :</h4>
                   <div className="space-y-2 text-muted-foreground">
                     <p><strong>Raison sociale :</strong> MND Technologies SARL</p>
-                    <p><strong>Nom commercial :</strong> MND Campus Connect</p>
+                    <p><strong>Nom commercial :</strong> CampusLink</p>
                     <p><strong>Forme juridique :</strong> Société à Responsabilité Limitée (SARL)</p>
                     <p><strong>Capital social :</strong> 10 000 000 FCFA</p>
                   </div>
@@ -202,9 +200,9 @@ export default function LegalNotice() {
               <div>
                 <h4 className="font-semibold mb-3">Marques et brevets :</h4>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li><strong>MND Campus Connect</strong> - Marque déposée n° 2024-001234 (OAPI)</li>
+                  <li><strong>CampusLink</strong> - Marque déposée n° 2024-001234 (OAPI)</li>
                   <li><strong>Logo MND</strong> - Marque figurative déposée n° 2024-001235 (OAPI)</li>
-                  <li><strong>Slogan "Campus Connect"</strong> - Marque verbale déposée n° 2024-001236 (OAPI)</li>
+                  <li><strong>Slogan "CampusLink"</strong> - Marque verbale déposée n° 2024-001236 (OAPI)</li>
                 </ul>
               </div>
 
@@ -324,7 +322,7 @@ export default function LegalNotice() {
               <div>
                 <h4 className="font-semibold mb-3">Accessibilité :</h4>
                 <p className="text-muted-foreground">
-                  MND Campus Connect s'engage à rendre son site accessible conformément aux
+                  CampusLink s'engage à rendre son site accessible conformément aux
                   standards WCAG 2.1 niveau AA. Un audit d'accessibilité est réalisé annuellement.
                 </p>
               </div>
@@ -341,7 +339,7 @@ export default function LegalNotice() {
               <div>
                 <h4 className="font-semibold mb-3">Partenariats universitaires :</h4>
                 <p className="text-muted-foreground">
-                  MND Campus Connect opère sous licence avec les universités partenaires.
+                  CampusLink opère sous licence avec les universités partenaires.
                   Les conventions de partenariat sont disponibles sur demande auprès
                   des administrations universitaires concernées.
                 </p>

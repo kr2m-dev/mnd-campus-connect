@@ -108,8 +108,6 @@ export default function Cart() {
       <div className="min-h-screen bg-background">
         <Header
           onUniversityChange={handleUniversityChange}
-          onSupplierAccess={handleSupplierAccess}
-          onStudentExchange={handleStudentExchange}
         />
         <div className="flex items-center justify-center pt-20 h-[calc(100vh-5rem)]">
           <div className="text-center">
@@ -126,8 +124,6 @@ export default function Cart() {
       <div className="min-h-screen bg-background">
         <Header
           onUniversityChange={handleUniversityChange}
-          onSupplierAccess={handleSupplierAccess}
-          onStudentExchange={handleStudentExchange}
         />
 
         <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
@@ -155,8 +151,6 @@ export default function Cart() {
     <div className="min-h-screen bg-background">
       <Header
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
 
       <div className="container mx-auto px-4 py-8 pt-24 max-w-6xl">

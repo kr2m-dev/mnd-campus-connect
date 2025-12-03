@@ -74,6 +74,8 @@ export const WhatsAppOrderDialog = ({
       formattedPhone = '+221' + formattedPhone; // Senegal country code
     }
 
+    console.log("Formatted Phone:", formattedPhone);
+
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
     onClose();

@@ -13,11 +13,15 @@ import {
   MapPin,
   LogIn,
   UserPlus,
-  Package
+  Package,
+  Shield,
+  LayoutDashboard
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-admin";
+import { useCurrentSupplier } from "@/hooks/use-supplier";
 import { getUniversityById } from "@/data/universities";
 
 interface HeaderProps {
@@ -28,18 +32,16 @@ interface HeaderProps {
     flag: string;
   } | null;
   onUniversityChange: () => void;
-  onSupplierAccess: () => void;
-  onStudentExchange: () => void;
 }
 
 export const Header = ({
   selectedUniversity,
-  onUniversityChange,
-  onSupplierAccess,
-  onStudentExchange
+  onUniversityChange
 }: HeaderProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
+  const { data: supplier } = useCurrentSupplier();
   const [cartCount] = useState(3);
 
   // Get user's university from their metadata
@@ -49,14 +51,42 @@ export const Header = ({
 
   const NavLinks = () => (
     <>
-      <Button variant="ghost" size="sm" onClick={() => navigate("/products")}>
-        <Package className="w-4 h-4 mr-2" />
-        Produits
-      </Button>
-      <Button variant="ghost" size="sm" onClick={onStudentExchange}>
-        <Users className="w-4 h-4 mr-2" />
-        Espace Échange
-      </Button>
+      {/* Lien Produits - masqué pour les fournisseurs (ils voient leurs produits dans leur espace) */}
+      {!supplier && (
+        <Button variant="ghost" size="sm" onClick={() => navigate("/products")} className="hover:bg-primary">
+          <Package className="w-4 h-4 mr-2" />
+          Produits
+        </Button>
+      )}
+
+      {/* Dashboard - visible uniquement pour les fournisseurs */}
+      {supplier && (
+        <Button variant="ghost" size="sm" onClick={() => navigate("/supplier")} className="hover:bg-primary">
+          <LayoutDashboard className="w-4 h-4 mr-2" />
+          Dashboard
+        </Button>
+      )}
+
+      {/* Lien Fournisseur - visible uniquement pour les non-fournisseurs connectés */}
+      {user && !supplier && (
+        <Button variant="ghost" size="sm" onClick={() => navigate("/supplier")} className="hover:bg-primary">
+          <Store className="w-4 h-4 mr-2" />
+          Devenir Fournisseur
+        </Button>
+      )}
+
+      {/* Lien Admin - visible uniquement pour les admins */}
+      {user && isAdmin && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/admin")}
+          className="text-primary hover:bg-primary"
+        >
+          <Shield className="w-4 h-4 mr-2" />
+          Administration
+        </Button>
+      )}
     </>
   );
 
@@ -65,25 +95,26 @@ export const Header = ({
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">MND</span>
-            </div>
+          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/")}>
+            <img
+              src="/logo_cc.png"
+              alt="CampusLink"
+              className="h-10 w-auto"
+            />
             <div>
-              <h1 className="font-bold text-lg">MND.Produits</h1>
-              <p className="text-xs text-muted-foreground">Campus Connect</p>
+              <h1 className="font-bold text-lg">CampusLink</h1>
             </div>
           </div>
         </div>
 
-        {/* University Display */}
-        {(user && userUniversity) ? (
+        {/* University Display - masqué pour les fournisseurs */}
+        {(user && userUniversity && !supplier) ? (
           <div className="hidden md:flex items-center space-x-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate("/profile")}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 hover:bg-primary"
             >
               <span className="text-lg">{userUniversity.flag}</span>
               <div className="flex flex-col items-start">
@@ -103,7 +134,7 @@ export const Header = ({
               variant="outline"
               size="sm"
               onClick={onUniversityChange}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 hover:bg-primary"
             >
               <span className="text-lg">{selectedUniversity.flag}</span>
               <div className="flex flex-col items-start">
@@ -137,39 +168,42 @@ export const Header = ({
           <div className="flex items-center space-x-2 ml-4 border-l pl-4">
             {user ? (
               <>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/notifications")}>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/notifications")} className="hover:bg-primary">
                   <Bell className="w-4 h-4" />
                 </Button>
 
-                <Button variant="ghost" size="sm" className="relative" onClick={() => navigate("/cart")}>
-                  <ShoppingCart className="w-4 h-4" />
-                  {cartCount > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs"
-                    >
-                      {cartCount}
-                    </Badge>
-                  )}
-                </Button>
+                {/* Panier - masqué pour les fournisseurs */}
+                {!supplier && (
+                  <Button variant="ghost" size="sm" className="relative hover:bg-primary" onClick={() => navigate("/cart")}>
+                    <ShoppingCart className="w-4 h-4" />
+                    {cartCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs"
+                      >
+                        {cartCount}
+                      </Badge>
+                    )}
+                  </Button>
+                )}
 
-                <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="hover:bg-primary">
                   <User className="w-4 h-4 mr-2" />
                   Profil
                 </Button>
 
-                <Button variant="ghost" size="sm" onClick={logout}>
+                <Button variant="ghost" size="sm" onClick={logout} className="hover:bg-primary">
                   Déconnexion
                 </Button>
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/login")} className="hover:bg-primary">
                   <LogIn className="w-4 h-4 mr-2" />
                   Connexion
                 </Button>
 
-                <Button variant="default" size="sm" onClick={() => navigate("/register")} className="bg-gradient-primary">
+                <Button variant="default" size="sm" onClick={() => navigate("/register")} className="bg-gradient-primary hover:bg-green-600">
                   <UserPlus className="w-4 h-4 mr-2" />
                   Inscription
                 </Button>
@@ -180,32 +214,36 @@ export const Header = ({
 
         {/* Mobile Navigation */}
         <div className="flex md:hidden items-center space-x-2">
-          <Button variant="ghost" size="sm" className="relative" onClick={() => navigate("/cart")}>
-            <ShoppingCart className="w-4 h-4" />
-            {cartCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs"
-              >
-                {cartCount}
-              </Badge>
-            )}
-          </Button>
-          
+          {/* Panier mobile - masqué pour les fournisseurs */}
+          {!supplier && (
+            <Button variant="ghost" size="sm" className="relative hover:bg-primary" onClick={() => navigate("/cart")}>
+              <ShoppingCart className="w-4 h-4" />
+              {cartCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs"
+                >
+                  {cartCount}
+                </Badge>
+              )}
+            </Button>
+          )}
+
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="hover:bg-primary">
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-80">
               <div className="flex flex-col space-y-4 mt-6">
-                {(user && userUniversity) ? (
+                {/* University Display Mobile - masqué pour les fournisseurs */}
+                {(user && userUniversity && !supplier) ? (
                   <div className="p-4 bg-muted rounded-lg">
                     <Button
                       variant="ghost"
                       onClick={() => navigate("/profile")}
-                      className="w-full justify-start p-0 h-auto"
+                      className="w-full justify-start p-0 h-auto hover:bg-primary"
                     >
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">{userUniversity.flag}</span>
@@ -225,7 +263,7 @@ export const Header = ({
                     <Button
                       variant="ghost"
                       onClick={onUniversityChange}
-                      className="w-full justify-start p-0 h-auto"
+                      className="w-full justify-start p-0 h-auto hover:bg-primary"
                     >
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">{selectedUniversity.flag}</span>
@@ -257,25 +295,25 @@ export const Header = ({
                 <div className="flex flex-col space-y-2 pt-4 border-t">
                   {user ? (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => navigate("/notifications")} className="w-full">
+                      <Button variant="outline" size="sm" onClick={() => navigate("/notifications")} className="w-full hover:bg-primary">
                         <Bell className="w-4 h-4 mr-2" />
                         Notifications
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => navigate("/profile")} className="w-full">
+                      <Button variant="outline" size="sm" onClick={() => navigate("/profile")} className="w-full hover:bg-primary">
                         <User className="w-4 h-4 mr-2" />
                         Profil
                       </Button>
-                      <Button variant="outline" size="sm" onClick={logout} className="w-full">
+                      <Button variant="outline" size="sm" onClick={logout} className="w-full hover:bg-primary">
                         Déconnexion
                       </Button>
                     </>
                   ) : (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => navigate("/login")} className="w-full">
+                      <Button variant="outline" size="sm" onClick={() => navigate("/login")} className="w-full hover:bg-primary">
                         <LogIn className="w-4 h-4 mr-2" />
                         Connexion
                       </Button>
-                      <Button variant="default" size="sm" onClick={() => navigate("/register")} className="w-full bg-gradient-primary">
+                      <Button variant="default" size="sm" onClick={() => navigate("/register")} className="w-full bg-gradient-primary hover:bg-green-600">
                         <UserPlus className="w-4 h-4 mr-2" />
                         Inscription
                       </Button>

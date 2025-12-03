@@ -16,8 +16,6 @@ export default function PrivacyPolicy() {
     <div className="min-h-screen bg-background">
       <Header
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
 
       <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
@@ -263,7 +261,7 @@ export default function PrivacyPolicy() {
                   <div>
                     <h4 className="font-semibold mb-2">Adresse postale</h4>
                     <p className="text-sm text-muted-foreground">
-                      MND.Produits<br />
+                      CampusLink<br />
                       Service Protection des Données<br />
                       Dakar, Sénégal
                     </p>

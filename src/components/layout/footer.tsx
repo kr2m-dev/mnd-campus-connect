@@ -27,12 +27,13 @@ export const Footer = () => {
           {/* Brand */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">MND</span>
-              </div>
+              <img
+                src="/logo_cc.png"
+                alt="CampusLink"
+                className="h-8 w-auto"
+              />
               <div>
-                <h3 className="font-bold text-lg">MND.Produits</h3>
-                <p className="text-xs text-secondary-foreground/70">Campus Connect</p>
+                <h3 className="font-bold text-lg">CampusLink</h3>
               </div>
             </div>
 
@@ -244,7 +245,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center text-sm text-secondary-foreground/60">
           <div>
-            © 2024 MND.Produits. Tous droits réservés.
+            © 2024 CampusLink. Tous droits réservés.
           </div>
 
           <div className="flex space-x-6 mt-4 md:mt-0">

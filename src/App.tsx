@@ -3,9 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AdminRoute } from "@/components/auth/AdminRoute";
+import { CustomerRoute } from "@/components/auth/CustomerRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Supplier from "./pages/Supplier";
+import SupplierRegister from "./pages/SupplierRegister";
+import Admin from "./pages/Admin";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
@@ -27,19 +32,58 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Routes publiques */}
           <Route path="/" element={<Index />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/supplier" element={<Supplier />} />
-          <Route path="/student-exchange" element={<StudentExchangePage />} />
+          {/* Route Produits - masquée pour les fournisseurs */}
+          <Route path="/products" element={
+            <CustomerRoute>
+              <Products />
+            </CustomerRoute>
+          } />
           <Route path="/register" element={<Register />} />
+          <Route path="/supplier-register" element={<SupplierRegister />} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/legal-notice" element={<LegalNotice />} />
+
+          {/* Routes protégées - nécessitent authentification */}
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          } />
+          <Route path="/cart" element={
+            <ProtectedRoute>
+              <CustomerRoute>
+                <Cart />
+              </CustomerRoute>
+            </ProtectedRoute>
+          } />
+          <Route path="/supplier" element={
+            <ProtectedRoute>
+              <Supplier />
+            </ProtectedRoute>
+          } />
+          <Route path="/student-exchange" element={
+            <ProtectedRoute>
+              <StudentExchangePage />
+            </ProtectedRoute>
+          } />
+
+          {/* Route Admin - nécessite admin_role */}
+          <Route path="/admin" element={
+            <AdminRoute>
+              <Admin />
+            </AdminRoute>
+          } />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -8,7 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store, ArrowRight, Sparkles } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -78,8 +78,6 @@ export default function Login() {
       <div className="min-h-screen bg-background">
         <Header
           onUniversityChange={handleUniversityChange}
-          onSupplierAccess={handleSupplierAccess}
-          onStudentExchange={handleStudentExchange}
         />
 
         <div className="flex items-center justify-center p-4 pt-20">
@@ -147,41 +145,43 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background Decorations */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 -left-4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 -right-4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+      </div>
+
       <Header
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
 
-      <div className="flex items-center justify-center p-4 pt-20">
+      <div className="flex items-center justify-center p-4 pt-10">
         <div className="w-full max-w-md space-y-6">
 
         {/* Logo and Brand */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-elegant">
-              <span className="text-primary-foreground font-bold text-lg">MND</span>
-            </div>
-          </div>
+        <div className="text-center space-y-1">
+          
           <div>
-            <h1 className="text-2xl font-bold">Bon retour !</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Bon retour !
+            </h1>
             <p className="text-muted-foreground">Connectez-vous à votre compte</p>
           </div>
         </div>
 
         {/* Login Form */}
-        <Card className="shadow-card border-border/50">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-center text-xl">Connexion</CardTitle>
-          </CardHeader>
+        <Card className="shadow-2xl border-none bg-gradient-to-br from-background/95 to-background backdrop-blur-xl">
+          
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Mail className="w-3 h-3 text-primary" />
+                  </div>
                   <Input
                     id="email"
                     name="email"
@@ -189,7 +189,7 @@ export default function Login() {
                     placeholder="votre.email@university.edu"
                     value={formData.email}
                     onChange={handleChange}
-                    className="pl-10"
+                    className="pl-12 h-12 border-2 focus:border-primary transition-all"
                     required
                   />
                 </div>
@@ -197,9 +197,11 @@ export default function Login() {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Label htmlFor="password" className="text-sm font-semibold">Mot de passe</Label>
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Lock className="w-3 h-3 text-primary" />
+                  </div>
                   <Input
                     id="password"
                     name="password"
@@ -207,15 +209,15 @@ export default function Login() {
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleChange}
-                    className="pl-10 pr-10"
+                    className="pl-12 pr-12 h-12 border-2 focus:border-primary transition-all"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -234,10 +236,20 @@ export default function Login() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300"
+                className="w-full h-12 bg-gradient-primary hover:shadow-glow transition-all duration-300 text-base font-semibold"
                 disabled={loading}
               >
-                {loading ? "Connexion en cours..." : "Se connecter"}
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Connexion en cours...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    Se connecter
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                )}
               </Button>
             </form>
 
@@ -256,14 +268,56 @@ export default function Login() {
           </CardContent>
         </Card>
 
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">ou</span>
+          </div>
+        </div>
+
+        {/* Supplier Section */}
+        <Card className="shadow-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 hover:shadow-2xl hover:border-primary/40 transition-all duration-300 cursor-pointer group"
+          onClick={() => navigate('/supplier-register')}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-14 h-14 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <Store className="w-7 h-7 text-white" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  Vous êtes fournisseur ?
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Créez votre espace fournisseur
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <ArrowRight className="w-6 h-6 text-primary group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Quick Login Info */}
-        <div className="text-center">
+        <div className="text-center space-y-2">
           <p className="text-xs text-muted-foreground">
             Connectez-vous pour accéder aux produits de votre université
           </p>
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <Lock className="w-3 h-3" />
+            <span>Connexion sécurisée</span>
+          </div>
         </div>
       </div>
     </div>
+      <Footer />
     </div>
   );
 }

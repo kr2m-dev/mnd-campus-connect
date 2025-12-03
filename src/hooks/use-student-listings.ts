@@ -1,49 +1,66 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  EnhancedStudentListing,
+  CreateStudentListingInput,
+  UpdateStudentListingInput,
+  StudentListingFilters,
+  ListingType,
+  ItemCondition
+} from "@/lib/database-types";
 
-export interface StudentListing {
-  id: string;
-  user_id: string;
-  title: string;
-  description?: string;
-  price?: number;
-  listing_type: 'sale' | 'exchange' | 'free';
-  category: string;
-  condition?: 'new' | 'like_new' | 'good' | 'fair' | 'poor';
-  image_urls?: string[];
-  university?: string;
-  location?: string;
-  is_active: boolean;
-  is_sold: boolean;
-  views_count: number;
-  created_at: string;
-  updated_at: string;
-  profiles?: {
-    full_name?: string;
-  };
+// Backward compatibility - export old interface
+export interface StudentListing extends EnhancedStudentListing {
+  category?: string; // For backward compatibility, will be removed
 }
 
-export const useStudentListings = (universityFilter?: string) => {
+export const useStudentListings = (filters?: StudentListingFilters) => {
   return useQuery({
-    queryKey: ["student-listings", universityFilter],
+    queryKey: ["student-listings", filters],
     queryFn: async () => {
       let query = supabase
         .from("student_listings")
         .select(`
           *,
-          profiles(full_name)
+          profiles(full_name),
+          categories(name, icon_name)
         `)
-        .eq("is_active", true)
-        .eq("is_sold", false)
+        .eq("is_active", filters?.is_active ?? true)
+        .eq("is_sold", filters?.is_sold ?? false)
         .order("created_at", { ascending: false });
 
-      if (universityFilter) {
-        query = query.eq("university", universityFilter);
+      // Apply filters using indexed columns for better performance
+      if (filters?.university) {
+        query = query.eq("university", filters.university);
+      }
+
+      if (filters?.listing_type) {
+        query = query.eq("listing_type", filters.listing_type);
+      }
+
+      if (filters?.category_id) {
+        query = query.eq("category_id", filters.category_id);
+      }
+
+      if (filters?.condition) {
+        query = query.eq("condition", filters.condition);
+      }
+
+      if (filters?.min_price !== undefined) {
+        query = query.gte("price", filters.min_price);
+      }
+
+      if (filters?.max_price !== undefined) {
+        query = query.lte("price", filters.max_price);
+      }
+
+      if (filters?.search) {
+        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as StudentListing[];
+      return data as EnhancedStudentListing[];
     },
   });
 };
@@ -57,32 +74,39 @@ export const useMyListings = () => {
 
       const { data, error } = await supabase
         .from("student_listings")
-        .select("*")
+        .select(`
+          *,
+          categories(name, icon_name)
+        `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as StudentListing[];
+      return data as EnhancedStudentListing[];
     },
   });
 };
 
 export const useCreateListing = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async (listing: Omit<StudentListing, "id" | "created_at" | "updated_at" | "user_id" | "views_count" | "is_sold">) => {
+    mutationFn: async (listing: CreateStudentListingInput) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Vous devez être connecté pour créer une annonce");
-      
+
       const { data, error } = await supabase
         .from("student_listings")
         .insert({ ...listing, user_id: user.id })
-        .select()
+        .select(`
+          *,
+          profiles(full_name),
+          categories(name, icon_name)
+        `)
         .single();
-      
+
       if (error) throw error;
-      return data;
+      return data as EnhancedStudentListing;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["student-listings"] });
@@ -93,18 +117,22 @@ export const useCreateListing = () => {
 
 export const useUpdateListing = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ id, ...listing }: Partial<StudentListing> & { id: string }) => {
+    mutationFn: async ({ id, ...listing }: UpdateStudentListingInput) => {
       const { data, error } = await supabase
         .from("student_listings")
         .update(listing)
         .eq("id", id)
-        .select()
+        .select(`
+          *,
+          profiles(full_name),
+          categories(name, icon_name)
+        `)
         .single();
-      
+
       if (error) throw error;
-      return data;
+      return data as EnhancedStudentListing;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["student-listings"] });

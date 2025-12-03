@@ -1,77 +1,83 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  EnhancedProduct,
+  CreateProductInput,
+  UpdateProductInput,
+  ProductFilters
+} from "@/lib/database-types";
 
-export interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  original_price?: number;
-  category_id?: string;
-  image_url?: string;
-  university_filter?: string;
-  is_active: boolean;
-  stock_quantity: number;
-  rating: number;
-  created_at: string;
-  updated_at: string;
-  supplier_id: string;
-  categories?: {
-    name: string;
-    icon_name?: string;
-  };
-  suppliers?: {
-    business_name: string;
-  };
-}
+// Backward compatibility - export old interface
+export interface Product extends EnhancedProduct {}
 
-export const useProducts = (universityFilter?: string) => {
+export const useProducts = (filters?: ProductFilters) => {
   return useQuery({
-    queryKey: ["products", universityFilter],
+    queryKey: ["products", filters],
     queryFn: async () => {
       let query = supabase
         .from("products")
         .select(`
           *,
           categories(name, icon_name),
-          suppliers(business_name)
+          suppliers(business_name, contact_whatsapp)
         `)
-        .eq("is_active", true)
+        .eq("is_active", filters?.is_active ?? true)
         .order("created_at", { ascending: false });
 
-      if (universityFilter) {
-        query = query.or(`university_filter.eq.${universityFilter},university_filter.is.null,university_filter.eq.`);
+      // Apply filters using indexed columns for better performance
+      if (filters?.university) {
+        query = query.or(`university_filter.eq.${filters.university},university_filter.is.null,university_filter.eq.`);
+      }
+
+      if (filters?.category_id) {
+        query = query.eq("category_id", filters.category_id);
+      }
+
+      if (filters?.min_price !== undefined) {
+        query = query.gte("price", filters.min_price);
+      }
+
+      if (filters?.max_price !== undefined) {
+        query = query.lte("price", filters.max_price);
+      }
+
+      if (filters?.search) {
+        query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Product[];
+      return data as EnhancedProduct[];
     },
   });
 };
 
 export const useCreateProduct = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async (product: Omit<Product, "id" | "created_at" | "updated_at" | "supplier_id">) => {
+    mutationFn: async (product: CreateProductInput) => {
       // Get current supplier
       const { data: supplier } = await supabase
         .from("suppliers")
         .select("id")
         .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
         .single();
-      
+
       if (!supplier) throw new Error("Vous devez être fournisseur pour ajouter des produits");
-      
+
       const { data, error } = await supabase
         .from("products")
         .insert({ ...product, supplier_id: supplier.id })
-        .select()
+        .select(`
+          *,
+          categories(name, icon_name),
+          suppliers(business_name, contact_whatsapp)
+        `)
         .single();
-      
+
       if (error) throw error;
-      return data;
+      return data as EnhancedProduct;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -81,18 +87,22 @@ export const useCreateProduct = () => {
 
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ id, ...product }: Partial<Product> & { id: string }) => {
+    mutationFn: async ({ id, ...product }: UpdateProductInput) => {
       const { data, error } = await supabase
         .from("products")
         .update(product)
         .eq("id", id)
-        .select()
+        .select(`
+          *,
+          categories(name, icon_name),
+          suppliers(business_name, contact_whatsapp)
+        `)
         .single();
-      
+
       if (error) throw error;
-      return data;
+      return data as EnhancedProduct;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });

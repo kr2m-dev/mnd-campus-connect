@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/header";
 import { HeroSection } from "@/components/sections/hero-section";
 import { ProductsShowcase } from "@/components/sections/products-showcase";
@@ -6,6 +7,7 @@ import { StudentExchange } from "@/components/sections/student-exchange";
 import { Footer } from "@/components/layout/footer";
 import { UniversitySelector } from "@/components/ui/university-selector";
 import { useAuth } from "@/hooks/use-auth";
+import { useCurrentSupplier } from "@/hooks/use-supplier";
 import { getUniversityById } from "@/data/universities";
 
 interface University {
@@ -17,7 +19,9 @@ interface University {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { data: supplier, isLoading: supplierLoading } = useCurrentSupplier();
   const [isUniversitySelectorOpen, setIsUniversitySelectorOpen] = useState(false);
   const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
   const [showStudentExchange, setShowStudentExchange] = useState(false);
@@ -27,6 +31,13 @@ const Index = () => {
   const userUniversity = user?.user_metadata?.university_id
     ? getUniversityById(user.user_metadata.university_id)
     : null;
+
+  // Redirection automatique pour les fournisseurs
+  useEffect(() => {
+    if (!loading && !supplierLoading && supplier) {
+      navigate("/supplier");
+    }
+  }, [supplier, loading, supplierLoading, navigate]);
 
   // Set up initial state based on authentication
   useEffect(() => {
@@ -90,11 +101,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
+      <Header
         selectedUniversity={selectedUniversity}
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
       
       <main>

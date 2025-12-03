@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.local
 
+SUPPLIER_FLOW_AUDIT.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

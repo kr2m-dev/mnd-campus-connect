@@ -9,7 +9,8 @@ import {
   ArrowRight,
   Store,
   Heart,
-  GraduationCap
+  GraduationCap,
+  Handshake
 } from "lucide-react";
 import heroImage from "@/assets/hero-students.jpg";
 import type { User } from "@supabase/supabase-js";
@@ -27,9 +28,9 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
     <section className="relative overflow-hidden">
       {/* Background with gradient overlay */}
       <div className="absolute inset-0">
-        <img 
-          src={heroImage} 
-          alt="Étudiants africains utilisant la plateforme MND.Produits"
+        <img
+          src={heroImage}
+          alt="Étudiants africains utilisant la plateforme CampusLink"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/90 via-secondary/60 to-transparent"></div>
@@ -100,7 +101,7 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
                   size="lg"
                   variant="outline"
                   onClick={onSelectUniversity}
-                  className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 group"
+                  className="bg-white border-primary/20 text-primary hover:bg-primary/10 hover:border-primary group shadow-md"
                 >
                   <GraduationCap className="w-5 h-5 mr-2" />
                   Mon Profil
@@ -152,6 +153,13 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
                 <Users className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="text-sm font-medium">Entre étudiants</span>
+            </div>
+            
+            <div className="flex items-center space-x-2 text-primary-foreground/80">
+              <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                <Handshake className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="text-sm font-medium">Entre étudiants et fournisseurs</span>
             </div>
           </div>
         </div>

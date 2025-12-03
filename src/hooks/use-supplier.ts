@@ -8,7 +8,9 @@ export interface Supplier {
   description?: string;
   contact_email?: string;
   contact_phone?: string;
+  contact_whatsapp?: string;
   address?: string;
+  logo_url?: string;
   is_verified: boolean;
   created_at: string;
   updated_at: string;

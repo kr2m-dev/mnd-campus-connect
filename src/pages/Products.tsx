@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ProductFilters } from "@/lib/database-types";
 import {
   Star,
   ShoppingCart,
@@ -33,6 +34,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { getUniversityById } from "@/data/universities";
 import { WhatsAppOrderDialog } from "@/components/whatsapp-order-dialog";
+import { ProductImageCarousel } from "@/components/product-image-carousel";
 
 // Map icon names to actual components
 const iconMap: Record<string, React.ElementType> = {
@@ -81,31 +83,28 @@ export default function Products() {
     ? getUniversityById(user.user_metadata.university_id)
     : null;
 
-  const { data: products = [], isLoading } = useProducts(userUniversity?.id);
+  // Build filters using enhanced types
+  const filters: ProductFilters = {
+    university: userUniversity?.name,
+    category_id: selectedCategory !== "all" ? selectedCategory : undefined,
+    search: searchQuery || undefined,
+    min_price: priceRange.min ? parseFloat(priceRange.min) : undefined,
+    max_price: priceRange.max ? parseFloat(priceRange.max) : undefined,
+    is_active: true,
+  };
+
+  const { data: products = [], isLoading } = useProducts(filters);
   const { data: categories = [] } = useCategories();
 
-  // Filter and search products
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesCategory = selectedCategory === "all" || product.categories?.name === selectedCategory;
-
-    const matchesPrice = (!priceRange.min || product.price >= parseFloat(priceRange.min)) &&
-                        (!priceRange.max || product.price <= parseFloat(priceRange.max));
-
-    return matchesSearch && matchesCategory && matchesPrice;
-  });
-
-  // Sort products
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  // Sort products (filtering is now done by the hook with indexes)
+  const sortedProducts = [...products].sort((a, b) => {
     switch (sortBy) {
       case "price-low":
         return a.price - b.price;
       case "price-high":
         return b.price - a.price;
       case "rating":
-        return b.rating - a.rating;
+        return (b.rating || 0) - (a.rating || 0);
       case "name":
         return a.name.localeCompare(b.name);
       default: // newest
@@ -118,8 +117,6 @@ export default function Products() {
       <div className="min-h-screen bg-background">
         <Header
           onUniversityChange={handleUniversityChange}
-          onSupplierAccess={handleSupplierAccess}
-          onStudentExchange={handleStudentExchange}
         />
         <div className="flex items-center justify-center pt-20 h-[calc(100vh-5rem)]">
           <div className="text-center">
@@ -136,20 +133,24 @@ export default function Products() {
       ? Math.round((1 - product.price / product.original_price) * 100)
       : 0;
 
+    // Obtenir les images du produit (compatibilité ancienne/nouvelle structure)
+    const productImages = product.image_urls || (product.image_url ? [product.image_url] : []);
+
     if (viewMode === "list") {
       return (
         <Card className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300">
           <CardContent className="p-0">
             <div className="flex gap-4 p-4">
-              {/* Product Image */}
-              <div className="relative w-32 h-32 bg-muted overflow-hidden rounded-lg flex-shrink-0">
-                <img
-                  src={product.image_url || "/placeholder.svg"}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              {/* Product Images Carousel */}
+              <div className="relative w-32 h-32 flex-shrink-0">
+                <ProductImageCarousel
+                  images={productImages}
+                  productName={product.name}
+                  aspectRatio="square"
+                  className="h-full"
                 />
                 {discount > 0 && (
-                  <Badge variant="destructive" className="absolute top-2 left-2 text-xs">
+                  <Badge variant="destructive" className="absolute top-2 left-2 text-xs z-10">
                     -{discount}%
                   </Badge>
                 )}
@@ -246,16 +247,16 @@ export default function Products() {
         style={{ animationDelay: `${index * 0.1}s` }}
       >
         <CardContent className="p-0">
-          {/* Product Image */}
-          <div className="relative aspect-square bg-muted overflow-hidden">
-            <img
-              src={product.image_url || "/placeholder.svg"}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          {/* Product Images Carousel */}
+          <div className="relative">
+            <ProductImageCarousel
+              images={productImages}
+              productName={product.name}
+              aspectRatio="square"
             />
 
             {/* Overlay Actions */}
-            <div className="absolute inset-0 bg-secondary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+            <div className="absolute inset-0 bg-secondary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-10">
               <Button size="sm" variant="secondary">
                 <Eye className="w-4 h-4" />
               </Button>
@@ -268,7 +269,7 @@ export default function Products() {
             </div>
 
             {/* Badges */}
-            <div className="absolute top-3 left-3 flex flex-col gap-1">
+            <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
               {discount > 0 && (
                 <Badge variant="destructive" className="text-xs">
                   -{discount}%
@@ -355,8 +356,6 @@ export default function Products() {
     <div className="min-h-screen bg-background">
       <Header
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
 
       <div className="container mx-auto px-4 py-8 pt-24">
@@ -410,7 +409,7 @@ export default function Products() {
               <SelectContent>
                 <SelectItem value="all">Toutes les catégories</SelectItem>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.name}>
+                  <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>
                 ))}
@@ -504,9 +503,9 @@ export default function Products() {
               return (
                 <Button
                   key={category.id}
-                  variant={selectedCategory === category.name ? "default" : "outline"}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setSelectedCategory(category.name)}
+                  onClick={() => setSelectedCategory(category.id)}
                 >
                   <Icon className="w-4 h-4 mr-2" />
                   {category.name}

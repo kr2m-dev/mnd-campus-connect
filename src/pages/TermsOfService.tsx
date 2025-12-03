@@ -16,8 +16,6 @@ export default function TermsOfService() {
     <div className="min-h-screen bg-background">
       <Header
         onUniversityChange={handleUniversityChange}
-        onSupplierAccess={handleSupplierAccess}
-        onStudentExchange={handleStudentExchange}
       />
 
       <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
@@ -34,7 +32,7 @@ export default function TermsOfService() {
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Ces conditions d'utilisation régissent votre accès et votre utilisation
-            de la plateforme MND Campus Connect.
+            de la plateforme CampusLink.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             Dernière mise à jour : 15 janvier 2024
@@ -54,7 +52,7 @@ export default function TermsOfService() {
               <div>
                 <h4 className="font-semibold mb-2">Définition du service :</h4>
                 <p className="text-muted-foreground">
-                  MND Campus Connect est une plateforme e-commerce dédiée aux étudiants universitaires
+                  CampusLink est une plateforme e-commerce dédiée aux étudiants universitaires
                   d'Afrique francophone, permettant l'achat de produits essentiels et les échanges
                   entre étudiants directement sur les campus universitaires.
                 </p>
@@ -245,7 +243,7 @@ export default function TermsOfService() {
               <div>
                 <h4 className="font-semibold mb-2">Responsabilité de MND :</h4>
                 <p className="text-muted-foreground">
-                  MND Campus Connect agit en tant qu'intermédiaire entre les acheteurs et les vendeurs.
+                  CampusLink agit en tant qu'intermédiaire entre les acheteurs et les vendeurs.
                   Notre responsabilité est limitée au bon fonctionnement de la plateforme et au
                   traitement des transactions.
                 </p>
