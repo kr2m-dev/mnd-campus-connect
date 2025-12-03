@@ -35,7 +35,7 @@ const Index = () => {
   // Redirection automatique pour les fournisseurs
   useEffect(() => {
     if (!loading && !supplierLoading && supplier) {
-      navigate("/supplier");
+      navigate("/supplier", { replace: true });
     }
   }, [supplier, loading, supplierLoading, navigate]);
 
@@ -59,6 +59,18 @@ const Index = () => {
       }
     }
   }, [user, userUniversity, loading]);
+
+  // Afficher un loader pendant la vérification ou si c'est un fournisseur
+  if (loading || supplierLoading || supplier) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleUniversitySelect = (university: University) => {
     setSelectedUniversity(university);
@@ -153,6 +165,7 @@ const Index = () => {
         <UniversitySelector
           isOpen={isUniversitySelectorOpen}
           onUniversitySelect={handleUniversitySelect}
+          onClose={() => setIsUniversitySelectorOpen(false)}
         />
       )}
     </div>

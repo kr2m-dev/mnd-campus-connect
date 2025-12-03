@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-admin";
 import { useCurrentSupplier } from "@/hooks/use-supplier";
+import { useCart } from "@/hooks/use-cart";
 import { getUniversityById } from "@/data/universities";
 
 interface HeaderProps {
@@ -42,7 +42,10 @@ export const Header = ({
   const { user, logout } = useAuth();
   const { data: isAdmin } = useIsAdmin();
   const { data: supplier } = useCurrentSupplier();
-  const [cartCount] = useState(3);
+  const { data: cartItems = [] } = useCart(user?.id);
+
+  // Calculate total cart items count
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   // Get user's university from their metadata
   const userUniversity = user?.user_metadata?.university_id
@@ -67,13 +70,7 @@ export const Header = ({
         </Button>
       )}
 
-      {/* Lien Fournisseur - visible uniquement pour les non-fournisseurs connectés */}
-      {user && !supplier && (
-        <Button variant="ghost" size="sm" onClick={() => navigate("/supplier")} className="hover:bg-primary">
-          <Store className="w-4 h-4 mr-2" />
-          Devenir Fournisseur
-        </Button>
-      )}
+      
 
       {/* Lien Admin - visible uniquement pour les admins */}
       {user && isAdmin && (
@@ -92,9 +89,9 @@ export const Header = ({
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4">
+      <div className="container flex h-16 items-center gap-4 px-4">
         {/* Logo */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center flex-shrink-0">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/")}>
             <img
               src="/logo_cc.png"
@@ -109,7 +106,7 @@ export const Header = ({
 
         {/* University Display - masqué pour les fournisseurs */}
         {(user && userUniversity && !supplier) ? (
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden md:flex items-center flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -129,7 +126,7 @@ export const Header = ({
             </Button>
           </div>
         ) : selectedUniversity && !user ? (
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden md:flex items-center flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -150,19 +147,23 @@ export const Header = ({
           </div>
         ) : null}
 
-        {/* Search Bar */}
-        <div className="hidden md:flex flex-1 max-w-sm mx-4">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder="Rechercher des produits..." 
-              className="pl-10 pr-4"
-            />
+        {/* Search Bar - prend tout l'espace restant - masqué pour les fournisseurs */}
+        {!supplier ? (
+          <div className="hidden md:flex flex-1 min-w-0">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher des produits..."
+                className="pl-10 pr-4 w-full"
+              />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="hidden md:flex flex-1" />
+        )}
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-2">
+        <nav className="hidden md:flex items-center space-x-2 flex-shrink-0">
           <NavLinks />
           
           <div className="flex items-center space-x-2 ml-4 border-l pl-4">
@@ -279,15 +280,18 @@ export const Header = ({
                     </Button>
                   </div>
                 ) : null}
-                
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Rechercher..." 
-                    className="pl-10"
-                  />
-                </div>
-                
+
+                {/* Barre de recherche mobile - masquée pour les fournisseurs */}
+                {!supplier && (
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher..."
+                      className="pl-10"
+                    />
+                  </div>
+                )}
+
                 <div className="flex flex-col space-y-2">
                   <NavLinks />
                 </div>
