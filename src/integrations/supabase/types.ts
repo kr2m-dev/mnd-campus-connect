@@ -255,6 +255,20 @@ export type Database = {
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_with_contact"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
@@ -322,6 +336,20 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_with_contact"
             referencedColumns: ["id"]
           },
         ]
@@ -570,7 +598,137 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      message_conversations: {
+        Row: {
+          conversation_user_id: string | null
+          first_name: string | null
+          is_read: boolean | null
+          last_message_at: string | null
+          last_message_content: string | null
+          last_message_id: string | null
+          last_name: string | null
+        }
+        Relationships: []
+      }
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          phone: string | null
+          university: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: never
+          created_at?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          phone?: never
+          university?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: never
+          created_at?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          phone?: never
+          university?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_stats: {
+        Row: {
+          policy_count: number | null
+          rls_enabled: boolean | null
+          table_name: string | null
+        }
+        Relationships: []
+      }
+      suppliers_public: {
+        Row: {
+          address: string | null
+          business_name: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          contact_whatsapp: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_verified: boolean | null
+          logo_url: string | null
+        }
+        Insert: {
+          address?: never
+          business_name?: string | null
+          contact_email?: never
+          contact_phone?: never
+          contact_whatsapp?: never
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+        }
+        Update: {
+          address?: never
+          business_name?: string | null
+          contact_email?: never
+          contact_phone?: never
+          contact_whatsapp?: never
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+        }
+        Relationships: []
+      }
+      suppliers_with_contact: {
+        Row: {
+          address: string | null
+          business_name: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          contact_whatsapp: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_verified: boolean | null
+          logo_url: string | null
+        }
+        Insert: {
+          address?: never
+          business_name?: string | null
+          contact_email?: never
+          contact_phone?: never
+          contact_whatsapp?: never
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+        }
+        Update: {
+          address?: never
+          business_name?: string | null
+          contact_email?: never
+          contact_phone?: never
+          contact_whatsapp?: never
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_ban_user: {
@@ -611,6 +769,24 @@ export type Database = {
           full_name: string
           phone: string
         }[]
+      }
+      get_supplier_contact: {
+        Args: { supplier_id_param: string }
+        Returns: {
+          address: string
+          contact_email: string
+          contact_phone: string
+          contact_whatsapp: string
+        }[]
+      }
+      get_unread_messages_count: { Args: never; Returns: number }
+      mark_message_as_read: {
+        Args: { message_id_param: string }
+        Returns: boolean
+      }
+      user_has_order_with_supplier: {
+        Args: { supplier_id_param: string }
+        Returns: boolean
       }
     }
     Enums: {

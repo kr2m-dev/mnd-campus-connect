@@ -65,11 +65,14 @@ export const useStudentListings = (filters?: StudentListingFilters) => {
         const userIds = [...new Set(data.map(listing => listing.user_id))];
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("user_id, full_name")
+          .select("user_id, first_name, last_name")
           .in("user_id", userIds);
 
-        // Mapper les profils aux listings
-        const profilesMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+        // Mapper les profils aux listings avec full_name construit
+        const profilesMap = new Map(profiles?.map(p => [p.user_id, { 
+          ...p, 
+          full_name: [p.first_name, p.last_name].filter(Boolean).join(' ') 
+        }]) || []);
         return data.map(listing => ({
           ...listing,
           profiles: profilesMap.get(listing.user_id)
@@ -102,14 +105,19 @@ export const useMyListings = () => {
       // Récupérer le profil de l'utilisateur
       const { data: profile } = await supabase
         .from("profiles")
-        .select("user_id, full_name")
+        .select("user_id, first_name, last_name")
         .eq("user_id", user.id)
         .single();
 
-      // Mapper le profil à chaque listing
+      // Mapper le profil à chaque listing avec full_name construit
+      const profileWithFullName = profile ? {
+        ...profile,
+        full_name: [profile.first_name, profile.last_name].filter(Boolean).join(' ')
+      } : null;
+
       return data.map(listing => ({
         ...listing,
-        profiles: profile
+        profiles: profileWithFullName
       })) as EnhancedStudentListing[];
     },
   });
@@ -137,13 +145,18 @@ export const useCreateListing = () => {
       // Récupérer le profil de l'utilisateur
       const { data: profile } = await supabase
         .from("profiles")
-        .select("user_id, full_name")
+        .select("user_id, first_name, last_name")
         .eq("user_id", user.id)
         .single();
 
+      const profileWithFullName = profile ? {
+        ...profile,
+        full_name: [profile.first_name, profile.last_name].filter(Boolean).join(' ')
+      } : null;
+
       return {
         ...data,
-        profiles: profile
+        profiles: profileWithFullName
       } as EnhancedStudentListing;
     },
     onSuccess: () => {
@@ -173,13 +186,18 @@ export const useUpdateListing = () => {
       // Récupérer le profil de l'utilisateur
       const { data: profile } = await supabase
         .from("profiles")
-        .select("user_id, full_name")
+        .select("user_id, first_name, last_name")
         .eq("user_id", data.user_id)
         .single();
 
+      const profileWithFullName = profile ? {
+        ...profile,
+        full_name: [profile.first_name, profile.last_name].filter(Boolean).join(' ')
+      } : null;
+
       return {
         ...data,
-        profiles: profile
+        profiles: profileWithFullName
       } as EnhancedStudentListing;
     },
     onSuccess: () => {

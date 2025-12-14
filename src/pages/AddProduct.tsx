@@ -120,7 +120,7 @@ export default function AddProduct() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onUniversityChange={() => {}} />
 
       <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
         <div className="mb-6">
