@@ -32,7 +32,7 @@ export default function Supplier() {
 
   const { data: supplier, isLoading: supplierLoading } = useCurrentSupplier();
   const { data: products = [], isLoading: productsLoading } = useProducts();
-  const { data: orders, isLoading: ordersLoading } = useSupplierOrders(supplier?.id);
+  const { data: orders, isLoading: ordersLoading } = useSupplierOrders();
   const createSupplier = useCreateSupplier();
   const updateSupplier = useUpdateSupplier();
   const deleteProduct = useDeleteProduct();

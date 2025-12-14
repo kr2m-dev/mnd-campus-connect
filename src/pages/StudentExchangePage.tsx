@@ -256,7 +256,7 @@ export default function StudentExchangePage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {listings.map((listing) => {
+              {listings.map((listing, listingIndex) => {
                 const Icon = categoryIcons[listing.categories?.name || "Autres"] || Package;
                 const imageUrl = listing.image_urls?.[0] || "/placeholder.svg";
                 
@@ -265,7 +265,7 @@ export default function StudentExchangePage() {
                     key={listing.id}
                     className="group overflow-hidden shadow-card hover:shadow-2xl transition-all duration-500 interactive-scale cursor-pointer border-2 border-transparent hover:border-primary/20"
                     onClick={() => handleViewListing(listing.id)}
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    style={{ animationDelay: `${listingIndex * 50}ms` }}
                   >
                     {/* Image en premier pour un meilleur impact visuel */}
                     <div className="relative aspect-video bg-gradient-to-br from-muted to-muted/50 overflow-hidden">

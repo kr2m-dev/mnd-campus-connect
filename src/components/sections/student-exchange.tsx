@@ -29,7 +29,7 @@ const categoryIcons: Record<string, React.ElementType> = {
 };
 
 export const StudentExchange = ({ onAccessExchange, selectedUniversity }: StudentExchangeProps) => {
-  const { data: listings = [], isLoading } = useStudentListings(selectedUniversity);
+  const { data: listings = [], isLoading } = useStudentListings(selectedUniversity ? { university: selectedUniversity } : undefined);
   const { data: stats } = usePlatformStats();
 
   // Format numbers for display
@@ -151,8 +151,8 @@ export const StudentExchange = ({ onAccessExchange, selectedUniversity }: Studen
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {displayedListings.map((listing, index) => {
-                const Icon = categoryIcons[listing.category] || Laptop;
+            {displayedListings.map((listing, index) => {
+                const Icon = categoryIcons[listing.categories?.name || "Autres"] || Laptop;
                 const imageUrl = listing.image_urls?.[0] || "/placeholder.svg";
                 
                 return (
@@ -212,7 +212,7 @@ export const StudentExchange = ({ onAccessExchange, selectedUniversity }: Studen
                         
                         <div className="flex items-center text-xs text-muted-foreground">
                           <Icon className="w-3 h-3 mr-1" />
-                          {listing.category}
+                          {listing.categories?.name || "Autre"}
                         </div>
                       </div>
                       

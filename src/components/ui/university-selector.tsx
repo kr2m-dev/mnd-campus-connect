@@ -9,7 +9,7 @@ interface University {
   name: string;
   city: string;
   country: string;
-  studentsCount?: string;
+  students_count?: string;
   flag: string;
 }
 
@@ -56,15 +56,15 @@ export const UniversitySelector = ({ isOpen, onUniversitySelect, onClose }: Univ
             <div
               key={university.id}
               className="group cursor-pointer"
-              onClick={() => handleSelect(university)}
+              onClick={() => handleSelect(university as unknown as University)}
             >
               <div className="card-gradient p-6 rounded-xl shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale border border-border hover:border-primary/30">
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-3xl">{university.flag}</div>
-                  {university.studentsCount && (
+                  {(university as any).students_count && (
                     <div className="flex items-center text-accent text-sm font-medium">
                       <Users className="w-4 h-4 mr-1" />
-                      {university.studentsCount}
+                      {(university as any).students_count}
                     </div>
                   )}
                 </div>

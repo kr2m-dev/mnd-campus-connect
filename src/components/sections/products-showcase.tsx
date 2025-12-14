@@ -176,7 +176,7 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("Tous");
-  const { data: products = [], isLoading } = useProducts(selectedUniversity);
+  const { data: products = [], isLoading } = useProducts(selectedUniversity ? { university: selectedUniversity } : undefined);
   const { data: categories = [] } = useCategories();
   const addToCart = useAddToCart();
   const toggleFavorite = useToggleFavorite();
