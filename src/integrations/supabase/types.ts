@@ -137,7 +137,7 @@ export type Database = {
           link: string | null
           message: string
           title: string
-          type: string
+          type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
         Insert: {
@@ -147,7 +147,7 @@ export type Database = {
           link?: string | null
           message: string
           title: string
-          type: string
+          type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
         Update: {
@@ -157,7 +157,7 @@ export type Database = {
           link?: string | null
           message?: string
           title?: string
-          type?: string
+          type?: Database["public"]["Enums"]["notification_type"]
           user_id?: string
         }
         Relationships: []
@@ -217,7 +217,7 @@ export type Database = {
           delivery_phone: string | null
           id: string
           notes: string | null
-          status: string
+          status: Database["public"]["Enums"]["order_status"]
           supplier_id: string | null
           total_amount: number
           updated_at: string | null
@@ -229,7 +229,7 @@ export type Database = {
           delivery_phone?: string | null
           id?: string
           notes?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["order_status"]
           supplier_id?: string | null
           total_amount: number
           updated_at?: string | null
@@ -241,7 +241,7 @@ export type Database = {
           delivery_phone?: string | null
           id?: string
           notes?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["order_status"]
           supplier_id?: string | null
           total_amount?: number
           updated_at?: string | null
@@ -264,6 +264,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          image_urls: string[] | null
           is_active: boolean | null
           name: string
           original_price: number | null
@@ -280,6 +281,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           is_active?: boolean | null
           name: string
           original_price?: number | null
@@ -296,6 +298,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           is_active?: boolean | null
           name?: string
           original_price?: number | null
@@ -326,12 +329,14 @@ export type Database = {
       profiles: {
         Row: {
           admin_role: string | null
+          avatar_url: string | null
           banned_at: string | null
           banned_reason: string | null
           created_at: string | null
-          full_name: string | null
+          first_name: string | null
           id: string
           is_active: boolean | null
+          last_name: string | null
           phone: string | null
           university: string | null
           updated_at: string | null
@@ -339,12 +344,14 @@ export type Database = {
         }
         Insert: {
           admin_role?: string | null
+          avatar_url?: string | null
           banned_at?: string | null
           banned_reason?: string | null
           created_at?: string | null
-          full_name?: string | null
+          first_name?: string | null
           id?: string
           is_active?: boolean | null
+          last_name?: string | null
           phone?: string | null
           university?: string | null
           updated_at?: string | null
@@ -352,12 +359,14 @@ export type Database = {
         }
         Update: {
           admin_role?: string | null
+          avatar_url?: string | null
           banned_at?: string | null
           banned_reason?: string | null
           created_at?: string | null
-          full_name?: string | null
+          first_name?: string | null
           id?: string
           is_active?: boolean | null
+          last_name?: string | null
           phone?: string | null
           university?: string | null
           updated_at?: string | null
@@ -415,15 +424,15 @@ export type Database = {
       }
       student_listings: {
         Row: {
-          category: string
-          condition: string | null
+          category_id: string | null
+          condition: Database["public"]["Enums"]["item_condition"] | null
           created_at: string
           description: string | null
           id: string
           image_urls: string[] | null
           is_active: boolean | null
           is_sold: boolean | null
-          listing_type: string
+          listing_type: Database["public"]["Enums"]["listing_type"]
           location: string | null
           price: number | null
           title: string
@@ -433,15 +442,15 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
-          category: string
-          condition?: string | null
+          category_id?: string | null
+          condition?: Database["public"]["Enums"]["item_condition"] | null
           created_at?: string
           description?: string | null
           id?: string
           image_urls?: string[] | null
           is_active?: boolean | null
           is_sold?: boolean | null
-          listing_type: string
+          listing_type: Database["public"]["Enums"]["listing_type"]
           location?: string | null
           price?: number | null
           title: string
@@ -451,15 +460,15 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
-          category?: string
-          condition?: string | null
+          category_id?: string | null
+          condition?: Database["public"]["Enums"]["item_condition"] | null
           created_at?: string
           description?: string | null
           id?: string
           image_urls?: string[] | null
           is_active?: boolean | null
           is_sold?: boolean | null
-          listing_type?: string
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           location?: string | null
           price?: number | null
           title?: string
@@ -468,7 +477,15 @@ export type Database = {
           user_id?: string
           views_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "student_listings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suppliers: {
         Row: {
@@ -481,6 +498,7 @@ export type Database = {
           description: string | null
           id: string
           is_verified: boolean | null
+          logo_url: string | null
           updated_at: string | null
           user_id: string
         }
@@ -494,6 +512,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_verified?: boolean | null
+          logo_url?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -507,6 +526,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_verified?: boolean | null
+          logo_url?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -520,6 +540,7 @@ export type Database = {
           flag: string
           id: string
           name: string
+          students_count: string | null
           type: string
           updated_at: string | null
         }
@@ -530,6 +551,7 @@ export type Database = {
           flag: string
           id: string
           name: string
+          students_count?: string | null
           type: string
           updated_at?: string | null
         }
@@ -540,6 +562,7 @@ export type Database = {
           flag?: string
           id?: string
           name?: string
+          students_count?: string | null
           type?: string
           updated_at?: string | null
         }
@@ -582,9 +605,25 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_order_with_profile: {
+        Args: { order_user_id: string }
+        Returns: {
+          full_name: string
+          phone: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      item_condition: "new" | "like_new" | "good" | "fair" | "poor"
+      listing_type: "sale" | "exchange" | "free"
+      notification_type: "order" | "message" | "product" | "system"
+      order_status:
+        | "pending"
+        | "confirmed"
+        | "preparing"
+        | "ready"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -711,6 +750,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      item_condition: ["new", "like_new", "good", "fair", "poor"],
+      listing_type: ["sale", "exchange", "free"],
+      notification_type: ["order", "message", "product", "system"],
+      order_status: [
+        "pending",
+        "confirmed",
+        "preparing",
+        "ready",
+        "completed",
+        "cancelled",
+      ],
+    },
   },
 } as const
