@@ -1,4 +1,5 @@
 import { useState } from "react";
+import authImage from "@/assets/support.png";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,6 +94,7 @@ export default function SupplierRegister() {
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
+        phone: formData.contactPhone || formData.contactWhatsapp, // Utiliser le téléphone de contact ou WhatsApp
         userType: "fournisseur",
         universityId: "", // Pas d'université pour les fournisseurs
         universityName: "",
@@ -157,30 +159,56 @@ export default function SupplierRegister() {
 
       <Header onUniversityChange={handleUniversityChange} />
 
-      <div className="flex items-center justify-center p-4 pt-10 pb-10">
-        <div className="w-full max-w-2xl space-y-6">
-          {/* Logo and Brand */}
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
-                <Store className="w-8 h-8 text-white" />
-              </div>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
-                Devenir Fournisseur
-                <Sparkles className="w-6 h-6 text-primary" />
-              </h1>
-              <p className="text-muted-foreground">Créez votre espace fournisseur et commencez à vendre</p>
+      {/* Main Content - Two Column Layout */}
+      <div className="container mx-auto px-4 py-8 lg:py-12">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[calc(100vh-200px)]">
+
+          {/* Left Side - Image */}
+          <div className="hidden lg:flex items-center justify-center">
+            <div className="w-full max-w-lg sticky top-8">
+              <img
+                src={authImage}
+                alt="Illustration d'inscription fournisseur"
+                className="w-full h-auto object-contain drop-shadow-2xl"
+              />
             </div>
           </div>
 
-          {/* Registration Form */}
-          <Card className="shadow-2xl border-none bg-gradient-to-br from-background/95 to-background backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="text-center">Inscription Fournisseur</CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Right Side - Registration Form */}
+          <div className="flex items-center justify-center">
+            <div className="w-full max-w-2xl space-y-6">
+
+            {/* Mobile Image - Visible only on mobile */}
+            <div className="lg:hidden flex justify-center mb-6">
+              <img
+                src={authImage}
+                alt="Illustration d'inscription fournisseur"
+                className="w-64 h-auto object-contain drop-shadow-xl"
+              />
+            </div>
+
+            {/* Logo and Brand */}
+            <div className="text-center space-y-3">
+              <div className="flex items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
+                  <Store className="w-8 h-8 text-white" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
+                  Devenir Fournisseur
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </h1>
+                <p className="text-muted-foreground text-base">Créez votre espace fournisseur et commencez à vendre</p>
+              </div>
+            </div>
+
+            {/* Registration Form */}
+            <Card className="shadow-2xl border-none bg-gradient-to-br from-background/95 to-background backdrop-blur-xl overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-center text-xl">Inscription Fournisseur</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Section Informations Personnelles */}
                 <div className="space-y-4">
@@ -449,14 +477,16 @@ export default function SupplierRegister() {
           {/* Terms */}
           <p className="text-xs text-center text-muted-foreground">
             En créant un compte, vous acceptez nos{" "}
-            <Link to="/terms-of-service" className="underline hover:text-foreground">
+            <Link to="/terms-of-service" className="underline hover:text-foreground transition-colors">
               Conditions d'utilisation
             </Link>{" "}
             et notre{" "}
-            <Link to="/privacy-policy" className="underline hover:text-foreground">
+            <Link to="/privacy-policy" className="underline hover:text-foreground transition-colors">
               Politique de confidentialité
             </Link>
           </p>
+        </div>
+          </div>
         </div>
       </div>
 

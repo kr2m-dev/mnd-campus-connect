@@ -6,34 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useOrders, useSupplierOrders } from "@/hooks/use-orders";
 import { useCurrentSupplier } from "@/hooks/use-supplier";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { OrdersList } from "@/components/orders-list";
-import { SupplierOrdersList } from "@/components/supplier-orders-list";
 import { supabase } from "@/integrations/supabase/client";
 import { useUniversities, getUniversityById } from "@/hooks/use-universities";
 import { userTypes } from "@/data/universities";
 import {
-  ArrowLeft,
   User,
   Mail,
+  Phone,
   GraduationCap,
   Building,
   Calendar,
   Edit,
   Save,
   X,
-  Package,
   Camera,
   ShoppingBag,
   TrendingUp,
   Award,
-  Settings,
   Lock,
   Shield,
   CheckCircle2,
@@ -68,6 +63,7 @@ export default function Profile() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     userType: "",
     universityId: "",
     universityName: "",
@@ -77,6 +73,7 @@ export default function Profile() {
   const [editForm, setEditForm] = useState({
     firstName: "",
     lastName: "",
+    phone: "",
     userType: "",
     universityId: "",
   });
@@ -93,40 +90,41 @@ export default function Profile() {
       return;
     }
 
-    // Load user data from metadata
-    const userData = {
-      firstName: user.user_metadata?.first_name || "",
-      lastName: user.user_metadata?.last_name || "",
-      email: user.email || "",
-      userType: user.user_metadata?.user_type || "",
-      universityId: user.user_metadata?.university_id || "",
-      universityName: user.user_metadata?.university_name || "",
-      avatarUrl: "",
-    };
-
-    setProfileData(userData);
-    setEditForm({
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      userType: userData.userType,
-      universityId: userData.universityId,
-    });
-
-    // Load avatar from profiles table
-    const loadAvatar = async () => {
-      const { data, error } = await supabase
+    // Load user data from profiles table and metadata
+    const loadProfileData = async () => {
+      // Load from profiles table
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('avatar_url')
+        .select('first_name, last_name, phone, avatar_url, university')
         .eq('user_id', user.id)
         .single();
 
-      if (data && data.avatar_url) {
-        setAvatarUrl(data.avatar_url);
-        setProfileData(prev => ({ ...prev, avatarUrl: data.avatar_url }));
+      const userData = {
+        firstName: profile?.first_name || user.user_metadata?.first_name || "",
+        lastName: profile?.last_name || user.user_metadata?.last_name || "",
+        email: user.email || "",
+        phone: profile?.phone || "",
+        userType: user.user_metadata?.user_type || "",
+        universityId: user.user_metadata?.university_id || "",
+        universityName: profile?.university || user.user_metadata?.university_name || "",
+        avatarUrl: profile?.avatar_url || "",
+      };
+
+      setProfileData(userData);
+      setEditForm({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        phone: userData.phone,
+        userType: userData.userType,
+        universityId: userData.universityId,
+      });
+
+      if (profile?.avatar_url) {
+        setAvatarUrl(profile.avatar_url);
       }
     };
 
-    loadAvatar();
+    loadProfileData();
   }, [user, authLoading, navigate]);
 
   const handleEdit = () => {
@@ -138,6 +136,7 @@ export default function Profile() {
     setEditForm({
       firstName: profileData.firstName,
       lastName: profileData.lastName,
+      phone: profileData.phone,
       userType: profileData.userType,
       universityId: profileData.universityId,
     });
@@ -147,7 +146,7 @@ export default function Profile() {
     if (!editForm.firstName || !editForm.lastName || !editForm.userType || !editForm.universityId) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs",
+        description: "Veuillez remplir tous les champs obligatoires",
         variant: "destructive",
       });
       return;
@@ -157,23 +156,40 @@ export default function Profile() {
     try {
       const selectedUniversity = getUniversityById(editForm.universityId);
 
-      const { error } = await supabase.auth.updateUser({
+      // Update auth metadata
+      const { error: authError } = await supabase.auth.updateUser({
         data: {
           first_name: editForm.firstName,
           last_name: editForm.lastName,
+          phone: editForm.phone,
           user_type: editForm.userType,
           university_id: editForm.universityId,
           university_name: selectedUniversity?.name || "",
         }
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      // Update profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          first_name: editForm.firstName,
+          last_name: editForm.lastName,
+          phone: editForm.phone,
+          university: selectedUniversity?.name || "",
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user?.id);
+
+      if (profileError) throw profileError;
 
       // Update local state
       const updatedData = {
         ...profileData,
         firstName: editForm.firstName,
         lastName: editForm.lastName,
+        phone: editForm.phone,
         userType: editForm.userType,
         universityId: editForm.universityId,
         universityName: selectedUniversity?.name || "",
@@ -499,6 +515,23 @@ export default function Profile() {
                   </div>
                 </div>
 
+                {/* Phone Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Téléphone</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={editForm.phone}
+                      onChange={handleChange}
+                      placeholder="77 123 45 67"
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
                 {/* User Type - Hidden for suppliers */}
                 {!isSupplier && (
                   <div className="space-y-2">
@@ -602,6 +635,19 @@ export default function Profile() {
                   </div>
                 </div>
 
+                {/* Phone */}
+                {profileData.phone && (
+                  <div className="group">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Téléphone</Label>
+                    <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-green-500/5 to-green-500/10 rounded-xl border border-green-500/10 group-hover:border-green-500/30 transition-all">
+                      <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                        <Phone className="w-5 h-5 text-green-600" />
+                      </div>
+                      <span className="font-medium">{profileData.phone}</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* User Type - Hidden for suppliers */}
                 {!isSupplier && (
                   <div className="group">
@@ -683,30 +729,8 @@ export default function Profile() {
             </Card>
           </div>
         ) : (
-          /* Clients : Affichage avec tabs */
-          <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6 h-14 bg-muted/50 p-1 rounded-2xl">
-              <TabsTrigger
-                value="profile"
-                className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all h-full"
-              >
-                <User className="w-4 h-4" />
-                <span className="font-medium">Mon Profil</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="orders"
-                className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all h-full"
-              >
-                <Package className="w-4 h-4" />
-                <span className="font-medium">Mes Commandes</span>
-                {orders && orders.length > 0 && (
-                  <Badge className="ml-2 bg-primary text-primary-foreground">{orders.length}</Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Profile Tab Content */}
-            <TabsContent value="profile" className="space-y-6">
+          /* Clients : Affichage direct sans tabs */
+          <div className="w-full space-y-6">
               {/* Quick Stats for Customers */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/10 hover:shadow-xl transition-shadow">
@@ -796,6 +820,23 @@ export default function Profile() {
                         value={editForm.lastName}
                         onChange={handleChange}
                         placeholder="Votre nom"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Phone Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        value={editForm.phone}
+                        onChange={handleChange}
+                        placeholder="77 123 45 67"
+                        className="pl-10"
                       />
                     </div>
                   </div>
@@ -893,6 +934,17 @@ export default function Profile() {
                     </div>
                   </div>
 
+                  {/* Phone */}
+                  {profileData.phone && (
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">Téléphone</Label>
+                      <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <span>{profileData.phone}</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* User Type */}
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Type de compte</Label>
@@ -964,13 +1016,7 @@ export default function Profile() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-
-            {/* Orders Tab Content */}
-            <TabsContent value="orders">
-              <OrdersList orders={orders || []} loading={ordersLoading} />
-            </TabsContent>
-          </Tabs>
+          </div>
         )}
 
       </div>

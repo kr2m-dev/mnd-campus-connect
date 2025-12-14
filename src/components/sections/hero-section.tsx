@@ -15,6 +15,8 @@ import {
 import heroImage from "@/assets/hero-students.jpg";
 import type { User } from "@supabase/supabase-js";
 import type { University } from "@/data/universities";
+import { usePlatformStats } from "@/hooks/use-stats";
+import { useNavigate } from "react-router-dom";
 
 interface HeroSectionProps {
   onSelectUniversity: () => void;
@@ -24,6 +26,17 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUniversity }: HeroSectionProps) => {
+  const { data: stats } = usePlatformStats();
+  const navigate = useNavigate();
+
+  // Format numbers for display
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return `${Math.floor(num / 1000)}${num % 1000 >= 500 ? '.5' : ''}K+`;
+    }
+    return num.toString();
+  };
+
   return (
     <section className="relative overflow-hidden">
       {/* Background with gradient overlay */}
@@ -35,7 +48,7 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
         />
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/90 via-secondary/60 to-transparent"></div>
       </div>
-      
+
       {/* Content */}
       <div className="relative container mx-auto px-4 py-20 lg:py-32">
         <div className="max-w-2xl">
@@ -68,7 +81,7 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 slide-up" style={{animationDelay: '0.2s'}}>
+          <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 slide-up" style={{ animationDelay: '0.2s' }}>
             {user && userUniversity ? (
               <>
                 Explorez notre sélection de produits d'hygiène, soins et parfums
@@ -81,15 +94,15 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
               </>
             )}
           </p>
-          
+
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-12 bounce-in" style={{animationDelay: '0.4s'}}>
+          <div className="flex flex-col sm:flex-row gap-4 mb-12 bounce-in" style={{ animationDelay: '0.4s' }}>
             {user ? (
               /* Buttons for authenticated users */
               <>
                 <Button
                   size="lg"
-                  onClick={() => document.querySelector('.products-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => navigate("/products")}
                   className="bg-primary hover:bg-primary-dark text-primary-foreground btn-glow group"
                 >
                   <ShoppingBag className="w-5 h-5 mr-2" />
@@ -131,30 +144,30 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
               </>
             )}
           </div>
-          
+
           {/* Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 fade-in" style={{animationDelay: '0.6s'}}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 fade-in" style={{ animationDelay: '0.6s' }}>
             <div className="flex items-center space-x-2 text-primary-foreground/80">
               <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                 <Truck className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="text-sm font-medium">Livraison campus</span>
             </div>
-            
+
             <div className="flex items-center space-x-2 text-primary-foreground/80">
               <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                 <Shield className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="text-sm font-medium">Paiement sécurisé</span>
             </div>
-            
+
             <div className="flex items-center space-x-2 text-primary-foreground/80">
               <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                 <Users className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="text-sm font-medium">Entre étudiants</span>
             </div>
-            
+
             <div className="flex items-center space-x-2 text-primary-foreground/80">
               <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                 <Handshake className="w-4 h-4 text-primary-foreground" />
@@ -163,22 +176,24 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
             </div>
           </div>
         </div>
-        
+
         {/* Stats */}
-        <div className="absolute bottom-8 right-8 hidden lg:block">
-          <div className="bg-background/10 backdrop-blur-sm rounded-xl p-6 border border-primary-foreground/20">
-            <div className="grid grid-cols-2 gap-4 text-center text-primary-foreground">
-              <div>
-                <div className="text-2xl font-bold">6</div>
-                <div className="text-xs opacity-80">Universités</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">225K+</div>
-                <div className="text-xs opacity-80">Étudiants</div>
+        {stats && (
+          <div className="absolute bottom-8 right-8 hidden lg:block">
+            <div className="bg-background/10 backdrop-blur-sm rounded-xl p-6 border border-primary-foreground/20">
+              <div className="grid grid-cols-2 gap-4 text-center text-primary-foreground">
+                <div>
+                  <div className="text-2xl font-bold">{stats.universitiesCount}</div>
+                  <div className="text-xs opacity-80">Universités</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">{formatNumber(stats.studentsCount)}</div>
+                  <div className="text-xs opacity-80">Étudiants</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

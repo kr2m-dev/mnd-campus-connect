@@ -16,12 +16,23 @@ import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Products from "./pages/Products";
+import ProductDetails from "./pages/ProductDetails";
 import Notifications from "./pages/Notifications";
 import Cart from "./pages/Cart";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import LegalNotice from "./pages/LegalNotice";
 import StudentExchangePage from "./pages/StudentExchangePage";
+import ListingDetails from "./pages/ListingDetails";
+import CreateListing from "./pages/CreateListing";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Favorites from "./pages/Favorites";
+import Checkout from "./pages/Checkout";
+import MyOrders from "./pages/MyOrders";
+import OrderDetails from "./pages/OrderDetails";
+import SupplierOrders from "./pages/SupplierOrders";
+import AddProduct from "./pages/AddProduct";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +51,11 @@ const App = () => (
               <Products />
             </CustomerRoute>
           } />
+          <Route path="/products/:id" element={
+            <CustomerRoute>
+              <ProductDetails />
+            </CustomerRoute>
+          } />
           <Route path="/register" element={<Register />} />
           <Route path="/supplier-register" element={<SupplierRegister />} />
           <Route path="/login" element={<Login />} />
@@ -47,6 +63,8 @@ const App = () => (
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/legal-notice" element={<LegalNotice />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
 
           {/* Routes protégées - nécessitent authentification */}
           <Route path="/profile" element={
@@ -66,14 +84,67 @@ const App = () => (
               </CustomerRoute>
             </ProtectedRoute>
           } />
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <CustomerRoute>
+                <Checkout />
+              </CustomerRoute>
+            </ProtectedRoute>
+          } />
+          <Route path="/orders" element={
+            <ProtectedRoute>
+              <CustomerRoute>
+                <MyOrders />
+              </CustomerRoute>
+            </ProtectedRoute>
+          } />
+          <Route path="/orders/:orderId" element={
+            <ProtectedRoute>
+              <CustomerRoute>
+                <OrderDetails />
+              </CustomerRoute>
+            </ProtectedRoute>
+          } />
           <Route path="/supplier" element={
             <ProtectedRoute>
               <Supplier />
             </ProtectedRoute>
           } />
+          <Route path="/supplier/orders" element={
+            <ProtectedRoute>
+              <SupplierOrders />
+            </ProtectedRoute>
+          } />
+          <Route path="/add-product" element={
+            <ProtectedRoute>
+              <AddProduct />
+            </ProtectedRoute>
+          } />
           <Route path="/student-exchange" element={
             <ProtectedRoute>
               <StudentExchangePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/student-exchange/create" element={
+            <ProtectedRoute>
+              <CreateListing />
+            </ProtectedRoute>
+          } />
+          <Route path="/student-exchange/edit/:id" element={
+            <ProtectedRoute>
+              <CreateListing />
+            </ProtectedRoute>
+          } />
+          <Route path="/student-exchange/:id" element={
+            <ProtectedRoute>
+              <ListingDetails />
+            </ProtectedRoute>
+          } />
+          <Route path="/favorites" element={
+            <ProtectedRoute>
+              <CustomerRoute>
+                <Favorites />
+              </CustomerRoute>
             </ProtectedRoute>
           } />
 

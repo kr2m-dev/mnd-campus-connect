@@ -40,7 +40,8 @@ export interface ProductFormData {
   category_id: string;
   image_url: string; // Gardé pour compatibilité (première image)
   image_urls: string[]; // Nouvelles images multiples
-  university_filter: string;
+  university_filter: string; // Gardé pour compatibilité (peut contenir 'all' ou une liste séparée par virgules)
+  university_filters: string[]; // Nouveaux filtres multiples
   stock_quantity: string;
 }
 
@@ -62,6 +63,7 @@ export function ProductForm({
     image_url: '',
     image_urls: [],
     university_filter: '',
+    university_filters: [],
     stock_quantity: '0',
   });
 
@@ -74,6 +76,33 @@ export function ProductForm({
       const imageUrls = (editingProduct as any).image_urls ||
                         (editingProduct.image_url ? [editingProduct.image_url] : []);
 
+      // Gérer la conversion de l'ancien format vers le nouveau
+      const universityFilter = editingProduct.university_filter || '';
+      let universityFilters: string[] = [];
+
+      if (universityFilter && universityFilter !== 'all') {
+        const filterParts = universityFilter.split(',').filter(part => part.trim());
+
+        // Convertir les noms en IDs si nécessaire
+        universityFilters = filterParts.map(part => {
+          const trimmedPart = part.trim();
+          // Vérifier si c'est déjà un ID (format court sans espaces)
+          const isId = universities.some(uni => uni.id === trimmedPart);
+
+          if (isId) {
+            return trimmedPart;
+          }
+
+          // Sinon, chercher l'université par nom
+          const university = universities.find(uni => uni.name === trimmedPart);
+          if (university) {
+            return university.id;
+          }
+
+          return trimmedPart; // Garder tel quel si non trouvé
+        }).filter(Boolean);
+      }
+
       setFormData({
         name: editingProduct.name,
         description: editingProduct.description || '',
@@ -82,7 +111,8 @@ export function ProductForm({
         category_id: editingProduct.category_id || '',
         image_url: imageUrls[0] || '',
         image_urls: imageUrls,
-        university_filter: editingProduct.university_filter || '',
+        university_filter: universityFilter,
+        university_filters: universityFilters,
         stock_quantity: editingProduct.stock_quantity.toString(),
       });
 
@@ -101,11 +131,12 @@ export function ProductForm({
         image_url: '',
         image_urls: [],
         university_filter: '',
+        university_filters: [],
         stock_quantity: '0',
       });
       setImages([]);
     }
-  }, [editingProduct]);
+  }, [editingProduct, universities]);
 
   // Calcul automatique de la remise
   const discountPercentage = useMemo(() => {
@@ -167,6 +198,27 @@ export function ProductForm({
     validateField(name, value);
   };
 
+  // Gérer la sélection/désélection d'une université
+  const toggleUniversitySelection = (universityId: string) => {
+    setFormData(prev => {
+      const currentFilters = prev.university_filters;
+      const isSelected = currentFilters.includes(universityId);
+
+      const newFilters = isSelected
+        ? currentFilters.filter(id => id !== universityId)
+        : [...currentFilters, universityId];
+
+      // Synchroniser avec university_filter
+      const filterValue = newFilters.length > 0 ? newFilters.join(',') : '';
+
+      return {
+        ...prev,
+        university_filters: newFilters,
+        university_filter: filterValue
+      };
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -187,6 +239,7 @@ export function ProductForm({
         category_id: '',
         image_url: '',
         image_urls: [],
+        university_filters: [],
         university_filter: '',
         stock_quantity: '0',
       });
@@ -468,28 +521,79 @@ export function ProductForm({
         </div>
 
         <div>
-          <Label htmlFor="university_filter" className="flex items-center gap-2 mb-2">
+          <Label className="flex items-center gap-2 mb-3">
             <School className="w-4 h-4" />
             Visibilité par université
+            {formData.university_filters.length > 0 && (
+              <Badge variant="secondary" className="ml-auto">
+                {formData.university_filters.length} sélectionnée{formData.university_filters.length > 1 ? 's' : ''}
+              </Badge>
+            )}
           </Label>
-          <Select
-            value={formData.university_filter || 'all'}
-            onValueChange={(value) => handleChange('university_filter', value === 'all' ? '' : value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Toutes les universités" />
-            </SelectTrigger>
-            <SelectContent>
-              {universities.map((uni) => (
-                <SelectItem key={uni.id} value={uni.id}>
-                  {uni.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground mt-1">
-            Restreindre la visibilité à une université spécifique (optionnel)
-          </p>
+
+          {universitiesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {universities.map((uni) => {
+                  const isSelected = formData.university_filters.includes(uni.id);
+                  return (
+                    <div
+                      key={uni.id}
+                      onClick={() => toggleUniversitySelection(uni.id)}
+                      className={cn(
+                        "relative cursor-pointer rounded-lg border-2 p-3 transition-all duration-200",
+                        "hover:shadow-md hover:scale-[1.02]",
+                        isSelected
+                          ? "border-primary bg-primary/5 shadow-sm"
+                          : "border-border bg-card hover:border-primary/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-2xl">{uni.flag || '🎓'}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className={cn(
+                            "font-medium text-sm truncate",
+                            isSelected ? "text-primary" : "text-foreground"
+                          )}>
+                            {uni.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {uni.city}
+                          </p>
+                        </div>
+                        <div className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0",
+                          isSelected
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground/30"
+                        )}>
+                          {isSelected && (
+                            <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-xs text-blue-800 flex items-start gap-2">
+                  <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    {formData.university_filters.length === 0
+                      ? "Aucune université sélectionnée : le produit sera visible pour tous les étudiants de toutes les universités."
+                      : `Produit visible uniquement pour les étudiants de ${formData.university_filters.length} université${formData.university_filters.length > 1 ? 's' : ''} sélectionnée${formData.university_filters.length > 1 ? 's' : ''}.`
+                    }
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

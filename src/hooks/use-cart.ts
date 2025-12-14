@@ -19,7 +19,9 @@ export const useCart = (userId?: string) => {
             original_price,
             image_url,
             stock_quantity,
+            supplier_id,
             suppliers (
+              id,
               business_name
             ),
             categories (

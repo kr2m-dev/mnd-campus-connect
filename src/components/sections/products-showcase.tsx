@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { 
-  Star, 
+import {
+  Star,
   ShoppingCart,
   Heart,
   Eye,
@@ -21,11 +21,13 @@ import { useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
+import { useToggleFavorite, useIsFavorite } from "@/hooks/use-favorites";
+import type { User } from "@supabase/supabase-js";
 
 // Map icon names to actual components
 const iconMap: Record<string, React.ElementType> = {
   Laptop,
-  Shirt, 
+  Shirt,
   Book,
   Coffee,
   Dumbbell,
@@ -34,97 +36,141 @@ const iconMap: Record<string, React.ElementType> = {
   Package
 };
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviews: number;
-  image: string;
-  category: string;
-  isPromo?: boolean;
-  badge?: string;
-}
-
-const categories = [
-  { id: "all", name: "Tous", icon: Package },
-  { id: "hygiene", name: "Hygiène", icon: Droplets },
-  { id: "parfums", name: "Parfums", icon: Sparkles },
-  { id: "soins", name: "Soins", icon: Heart },
-  { id: "vetements", name: "Vêtements", icon: Shirt }
-];
-
-const sampleProducts: Product[] = [
-  {
-    id: "1",
-    name: "Savon antibactérien Dettol",
-    price: 2500,
-    originalPrice: 3000,
-    rating: 4.8,
-    reviews: 124,
-    image: "/placeholder.svg",
-    category: "hygiene",
-    isPromo: true,
-    badge: "Populaire"
-  },
-  {
-    id: "2",
-    name: "Parfum Axe Africa 150ml",
-    price: 8500,
-    rating: 4.6,
-    reviews: 89,
-    image: "/placeholder.svg",
-    category: "parfums",
-    badge: "Nouveau"
-  },
-  {
-    id: "3",
-    name: "Crème hydratante Nivea",
-    price: 4200,
-    originalPrice: 5000,
-    rating: 4.7,
-    reviews: 156,
-    image: "/placeholder.svg",
-    category: "soins",
-    isPromo: true
-  },
-  {
-    id: "4",
-    name: "Shampoing Head & Shoulders",
-    price: 3800,
-    rating: 4.5,
-    reviews: 203,
-    image: "/placeholder.svg",
-    category: "hygiene"
-  },
-  {
-    id: "5",
-    name: "Déodorant Rexona 48h",
-    price: 3200,
-    originalPrice: 3800,
-    rating: 4.9,
-    reviews: 98,
-    image: "/placeholder.svg",
-    category: "hygiene",
-    isPromo: true,
-    badge: "Meilleure vente"
-  },
-  {
-    id: "6",
-    name: "Eau de toilette Hugo Boss",
-    price: 15000,
-    rating: 4.8,
-    reviews: 67,
-    image: "/placeholder.svg",
-    category: "parfums",
-    badge: "Premium"
-  }
-];
-
 interface ProductsShowcaseProps {
   selectedUniversity?: string;
 }
+
+interface ProductCardProps {
+  product: any;
+  discount: number;
+  index: number;
+  user: User | null;
+  onAddToCart: (productId: string) => void;
+  onToggleFavorite: (productId: string, isFavorite: boolean) => void;
+  onViewDetails: (product: any) => void;
+}
+
+const ProductCard = ({ product, discount, index, user, onAddToCart, onToggleFavorite, onViewDetails }: ProductCardProps) => {
+  const { data: isFavorite = false } = useIsFavorite(user?.id, product.id);
+
+  return (
+    <Card
+      className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale"
+      style={{ animationDelay: `${index * 0.1}s` }}
+    >
+      <CardContent className="p-0">
+        {/* Product Image */}
+        <div className="relative aspect-square bg-muted overflow-hidden">
+          <img
+            src={product.image_url || "/placeholder.svg"}
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+
+          {/* Overlay Actions */}
+          <div className="absolute inset-0 bg-secondary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+            <Button size="sm" variant="secondary" onClick={() => onViewDetails(product)}>
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => onToggleFavorite(product.id, isFavorite)}
+              className={isFavorite ? "text-red-500" : ""}
+            >
+              <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
+            </Button>
+            <Button
+              size="sm"
+              className="bg-primary hover:bg-primary-dark"
+              onClick={() => onAddToCart(product.id)}
+            >
+              <ShoppingCart className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex flex-col gap-1">
+            {discount > 0 && (
+              <Badge variant="destructive" className="text-xs">
+                -{discount}%
+              </Badge>
+            )}
+            {product.stock_quantity < 5 && product.stock_quantity > 0 && (
+              <Badge variant="secondary" className="text-xs bg-orange-500 text-white">
+                Stock limité
+              </Badge>
+            )}
+          </div>
+
+          {/* Favorite Badge */}
+          {isFavorite && (
+            <div className="absolute top-3 right-3">
+              <Heart className="w-5 h-5 text-red-500 fill-current" />
+            </div>
+          )}
+        </div>
+
+        {/* Product Info */}
+        <div className="p-4">
+          <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            {product.name}
+          </h3>
+
+          {/* Rating */}
+          <div className="flex items-center gap-1 mb-3">
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-3 h-3 ${
+                    i < Math.floor(product.rating)
+                      ? "text-yellow-400 fill-current"
+                      : "text-muted-foreground"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-sm text-muted-foreground">
+              {product.rating}
+            </span>
+          </div>
+
+          {/* Supplier */}
+          {product.suppliers && (
+            <p className="text-xs text-muted-foreground mb-2">
+              par {product.suppliers.business_name}
+            </p>
+          )}
+
+          {/* Price */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-primary">
+                {product.price} CFA
+              </span>
+              {product.original_price && (
+                <span className="text-sm text-muted-foreground line-through">
+                  {product.original_price} CFA
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+
+      <CardFooter className="p-4 pt-0">
+        <Button
+          className="w-full bg-primary hover:bg-primary-dark btn-glow group"
+          onClick={() => onAddToCart(product.id)}
+        >
+          <ShoppingCart className="w-4 h-4 mr-2" />
+          Ajouter au panier
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
 
 export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) => {
   const navigate = useNavigate();
@@ -133,6 +179,7 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
   const { data: products = [], isLoading } = useProducts(selectedUniversity);
   const { data: categories = [] } = useCategories();
   const addToCart = useAddToCart();
+  const toggleFavorite = useToggleFavorite();
 
   const handleAddToCart = (productId: string) => {
     if (!user) {
@@ -142,8 +189,20 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
     addToCart.mutate({ userId: user.id, productId, quantity: 1 });
   };
 
-  const filteredProducts = selectedCategory === "Tous" 
-    ? products 
+  const handleToggleFavorite = (productId: string, isFavorite: boolean) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    toggleFavorite.mutate({ userId: user.id, productId, isFavorite });
+  };
+
+  const handleViewDetails = (product: any) => {
+    navigate(`/products/${product.id}`);
+  };
+
+  const filteredProducts = selectedCategory === "Tous"
+    ? products
     : products.filter(product => product.categories?.name === selectedCategory);
 
   if (isLoading) {
@@ -165,19 +224,19 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
             <Sparkles className="w-3 h-3 mr-1" />
             Produits essentiels
           </Badge>
-          
+
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Découvrez nos{" "}
             <span className="bg-gradient-primary bg-clip-text text-transparent">
               produits phares
             </span>
           </h2>
-          
+
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Une sélection soigneusement choisie de produits d'hygiène, de soins et de parfums 
+            Une sélection soigneusement choisie de produits d'hygiène, de soins et de parfums
             disponibles sur votre campus universitaire.
           </p>
-          
+
           {selectedUniversity && (
             <div className="mt-4">
               <Badge variant="outline" className="text-sm">
@@ -219,115 +278,21 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
         {/* Products Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 mb-12">
           {filteredProducts.slice(0, 12).map((product, index) => {
-            const discount = product.original_price 
+            const discount = product.original_price
               ? Math.round((1 - product.price / product.original_price) * 100)
               : 0;
-              
+
             return (
-              <Card 
-                key={product.id} 
-                className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CardContent className="p-0">
-                  {/* Product Image */}
-                  <div className="relative aspect-square bg-muted overflow-hidden">
-                    <img 
-                      src={product.image_url || "/placeholder.svg"} 
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    
-                    {/* Overlay Actions */}
-                    <div className="absolute inset-0 bg-secondary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
-                      <Button size="sm" variant="secondary">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="secondary">
-                        <Heart className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="bg-primary hover:bg-primary-dark"
-                        onClick={() => handleAddToCart(product.id)}
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    
-                    {/* Badges */}
-                    <div className="absolute top-3 left-3 flex flex-col gap-1">
-                      {discount > 0 && (
-                        <Badge variant="destructive" className="text-xs">
-                          -{discount}%
-                        </Badge>
-                      )}
-                      {product.stock_quantity < 5 && product.stock_quantity > 0 && (
-                        <Badge variant="secondary" className="text-xs bg-orange-500 text-white">
-                          Stock limité
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                      {product.name}
-                    </h3>
-                    
-                    {/* Rating */}
-                    <div className="flex items-center gap-1 mb-3">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3 h-3 ${
-                              i < Math.floor(product.rating)
-                                ? "text-yellow-400 fill-current"
-                                : "text-muted-foreground"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {product.rating}
-                      </span>
-                    </div>
-                    
-                    {/* Supplier */}
-                    {product.suppliers && (
-                      <p className="text-xs text-muted-foreground mb-2">
-                        par {product.suppliers.business_name}
-                      </p>
-                    )}
-                    
-                    {/* Price */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-primary">
-                          {product.price} CFA
-                        </span>
-                        {product.original_price && (
-                          <span className="text-sm text-muted-foreground line-through">
-                            {product.original_price} CFA
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                
-                <CardFooter className="p-4 pt-0">
-                  <Button 
-                    className="w-full bg-primary hover:bg-primary-dark btn-glow group"
-                    onClick={() => handleAddToCart(product.id)}
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Ajouter au panier
-                  </Button>
-                </CardFooter>
-              </Card>
+              <ProductCard
+                key={product.id}
+                product={product}
+                discount={discount}
+                index={index}
+                user={user}
+                onAddToCart={handleAddToCart}
+                onToggleFavorite={handleToggleFavorite}
+                onViewDetails={handleViewDetails}
+              />
             );
           })}
         </div>
@@ -345,6 +310,7 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
           </Button>
         </div>
       </div>
+
     </section>
   );
 };

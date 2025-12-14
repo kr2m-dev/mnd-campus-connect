@@ -390,22 +390,27 @@ export default function Cart() {
                 </div>
 
                 <div className="space-y-3">
-                  <Button 
-                    className="w-full bg-green-600 hover:bg-green-700" 
+                  <Button
+                    className="w-full bg-gradient-primary"
                     size="lg"
-                    onClick={() => setWhatsappDialogOpen(true)}
+                    onClick={() => navigate("/checkout")}
                   >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Commander via WhatsApp
-                  </Button>
-                  
-                  <Button className="w-full bg-gradient-primary" size="lg">
                     <CreditCard className="w-4 h-4 mr-2" />
                     Procéder au paiement
                   </Button>
 
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                    onClick={() => setWhatsappDialogOpen(true)}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Contacter via WhatsApp
+                  </Button>
+
                   <div className="text-xs text-center text-muted-foreground">
-                    Paiement sécurisé • Livraison sur le campus
+                    Paiement à la livraison • Livraison sur le campus
                   </div>
                 </div>
               </CardContent>

@@ -5,6 +5,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { ProductFilters } from "@/lib/database-types";
 import {
   Star,
@@ -24,15 +26,17 @@ import {
   ArrowLeft,
   Grid3X3,
   List,
-  MessageCircle
+  MessageCircle,
+  Globe
 } from "lucide-react";
 import { useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
 import { useAuth } from "@/hooks/use-auth";
 import { useAddToCart } from "@/hooks/use-cart";
+import { useToggleFavorite, useIsFavorite } from "@/hooks/use-favorites";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { getUniversityById } from "@/data/universities";
+import { getUniversityById, senegalUniversities } from "@/data/universities";
 import { WhatsAppOrderDialog } from "@/components/whatsapp-order-dialog";
 import { ProductImageCarousel } from "@/components/product-image-carousel";
 
@@ -58,7 +62,10 @@ export default function Products() {
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showAllUniversities, setShowAllUniversities] = useState(false);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null);
   const addToCart = useAddToCart();
+  const toggleFavorite = useToggleFavorite();
 
   const handleAddToCart = (productId: string) => {
     if (!user) {
@@ -68,9 +75,21 @@ export default function Products() {
     addToCart.mutate({ userId: user.id, productId, quantity: 1 });
   };
 
+  const handleToggleFavorite = (productId: string, isFavorite: boolean) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    toggleFavorite.mutate({ userId: user.id, productId, isFavorite });
+  };
+
   const handleWhatsAppOrder = (product: any) => {
     setSelectedProduct(product);
     setWhatsappDialogOpen(true);
+  };
+
+  const handleViewDetails = (product: any) => {
+    navigate(`/products/${product.id}`);
   };
 
   // Dummy handlers for Header component
@@ -83,9 +102,24 @@ export default function Products() {
     ? getUniversityById(user.user_metadata.university_id)
     : null;
 
+  // Determine which university to filter by
+  const getFilterUniversity = () => {
+    if (showAllUniversities) {
+      // Si une université spécifique est sélectionnée, l'utiliser
+      if (selectedUniversityId) {
+        const university = getUniversityById(selectedUniversityId);
+        return university?.name;
+      }
+      // Sinon, ne pas filtrer par université (undefined)
+      return undefined;
+    }
+    // Par défaut, filtrer par l'université de l'utilisateur
+    return userUniversity?.name;
+  };
+
   // Build filters using enhanced types
   const filters: ProductFilters = {
-    university: userUniversity?.name,
+    university: getFilterUniversity(),
     category_id: selectedCategory !== "all" ? selectedCategory : undefined,
     search: searchQuery || undefined,
     min_price: priceRange.min ? parseFloat(priceRange.min) : undefined,
@@ -129,6 +163,7 @@ export default function Products() {
   }
 
   const ProductCard = ({ product, index }: { product: any; index: number }) => {
+    const { data: isFavorite = false } = useIsFavorite(user?.id, product.id);
     const discount = product.original_price
       ? Math.round((1 - product.price / product.original_price) * 100)
       : 0;
@@ -163,10 +198,15 @@ export default function Products() {
                     {product.name}
                   </h3>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline">
-                      <Heart className="w-4 h-4" />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleToggleFavorite(product.id, isFavorite)}
+                      className={isFavorite ? "text-red-500 hover:text-red-600" : ""}
+                    >
+                      <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleViewDetails(product)}>
                       <Eye className="w-4 h-4" />
                     </Button>
                   </div>
@@ -196,6 +236,14 @@ export default function Products() {
                     {product.rating}
                   </span>
                 </div>
+
+                {/* University Badge - Only show when viewing products from other universities */}
+                {showAllUniversities && product.university_filter && (
+                  <Badge variant="secondary" className="text-xs mb-2">
+                    {senegalUniversities.find(u => u.name === product.university_filter)?.flag || ''}{' '}
+                    {product.university_filter}
+                  </Badge>
+                )}
 
                 {/* Supplier */}
                 {product.suppliers && (
@@ -257,13 +305,22 @@ export default function Products() {
 
             {/* Overlay Actions */}
             <div className="absolute inset-0 bg-secondary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-10">
-              <Button size="sm" variant="secondary">
+              <Button size="sm" variant="secondary" onClick={() => handleViewDetails(product)}>
                 <Eye className="w-4 h-4" />
               </Button>
-              <Button size="sm" variant="secondary">
-                <Heart className="w-4 h-4" />
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => handleToggleFavorite(product.id, isFavorite)}
+                className={isFavorite ? "text-red-500" : ""}
+              >
+                <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
               </Button>
-              <Button size="sm" className="bg-primary hover:bg-primary-dark">
+              <Button
+                size="sm"
+                className="bg-primary hover:bg-primary-dark"
+                onClick={() => handleAddToCart(product.id)}
+              >
                 <ShoppingCart className="w-4 h-4" />
               </Button>
             </div>
@@ -281,6 +338,13 @@ export default function Products() {
                 </Badge>
               )}
             </div>
+
+            {/* Favorite Badge */}
+            {isFavorite && (
+              <div className="absolute top-3 right-3 z-10">
+                <Heart className="w-5 h-5 text-red-500 fill-current" />
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -307,6 +371,14 @@ export default function Products() {
                 {product.rating}
               </span>
             </div>
+
+            {/* University Badge - Only show when viewing products from other universities */}
+            {showAllUniversities && product.university_filter && (
+              <Badge variant="secondary" className="text-xs mb-2">
+                {senegalUniversities.find(u => u.name === product.university_filter)?.flag || ''}{' '}
+                {product.university_filter}
+              </Badge>
+            )}
 
             {/* Supplier */}
             {product.suppliers && (
@@ -377,14 +449,80 @@ export default function Products() {
             disponibles sur votre campus universitaire.
           </p>
 
-          {userUniversity && (
-            <div className="mt-4">
-              <Badge variant="outline" className="text-sm">
-                <span className="mr-2">{userUniversity.flag}</span>
-                Disponible sur {userUniversity.name}
-              </Badge>
+          <div className="mt-4 space-y-3">
+            {/* Status Badge */}
+            <Badge variant="outline" className="text-sm">
+              {userUniversity && !showAllUniversities ? (
+                <>
+                  <span className="mr-2">{userUniversity.flag}</span>
+                  Disponible sur {userUniversity.name}
+                </>
+              ) : showAllUniversities && selectedUniversityId ? (
+                <>
+                  <span className="mr-2">{getUniversityById(selectedUniversityId)?.flag}</span>
+                  Produits de {getUniversityById(selectedUniversityId)?.name}
+                </>
+              ) : showAllUniversities ? (
+                <>
+                  <Globe className="w-3 h-3 mr-2" />
+                  Produits de toutes les universités
+                </>
+              ) : (
+                <>
+                  <Package className="w-3 h-3 mr-2" />
+                  Tous les produits disponibles
+                </>
+              )}
+            </Badge>
+
+            {/* University Filter Toggle */}
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <div className="flex items-center space-x-2 bg-card p-3 rounded-lg shadow-sm border">
+                <Globe className="w-4 h-4 text-primary" />
+                <Switch
+                  id="show-all-universities"
+                  checked={showAllUniversities}
+                  onCheckedChange={(checked) => {
+                    setShowAllUniversities(checked);
+                    if (!checked) {
+                      setSelectedUniversityId(null);
+                    }
+                  }}
+                />
+                <Label htmlFor="show-all-universities" className="cursor-pointer text-sm font-medium">
+                  {userUniversity
+                    ? "Voir les produits d'autres universités"
+                    : "Filtrer par université"
+                  }
+                </Label>
+              </div>
+
+              {showAllUniversities && (
+                <Select
+                  value={selectedUniversityId || "all"}
+                  onValueChange={(value) => setSelectedUniversityId(value === "all" ? null : value)}
+                >
+                  <SelectTrigger className="w-[280px] border-primary/50">
+                    <SelectValue placeholder="Sélectionner une université" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <div className="flex items-center">
+                        <Globe className="w-4 h-4 mr-2" />
+                        Toutes les universités
+                      </div>
+                    </SelectItem>
+                    {senegalUniversities.map((university) => (
+                      <SelectItem key={university.id} value={university.id}>
+                        <span className="mr-2">{university.flag}</span>
+                        {university.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Filters and Search */}

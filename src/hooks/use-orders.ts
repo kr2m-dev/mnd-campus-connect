@@ -29,7 +29,6 @@ export const useOrders = (filters?: OrderFilters) => {
         .from("orders")
         .select(`
           *,
-          profiles(full_name, phone),
           suppliers(business_name, contact_phone, contact_whatsapp)
         `)
         .eq("user_id", user.id)
@@ -54,7 +53,21 @@ export const useOrders = (filters?: OrderFilters) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as EnhancedOrder[];
+
+      // Manually fetch profile data
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone")
+        .eq("user_id", user.id)
+        .single();
+
+      // Add profile to each order
+      const ordersWithProfile = data.map(order => ({
+        ...order,
+        profiles: profile
+      }));
+
+      return ordersWithProfile as EnhancedOrder[];
     },
   });
 };
@@ -83,7 +96,6 @@ export const useSupplierOrders = (filters?: OrderFilters) => {
         .from("orders")
         .select(`
           *,
-          profiles(full_name, phone),
           order_items (
             *,
             products (
@@ -111,7 +123,26 @@ export const useSupplierOrders = (filters?: OrderFilters) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as any[];
+
+      // Get unique user IDs from orders
+      const userIds = [...new Set(data.map(order => order.user_id))];
+
+      // Fetch profiles for all users
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, first_name, last_name, phone")
+        .in("user_id", userIds);
+
+      // Create a map of profiles by user_id
+      const profilesMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      // Add profile to each order
+      const ordersWithProfiles = data.map(order => ({
+        ...order,
+        profiles: profilesMap.get(order.user_id)
+      }));
+
+      return ordersWithProfiles as any[];
     },
   });
 };
@@ -127,14 +158,24 @@ export const useOrder = (orderId: string) => {
         .from("orders")
         .select(`
           *,
-          profiles(full_name, phone),
           suppliers(business_name, contact_phone, contact_whatsapp)
         `)
         .eq("id", orderId)
         .single();
 
       if (error) throw error;
-      return data as EnhancedOrder;
+
+      // Fetch profile data
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone")
+        .eq("user_id", data.user_id)
+        .single();
+
+      return {
+        ...data,
+        profiles: profile
+      } as EnhancedOrder;
     },
     enabled: !!orderId,
   });
@@ -180,13 +221,23 @@ export const useCreateOrder = () => {
         .insert({ ...order, user_id: user.id })
         .select(`
           *,
-          profiles(full_name, phone),
           suppliers(business_name, contact_phone, contact_whatsapp)
         `)
         .single();
 
       if (error) throw error;
-      return data as EnhancedOrder;
+
+      // Fetch profile data
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone")
+        .eq("user_id", user.id)
+        .single();
+
+      return {
+        ...data,
+        profiles: profile
+      } as EnhancedOrder;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
@@ -214,13 +265,23 @@ export const useUpdateOrder = () => {
         .eq("id", id)
         .select(`
           *,
-          profiles(full_name, phone),
           suppliers(business_name, contact_phone, contact_whatsapp)
         `)
         .single();
 
       if (error) throw error;
-      return data as EnhancedOrder;
+
+      // Fetch profile data
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone")
+        .eq("user_id", data.user_id)
+        .single();
+
+      return {
+        ...data,
+        profiles: profile
+      } as EnhancedOrder;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
@@ -243,19 +304,37 @@ export const useUpdateOrderStatus = () => {
 
   return useMutation({
     mutationFn: async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
-      const { data, error } = await supabase
+      // First, update the order status
+      const { error: updateError } = await supabase
         .from("orders")
         .update({ status })
-        .eq("id", orderId)
+        .eq("id", orderId);
+
+      if (updateError) throw updateError;
+
+      // Then fetch the updated order with all relations
+      const { data, error: fetchError } = await supabase
+        .from("orders")
         .select(`
           *,
-          profiles(full_name, phone),
           suppliers(business_name, contact_phone, contact_whatsapp)
         `)
+        .eq("id", orderId)
         .single();
 
-      if (error) throw error;
-      return data as EnhancedOrder;
+      if (fetchError) throw fetchError;
+
+      // Fetch profile data
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, phone")
+        .eq("user_id", data.user_id)
+        .single();
+
+      return {
+        ...data,
+        profiles: profile
+      } as EnhancedOrder;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
@@ -263,8 +342,9 @@ export const useUpdateOrderStatus = () => {
       queryClient.invalidateQueries({ queryKey: ["order", data.id] });
       toast.success("Statut mis à jour");
     },
-    onError: () => {
-      toast.error("Erreur lors de la mise à jour");
+    onError: (error) => {
+      console.error("Error updating order status:", error);
+      toast.error("Erreur lors de la mise à jour du statut");
     },
   });
 };

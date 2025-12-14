@@ -20,93 +20,39 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import {
+  useNotifications,
+  useUnreadNotificationsCount,
+  useMarkNotificationAsRead,
+  useMarkAllNotificationsAsRead,
+  useDeleteNotification,
+  type NotificationType
+} from "@/hooks/use-notifications";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface Notification {
   id: string;
-  type: "order" | "product" | "system" | "promotion";
+  user_id: string;
+  type: NotificationType;
   title: string;
   message: string;
-  timestamp: string;
-  isRead: boolean;
-  isImportant?: boolean;
-  actionUrl?: string;
-  actionText?: string;
-  icon?: React.ElementType;
+  link?: string;
+  is_read: boolean;
+  created_at: string;
 }
-
-const sampleNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "order",
-    title: "Commande expédiée",
-    message: "Votre commande #CMD-2024-001 a été expédiée et arrivera dans 2-3 jours ouvrables.",
-    timestamp: "2024-01-15T10:30:00Z",
-    isRead: false,
-    actionUrl: "/orders/CMD-2024-001",
-    actionText: "Suivre la commande",
-    icon: Package
-  },
-  {
-    id: "2",
-    type: "promotion",
-    title: "Offre spéciale : -30% sur les parfums",
-    message: "Profitez de notre promotion exceptionnelle sur tous les parfums jusqu'au 20 janvier.",
-    timestamp: "2024-01-14T14:15:00Z",
-    isRead: false,
-    isImportant: true,
-    actionUrl: "/products?category=parfums",
-    actionText: "Voir les offres",
-    icon: AlertCircle
-  },
-  {
-    id: "3",
-    type: "product",
-    title: "Produit de retour en stock",
-    message: "Le savon antibactérien Dettol que vous suivez est de nouveau disponible.",
-    timestamp: "2024-01-14T09:45:00Z",
-    isRead: true,
-    actionUrl: "/products/savon-dettol",
-    actionText: "Voir le produit",
-    icon: Package
-  },
-  {
-    id: "4",
-    type: "system",
-    title: "Mise à jour de votre profil",
-    message: "Votre profil a été mis à jour avec succès. Vérifiez vos informations.",
-    timestamp: "2024-01-13T16:20:00Z",
-    isRead: true,
-    icon: CheckCircle
-  },
-  {
-    id: "5",
-    type: "order",
-    title: "Commande confirmée",
-    message: "Votre commande #CMD-2024-002 a été confirmée et est en cours de préparation.",
-    timestamp: "2024-01-13T11:10:00Z",
-    isRead: true,
-    actionUrl: "/orders/CMD-2024-002",
-    actionText: "Voir les détails",
-    icon: ShoppingCart
-  },
-  {
-    id: "6",
-    type: "promotion",
-    title: "Nouveaux produits disponibles",
-    message: "Découvrez notre nouvelle collection de produits d'hygiène sur votre campus.",
-    timestamp: "2024-01-12T08:00:00Z",
-    isRead: true,
-    actionUrl: "/products?filter=new",
-    actionText: "Découvrir",
-    icon: Package
-  }
-];
 
 export default function Notifications() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState(sampleNotifications);
   const [activeTab, setActiveTab] = useState("all");
+
+  // Use real data from database
+  const { data: notifications = [] } = useNotifications(user?.id);
+  const { data: unreadCount = 0 } = useUnreadNotificationsCount(user?.id);
+  const markAsRead = useMarkNotificationAsRead();
+  const markAllAsRead = useMarkAllNotificationsAsRead();
+  const deleteNotification = useDeleteNotification();
 
   // Dummy handlers for Header component
   const handleUniversityChange = () => {};
@@ -127,7 +73,7 @@ export default function Notifications() {
         return Package;
       case "system":
         return Settings;
-      case "promotion":
+      case "message":
         return AlertCircle;
       default:
         return Bell;
@@ -142,56 +88,51 @@ export default function Notifications() {
         return "bg-green-500";
       case "system":
         return "bg-gray-500";
-      case "promotion":
-        return "bg-orange-500";
+      case "message":
+        return "bg-purple-500";
       default:
         return "bg-primary";
     }
   };
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-
-    if (diffInHours < 1) {
-      return "À l'instant";
-    } else if (diffInHours < 24) {
-      return `Il y a ${diffInHours}h`;
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `Il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
-    }
+    return formatDistanceToNow(new Date(timestamp), {
+      addSuffix: true,
+      locale: fr,
+    });
   };
 
   const filteredNotifications = notifications.filter(notification => {
     if (activeTab === "all") return true;
-    if (activeTab === "unread") return !notification.isRead;
-    if (activeTab === "important") return notification.isImportant;
+    if (activeTab === "unread") return !notification.is_read;
     return notification.type === activeTab;
   });
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-  const importantCount = notifications.filter(n => n.isImportant).length;
-
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-    );
+  const handleMarkAsRead = (id: string) => {
+    if (!user?.id) return;
+    markAsRead.mutate({ notificationId: id, userId: user.id });
   };
 
-  const markAsUnread = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, isRead: false } : n)
-    );
+  const handleDeleteNotification = (id: string) => {
+    if (!user?.id) return;
+    deleteNotification.mutate({ notificationId: id, userId: user.id });
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+  const handleMarkAllAsRead = () => {
+    if (!user?.id) return;
+    markAllAsRead.mutate(user.id);
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read
+    if (!notification.is_read && user?.id) {
+      markAsRead.mutate({ notificationId: notification.id, userId: user.id });
+    }
+
+    // Navigate if link exists
+    if (notification.link) {
+      navigate(notification.link);
+    }
   };
 
   return (
@@ -216,7 +157,7 @@ export default function Notifications() {
           </div>
 
           {unreadCount > 0 && (
-            <Button onClick={markAllAsRead} variant="outline">
+            <Button onClick={handleMarkAllAsRead} variant="outline">
               <CheckCircle className="w-4 h-4 mr-2" />
               Tout marquer comme lu
             </Button>
@@ -224,7 +165,7 @@ export default function Notifications() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-primary">{notifications.length}</div>
@@ -235,12 +176,6 @@ export default function Notifications() {
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-orange-500">{unreadCount}</div>
               <div className="text-sm text-muted-foreground">Non lues</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-red-500">{importantCount}</div>
-              <div className="text-sm text-muted-foreground">Importantes</div>
             </CardContent>
           </Card>
           <Card>
@@ -263,17 +198,14 @@ export default function Notifications() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
                 <TabsTrigger value="all">Toutes</TabsTrigger>
                 <TabsTrigger value="unread">
                   Non lues {unreadCount > 0 && <Badge className="ml-1">{unreadCount}</Badge>}
                 </TabsTrigger>
-                <TabsTrigger value="important">
-                  Importantes {importantCount > 0 && <Badge className="ml-1">{importantCount}</Badge>}
-                </TabsTrigger>
                 <TabsTrigger value="order">Commandes</TabsTrigger>
                 <TabsTrigger value="product">Produits</TabsTrigger>
-                <TabsTrigger value="promotion">Promotions</TabsTrigger>
+                <TabsTrigger value="message">Messages</TabsTrigger>
               </TabsList>
 
               <TabsContent value={activeTab} className="mt-6">
@@ -291,14 +223,15 @@ export default function Notifications() {
                 ) : (
                   <div className="space-y-4">
                     {filteredNotifications.map((notification) => {
-                      const TypeIcon = notification.icon || getTypeIcon(notification.type);
+                      const TypeIcon = getTypeIcon(notification.type);
 
                       return (
                         <Card
                           key={notification.id}
-                          className={`transition-all duration-200 hover:shadow-md ${
-                            !notification.isRead ? "border-l-4 border-l-primary bg-primary/5" : ""
+                          className={`transition-all duration-200 hover:shadow-md cursor-pointer ${
+                            !notification.is_read ? "border-l-4 border-l-primary bg-primary/5" : ""
                           }`}
+                          onClick={() => handleNotificationClick(notification)}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-start gap-4">
@@ -312,15 +245,10 @@ export default function Notifications() {
                                 <div className="flex items-start justify-between">
                                   <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                      <h3 className={`font-semibold ${!notification.isRead ? "text-foreground" : "text-muted-foreground"}`}>
+                                      <h3 className={`font-semibold ${!notification.is_read ? "text-foreground" : "text-muted-foreground"}`}>
                                         {notification.title}
                                       </h3>
-                                      {notification.isImportant && (
-                                        <Badge variant="destructive" className="text-xs">
-                                          Important
-                                        </Badge>
-                                      )}
-                                      {!notification.isRead && (
+                                      {!notification.is_read && (
                                         <div className="w-2 h-2 bg-primary rounded-full"></div>
                                       )}
                                     </div>
@@ -329,35 +257,32 @@ export default function Notifications() {
                                     </p>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                       <Clock className="w-3 h-3" />
-                                      {formatTimestamp(notification.timestamp)}
+                                      {formatTimestamp(notification.created_at)}
                                     </div>
                                   </div>
 
                                   {/* Actions */}
                                   <div className="flex items-center gap-1">
-                                    {!notification.isRead ? (
+                                    {!notification.is_read ? (
                                       <Button
                                         size="sm"
                                         variant="ghost"
-                                        onClick={() => markAsRead(notification.id)}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleMarkAsRead(notification.id);
+                                        }}
                                         title="Marquer comme lu"
                                       >
                                         <Check className="w-4 h-4" />
                                       </Button>
-                                    ) : (
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => markAsUnread(notification.id)}
-                                        title="Marquer comme non lu"
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </Button>
-                                    )}
+                                    ) : null}
                                     <Button
                                       size="sm"
                                       variant="ghost"
-                                      onClick={() => deleteNotification(notification.id)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteNotification(notification.id);
+                                      }}
                                       title="Supprimer"
                                     >
                                       <Trash2 className="w-4 h-4" />
@@ -365,18 +290,11 @@ export default function Notifications() {
                                   </div>
                                 </div>
 
-                                {/* Action Button */}
-                                {notification.actionUrl && notification.actionText && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      markAsRead(notification.id);
-                                      navigate(notification.actionUrl!);
-                                    }}
-                                  >
-                                    {notification.actionText}
-                                  </Button>
+                                {/* Link indication */}
+                                {notification.link && (
+                                  <p className="text-xs text-primary">
+                                    Cliquer pour voir les détails →
+                                  </p>
                                 )}
                               </div>
                             </div>

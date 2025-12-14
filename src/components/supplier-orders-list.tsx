@@ -212,10 +212,15 @@ export const SupplierOrdersList = ({ orders, loading }: SupplierOrdersListProps)
                   </Label>
                   <Select
                     value={order.status}
-                    onValueChange={(value) => handleStatusChange(order.id, value)}
+                    onValueChange={(value) => {
+                      console.log('Status change:', { orderId: order.id, from: order.status, to: value });
+                      handleStatusChange(order.id, value);
+                    }}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue />
+                      <SelectValue>
+                        {orderStatuses.find(s => s.value === order.status)?.label || order.status}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {orderStatuses.map((status) => (

@@ -9,6 +9,7 @@ export interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
+  phone: string;
   userType: string;
   universityId: string;
   universityName: string;
@@ -55,6 +56,7 @@ export const useAuth = () => {
           data: {
             first_name: data.firstName,
             last_name: data.lastName,
+            phone: data.phone,
             user_type: data.userType,
             university_id: data.universityId,
             university_name: data.universityName,

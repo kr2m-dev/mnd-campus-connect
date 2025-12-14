@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Facebook,
   Instagram,
@@ -13,24 +14,29 @@ import {
   Shield,
   Truck,
   Users,
-  Heart
+  Heart,
+  Store,
+  ShoppingBag,
+  User,
+  Package
 } from "lucide-react";
 
 export const Footer = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <footer className="bg-secondary text-secondary-foreground">
       {/* Main Footer */}
       <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center space-x-2 mb-4 cursor-pointer" onClick={() => navigate("/")}>
               <img
                 src="/logo_cc.png"
                 alt="CampusLink"
-                className="h-8 w-auto"
+                className="h-8 w-8 rounded-full object-cover"
               />
               <div>
                 <h3 className="font-bold text-lg">CampusLink</h3>
@@ -50,7 +56,7 @@ export const Footer = () => {
                   placeholder="Votre email"
                   className="bg-secondary-foreground/10 border-secondary-foreground/20 text-secondary-foreground placeholder:text-secondary-foreground/60"
                 />
-                <Button size="sm" className="bg-primary hover:bg-primary-dark">
+                <Button size="sm" className="bg-primary hover:bg-primary/90">
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
@@ -59,7 +65,10 @@ export const Footer = () => {
 
           {/* Navigation */}
           <div>
-            <h4 className="font-semibold mb-4">Navigation</h4>
+            <h4 className="font-semibold mb-4 flex items-center gap-2">
+              <Package className="w-4 h-4 text-primary" />
+              Plateforme
+            </h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <button
@@ -79,7 +88,7 @@ export const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => {}}
+                  onClick={() => navigate("/student-exchange")}
                   className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
                 >
                   Espace Échange
@@ -87,7 +96,7 @@ export const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => {}}
+                  onClick={() => navigate("/about")}
                   className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
                 >
                   À propos
@@ -95,10 +104,80 @@ export const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => {}}
+                  onClick={() => navigate("/contact")}
                   className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
                 >
                   Contact
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Mon compte */}
+          {user && (
+            <div>
+              <h4 className="font-semibold mb-4 flex items-center gap-2">
+                <User className="w-4 h-4 text-primary" />
+                Mon compte
+              </h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <button
+                    onClick={() => navigate("/profile")}
+                    className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
+                  >
+                    Mon profil
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate("/orders")}
+                    className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
+                  >
+                    Mes commandes
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate("/favorites")}
+                    className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
+                  >
+                    Mes favoris
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate("/cart")}
+                    className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
+                  >
+                    Mon panier
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate("/notifications")}
+                    className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
+                  >
+                    Notifications
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
+
+          {/* Fournisseurs */}
+          <div>
+            <h4 className="font-semibold mb-4 flex items-center gap-2">
+              <Store className="w-4 h-4 text-primary" />
+              Fournisseurs
+            </h4>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <button
+                  onClick={() => navigate("/supplier-register")}
+                  className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
+                >
+                  Devenir fournisseur
                 </button>
               </li>
               <li>
@@ -106,49 +185,26 @@ export const Footer = () => {
                   onClick={() => navigate("/supplier")}
                   className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
                 >
-                  Espace Fournisseur
+                  Espace fournisseur
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate("/add-product")}
+                  className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
+                >
+                  Ajouter un produit
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate("/supplier/orders")}
+                  className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors text-left"
+                >
+                  Gérer les commandes
                 </button>
               </li>
             </ul>
-          </div>
-
-          {/* Universities */}
-          <div>
-            <h4 className="font-semibold mb-4">Universités partenaires</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="#" className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors">
-                  🇸🇳 Université de Dakar
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors">
-                  🇹🇬 Université de Lomé
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors">
-                  🇧🇯 Université de Cotonou
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors">
-                  🇲🇱 Université de Bamako
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors">
-                  🇧🇫 Université de Ouagadougou
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-secondary-foreground/80 hover:text-secondary-foreground transition-colors">
-                  🇨🇮 Université d'Abidjan
-                </a>
-              </li>
-            </ul>
-
-
           </div>
 
           {/* Contact */}
@@ -156,15 +212,21 @@ export const Footer = () => {
             <h4 className="font-semibold mb-4">Contact</h4>
 
             <div className="space-y-3 text-sm">
-              <div className="flex items-center space-x-2">
+              <a
+                href="mailto:contact@campuslink.com"
+                className="flex items-center space-x-2 text-secondary-foreground/80 hover:text-secondary-foreground transition-colors"
+              >
                 <Mail className="w-4 h-4 text-primary" />
-                <span className="text-secondary-foreground/80">contact@mndproduits.com</span>
-              </div>
+                <span>contact@campuslink.com</span>
+              </a>
 
-              <div className="flex items-center space-x-2">
+              <a
+                href="tel:+221771234567"
+                className="flex items-center space-x-2 text-secondary-foreground/80 hover:text-secondary-foreground transition-colors"
+              >
                 <Phone className="w-4 h-4 text-primary" />
-                <span className="text-secondary-foreground/80">+221 77 123 45 67</span>
-              </div>
+                <span>+221 77 123 45 67</span>
+              </a>
 
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4 text-primary" />
@@ -180,6 +242,7 @@ export const Footer = () => {
                   size="sm"
                   variant="outline"
                   className="group border-secondary-foreground/20 hover:bg-primary hover:border-primary text-primary hover:text-white"
+                  onClick={() => window.open('https://facebook.com', '_blank')}
                 >
                   <Facebook className="w-4 h-4 text-current" />
                 </Button>
@@ -188,6 +251,7 @@ export const Footer = () => {
                   size="sm"
                   variant="outline"
                   className="group border-secondary-foreground/20 hover:bg-primary hover:border-primary text-primary hover:text-white"
+                  onClick={() => window.open('https://instagram.com', '_blank')}
                 >
                   <Instagram className="w-4 h-4 text-current" />
                 </Button>
@@ -196,11 +260,11 @@ export const Footer = () => {
                   size="sm"
                   variant="outline"
                   className="group border-secondary-foreground/20 hover:bg-primary hover:border-primary text-primary hover:text-white"
+                  onClick={() => window.open('https://twitter.com', '_blank')}
                 >
                   <Twitter className="w-4 h-4 text-current" />
                 </Button>
               </div>
-
             </div>
           </div>
         </div>
@@ -244,11 +308,13 @@ export const Footer = () => {
       {/* Bottom Footer */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center text-sm text-secondary-foreground/60">
-          <div>
-            © 2024 CampusLink. Tous droits réservés.
+          <div className="flex items-center gap-2">
+            © 2025 CampusLink. Tous droits réservés.
+            <span className="hidden md:inline">•</span>
+            <span className="hidden md:inline text-xs">Made with ❤️ for African Students</span>
           </div>
 
-          <div className="flex space-x-6 mt-4 md:mt-0">
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6 mt-4 md:mt-0">
             <button
               onClick={() => navigate("/privacy-policy")}
               className="hover:text-secondary-foreground transition-colors"

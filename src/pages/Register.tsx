@@ -1,4 +1,5 @@
 import { useState } from "react";
+import authImage from "@/assets/support.png";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { useUniversities, getUniversityById } from "@/hooks/use-universities";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, GraduationCap, Building, Store, ArrowRight, Sparkles, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, GraduationCap, Building, Store, ArrowRight, Sparkles, CheckCircle, Phone } from "lucide-react";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function Register() {
     confirmPassword: "",
     firstName: "",
     lastName: "",
+    phone: "",
     universityId: "",
   });
 
@@ -77,6 +79,7 @@ export default function Register() {
       password: formData.password,
       firstName: formData.firstName,
       lastName: formData.lastName,
+      phone: formData.phone,
       userType: "client", // Par défaut, les inscriptions depuis /register sont des clients
       universityId: formData.universityId,
       universityName: selectedUniversity?.name || "",
@@ -99,24 +102,45 @@ export default function Register() {
         onUniversityChange={handleUniversityChange}
       />
 
-      <div className="flex items-center justify-center p-4 pt-10 pb-10">
-        <div className="w-full max-w-md space-y-6">
+      {/* Main Content - Two Column Layout */}
+      <div className="container mx-auto px-4 py-8 lg:py-12">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[calc(100vh-200px)]">
 
-        {/* Logo and Brand */}
-        <div className="text-center space-y-4">
-          
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              Créer un compte
-            </h1>
-            <p className="text-muted-foreground">Rejoignez votre université sur CampusLink</p>
+          {/* Left Side - Image */}
+          <div className="hidden lg:flex items-center justify-center">
+            <div className="w-full max-w-lg">
+              <img
+                src={authImage}
+                alt="Illustration d'inscription"
+                className="w-full h-auto object-contain drop-shadow-2xl"
+              />
+            </div>
           </div>
-        </div>
+
+          {/* Right Side - Registration Form */}
+          <div className="flex items-center justify-center">
+            <div className="w-full max-w-md space-y-6">
+
+            {/* Mobile Image - Visible only on mobile */}
+            <div className="lg:hidden flex justify-center mb-6">
+              <img
+                src={authImage}
+                alt="Illustration d'inscription"
+                className="w-64 h-auto object-contain drop-shadow-xl"
+              />
+            </div>
+
+            {/* Logo and Brand */}
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Créer un compte
+              </h1>
+              <p className="text-muted-foreground text-base">Rejoignez votre université sur CampusLink</p>
+            </div>
 
         {/* Registration Form */}
-        <Card className="shadow-2xl border-none bg-gradient-to-br from-background/95 to-background backdrop-blur-xl">
-          
-          <CardContent>
+        <Card className="shadow-2xl border-none bg-gradient-to-br from-background/95 to-background backdrop-blur-xl overflow-hidden">
+          <CardContent className="p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-4">
@@ -203,6 +227,26 @@ export default function Register() {
                     type="email"
                     placeholder="modou.diop@university.edu"
                     value={formData.email}
+                    onChange={handleChange}
+                    className="pl-12 h-11 border-2 focus:border-primary transition-all"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Phone Field */}
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-semibold">Téléphone</Label>
+                <div className="relative group">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-green-500/10 rounded-lg flex items-center justify-center">
+                    <Phone className="w-3 h-3 text-green-600" />
+                  </div>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="77 123 45 67"
+                    value={formData.phone}
                     onChange={handleChange}
                     className="pl-12 h-11 border-2 focus:border-primary transition-all"
                     required
@@ -310,7 +354,7 @@ export default function Register() {
         </div>
 
         {/* Supplier Section */}
-        <Card className="shadow-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 hover:shadow-2xl hover:border-primary/40 transition-all duration-300 cursor-pointer group"
+        <Card className="shadow-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 hover:shadow-2xl hover:border-primary/40 hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
           onClick={() => navigate('/supplier-register')}
         >
           <CardContent className="p-6">
@@ -339,18 +383,21 @@ export default function Register() {
         {/* Terms */}
         <p className="text-xs text-center text-muted-foreground">
           En créant un compte, vous acceptez nos{" "}
-          <Link to="/terms" className="underline hover:text-foreground">
+          <Link to="/terms" className="underline hover:text-foreground transition-colors">
             Conditions d'utilisation
           </Link>{" "}
           et notre{" "}
-          <Link to="/privacy" className="underline hover:text-foreground">
+          <Link to="/privacy" className="underline hover:text-foreground transition-colors">
             Politique de confidentialité
           </Link>
         </p>
+        </div>
+          </div>
         </div>
       </div>
 
       <Footer />
     </div>
+    
   );
 }

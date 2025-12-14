@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useCurrentSupplier, useCreateSupplier, useUpdateSupplier } from "@/hooks/use-supplier";
-import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, Product } from "@/hooks/use-products";
+import { useProducts, useDeleteProduct, Product } from "@/hooks/use-products";
 import { useSupplierOrders } from "@/hooks/use-orders";
-import { useCategories } from "@/hooks/use-categories";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,39 +9,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus, BarChart3, Package, ShoppingCart, Star, Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { SupplierStats } from "@/components/supplier/supplier-stats";
 import { SupplierOrdersList } from "@/components/supplier-orders-list";
 import { SupplierReviews } from "@/components/supplier/supplier-reviews";
-import { ProductForm, ProductFormData } from "@/components/supplier/product-form";
 import { ImageUpload } from "@/components/image-upload";
 
 export default function Supplier() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
 
   // Dummy handlers for Header component
   const handleUniversityChange = () => {};
   const handleSupplierAccess = () => navigate('/supplier');
   const handleStudentExchange = () => {};
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const { data: supplier, isLoading: supplierLoading } = useCurrentSupplier();
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const { data: orders, isLoading: ordersLoading } = useSupplierOrders(supplier?.id);
-  const { data: categories = [] } = useCategories();
   const createSupplier = useCreateSupplier();
   const updateSupplier = useUpdateSupplier();
-  const createProduct = useCreateProduct();
-  const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
 
   // Vérifier l'authentification
@@ -79,17 +71,6 @@ export default function Supplier() {
     logo_url: "",
   });
 
-  const [productForm, setProductForm] = useState({
-    name: "",
-    description: "",
-    price: "",
-    original_price: "",
-    category_id: "",
-    image_url: "",
-    university_filter: "",
-    stock_quantity: "",
-  });
-
   useEffect(() => {
     if (supplier) {
       setSupplierForm({
@@ -121,62 +102,6 @@ export default function Supplier() {
         variant: "destructive",
       });
     }
-  };
-
-  const handleProductSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const productData = {
-        ...productForm,
-        price: parseFloat(productForm.price),
-        original_price: productForm.original_price ? parseFloat(productForm.original_price) : undefined,
-        stock_quantity: parseInt(productForm.stock_quantity) || 0,
-        is_active: true,
-        rating: 0,
-      };
-
-      if (editingProduct) {
-        await updateProduct.mutateAsync({ id: editingProduct.id, ...productData });
-        toast({ title: "Produit mis à jour avec succès" });
-      } else {
-        await createProduct.mutateAsync(productData);
-        toast({ title: "Produit créé avec succès" });
-      }
-
-      setIsProductModalOpen(false);
-      setEditingProduct(null);
-      setProductForm({
-        name: "",
-        description: "",
-        price: "",
-        original_price: "",
-        category_id: "",
-        image_url: "",
-        university_filter: "",
-        stock_quantity: "",
-      });
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de l'ajout du produit",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setProductForm({
-      name: product.name,
-      description: product.description || "",
-      price: product.price.toString(),
-      original_price: product.original_price?.toString() || "",
-      category_id: product.category_id || "",
-      image_url: product.image_url || "",
-      university_filter: product.university_filter || "",
-      stock_quantity: product.stock_quantity.toString(),
-    });
-    setIsProductModalOpen(true);
   };
 
   const handleDeleteProduct = async (id: string) => {
@@ -377,71 +302,10 @@ export default function Supplier() {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Mes Produits ({myProducts.length})</CardTitle>
-                  <Dialog open={isProductModalOpen} onOpenChange={setIsProductModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button onClick={() => {
-                        setEditingProduct(null);
-                        setProductForm({
-                          name: "",
-                          description: "",
-                          price: "",
-                          original_price: "",
-                          category_id: "",
-                          image_url: "",
-                          university_filter: "",
-                          stock_quantity: "",
-                        });
-                      }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Ajouter un produit
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>
-                          {editingProduct ? "Modifier le produit" : "Ajouter un produit"}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <ProductForm
-                        editingProduct={editingProduct}
-                        categories={categories}
-                        onSubmit={async (data: ProductFormData) => {
-                          try {
-                            const productData = {
-                              ...data,
-                              price: parseFloat(data.price),
-                              original_price: data.original_price ? parseFloat(data.original_price) : undefined,
-                              stock_quantity: parseInt(data.stock_quantity) || 0,
-                              is_active: true,
-                              rating: 0,
-                            };
-
-                            if (editingProduct) {
-                              await updateProduct.mutateAsync({ id: editingProduct.id, ...productData });
-                              toast({ title: "Produit mis à jour avec succès" });
-                            } else {
-                              await createProduct.mutateAsync(productData);
-                              toast({ title: "Produit créé avec succès" });
-                            }
-
-                            setIsProductModalOpen(false);
-                            setEditingProduct(null);
-                          } catch (error) {
-                            toast({
-                              title: "Erreur",
-                              description: "Une erreur est survenue",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                        isSubmitting={createProduct.isPending || updateProduct.isPending}
-                        onClose={() => {
-                          setIsProductModalOpen(false);
-                          setEditingProduct(null);
-                        }}
-                      />
-                    </DialogContent>
-                  </Dialog>
+                  <Button onClick={() => navigate("/add-product")}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Ajouter un produit
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -482,7 +346,7 @@ export default function Supplier() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleEditProduct(product)}
+                            onClick={() => navigate(`/add-product?id=${product.id}`)}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>

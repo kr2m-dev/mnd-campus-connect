@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Users, 
-  ArrowRight, 
-  MessageCircle, 
-  Shield, 
+import {
+  Users,
+  ArrowRight,
+  MessageCircle,
+  Shield,
   TrendingUp,
   BookOpen,
   Laptop,
@@ -15,6 +15,7 @@ import {
   Eye
 } from "lucide-react";
 import { useStudentListings } from "@/hooks/use-student-listings";
+import { usePlatformStats } from "@/hooks/use-stats";
 
 interface StudentExchangeProps {
   onAccessExchange: () => void;
@@ -29,7 +30,16 @@ const categoryIcons: Record<string, React.ElementType> = {
 
 export const StudentExchange = ({ onAccessExchange, selectedUniversity }: StudentExchangeProps) => {
   const { data: listings = [], isLoading } = useStudentListings(selectedUniversity);
-  
+  const { data: stats } = usePlatformStats();
+
+  // Format numbers for display
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return `${Math.floor(num / 1000)}${num % 1000 >= 500 ? '.5' : ''}K+`;
+    }
+    return num.toString();
+  };
+
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -76,20 +86,22 @@ export const StudentExchange = ({ onAccessExchange, selectedUniversity }: Studen
           </p>
           
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">2.5K+</div>
-              <div className="text-xs text-muted-foreground">Annonces actives</div>
+          {stats && (
+            <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{formatNumber(stats.activeListingsCount)}</div>
+                <div className="text-xs text-muted-foreground">Annonces actives</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-accent">{formatNumber(stats.studentsCount)}</div>
+                <div className="text-xs text-muted-foreground">Étudiants inscrits</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{stats.averageRating}</div>
+                <div className="text-xs text-muted-foreground">Note moyenne</div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-accent">15K+</div>
-              <div className="text-xs text-muted-foreground">Étudiants inscrits</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">4.9</div>
-              <div className="text-xs text-muted-foreground">Note moyenne</div>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Features */}

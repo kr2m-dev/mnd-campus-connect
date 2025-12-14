@@ -1,0 +1,24 @@
+Super ! 🎉 Je vais créer l'interface des notifications. Laisse-moi d'abord vérifier s'il existe déjà un hook :
+
+● Search(pattern: "**/*notification*.{ts,tsx}")
+⎿  Found 1 file (ctrl+o to expand)
+
+● Read(src\hooks\use-notifications.ts)
+⎿  Read 193 lines
+
+● Parfait ! Les hooks existent déjà. Je vais créer un composant de notifications pour le header avec une cloche et un badge :
+
+● Write(src\components\notifications-popover.tsx)
+⎿  Wrote 1 lines to src\components\notifications-popover.tsx
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Bell, Check, Trash2, CheckCheck, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+Popover,
+PopoverContent,
+PopoverTrigger,
+} from "@/components/ui/popover";
+⎿  Limit reached · resets 4pm (UTC) · /upgrade to Max or turn on /extra-usage
+Opening your options…

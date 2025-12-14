@@ -22,7 +22,6 @@ export const useStudentListings = (filters?: StudentListingFilters) => {
         .from("student_listings")
         .select(`
           *,
-          profiles(full_name),
           categories(name, icon_name)
         `)
         .eq("is_active", filters?.is_active ?? true)
@@ -60,6 +59,23 @@ export const useStudentListings = (filters?: StudentListingFilters) => {
 
       const { data, error } = await query;
       if (error) throw error;
+
+      // Récupérer les profils des utilisateurs pour chaque listing
+      if (data && data.length > 0) {
+        const userIds = [...new Set(data.map(listing => listing.user_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", userIds);
+
+        // Mapper les profils aux listings
+        const profilesMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+        return data.map(listing => ({
+          ...listing,
+          profiles: profilesMap.get(listing.user_id)
+        })) as EnhancedStudentListing[];
+      }
+
       return data as EnhancedStudentListing[];
     },
   });
@@ -82,7 +98,19 @@ export const useMyListings = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as EnhancedStudentListing[];
+
+      // Récupérer le profil de l'utilisateur
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .eq("user_id", user.id)
+        .single();
+
+      // Mapper le profil à chaque listing
+      return data.map(listing => ({
+        ...listing,
+        profiles: profile
+      })) as EnhancedStudentListing[];
     },
   });
 };
@@ -100,13 +128,23 @@ export const useCreateListing = () => {
         .insert({ ...listing, user_id: user.id })
         .select(`
           *,
-          profiles(full_name),
           categories(name, icon_name)
         `)
         .single();
 
       if (error) throw error;
-      return data as EnhancedStudentListing;
+
+      // Récupérer le profil de l'utilisateur
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .eq("user_id", user.id)
+        .single();
+
+      return {
+        ...data,
+        profiles: profile
+      } as EnhancedStudentListing;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["student-listings"] });
@@ -126,13 +164,23 @@ export const useUpdateListing = () => {
         .eq("id", id)
         .select(`
           *,
-          profiles(full_name),
           categories(name, icon_name)
         `)
         .single();
 
       if (error) throw error;
-      return data as EnhancedStudentListing;
+
+      // Récupérer le profil de l'utilisateur
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .eq("user_id", data.user_id)
+        .single();
+
+      return {
+        ...data,
+        profiles: profile
+      } as EnhancedStudentListing;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["student-listings"] });
