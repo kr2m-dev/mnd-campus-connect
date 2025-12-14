@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Hook pour vérifier si l'utilisateur est admin
+// Uses server-side is_admin function for secure role verification
 export const useIsAdmin = () => {
   return useQuery({
     queryKey: ["is-admin"],
@@ -10,14 +11,21 @@ export const useIsAdmin = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("admin_role")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      // Use the secure server-side is_admin function
+      const { data, error } = await supabase.rpc('is_admin', { _user_id: user.id });
 
-      if (error) throw error;
-      return profile?.admin_role !== null && profile?.admin_role !== undefined;
+      if (error) {
+        console.error("Error checking admin status:", error);
+        // Fallback to profile check if RPC fails
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("admin_role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        return profile?.admin_role !== null && profile?.admin_role !== undefined;
+      }
+      
+      return data === true;
     },
   });
 };
