@@ -44,8 +44,8 @@ export default function Profile() {
   const { data: universities, isLoading: universitiesLoading } = useUniversities();
 
   // Récupérer les commandes selon le type d'utilisateur
-  const { data: customerOrders, isLoading: customerOrdersLoading } = useOrders(user?.id);
-  const { data: supplierOrders, isLoading: supplierOrdersLoading } = useSupplierOrders(supplier?.id);
+  const { data: customerOrders, isLoading: customerOrdersLoading } = useOrders();
+  const { data: supplierOrders, isLoading: supplierOrdersLoading } = useSupplierOrders();
 
   const isSupplier = !!supplier;
   const orders = isSupplier ? supplierOrders : customerOrders;
@@ -154,7 +154,7 @@ export default function Profile() {
 
     setLoading(true);
     try {
-      const selectedUniversity = getUniversityById(editForm.universityId);
+      const selectedUniversity = getUniversityById(universities, editForm.universityId);
 
       // Update auth metadata
       const { error: authError } = await supabase.auth.updateUser({

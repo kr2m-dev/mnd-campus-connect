@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useUpdateOrderStatus } from "@/hooks/use-orders";
 import { logger } from "@/lib/logger";
+import { OrderStatus } from "@/lib/database-types";
 
 interface Order {
   id: string;
@@ -101,7 +102,7 @@ export const SupplierOrdersList = ({ orders, loading }: SupplierOrdersListProps)
   const updateOrderStatus = useUpdateOrderStatus();
 
   const handleStatusChange = (orderId: string, newStatus: string) => {
-    updateOrderStatus.mutate({ orderId, status: newStatus });
+    updateOrderStatus.mutate({ orderId, status: newStatus as OrderStatus });
   };
 
   if (loading) {

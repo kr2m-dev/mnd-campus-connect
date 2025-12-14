@@ -137,7 +137,7 @@ export type Database = {
           link: string | null
           message: string
           title: string
-          type: string
+          type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
         Insert: {
@@ -147,7 +147,7 @@ export type Database = {
           link?: string | null
           message: string
           title: string
-          type: string
+          type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
         Update: {
@@ -157,7 +157,7 @@ export type Database = {
           link?: string | null
           message?: string
           title?: string
-          type?: string
+          type?: Database["public"]["Enums"]["notification_type"]
           user_id?: string
         }
         Relationships: []
@@ -217,7 +217,7 @@ export type Database = {
           delivery_phone: string | null
           id: string
           notes: string | null
-          status: string
+          status: Database["public"]["Enums"]["order_status"]
           supplier_id: string | null
           total_amount: number
           updated_at: string | null
@@ -229,7 +229,7 @@ export type Database = {
           delivery_phone?: string | null
           id?: string
           notes?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["order_status"]
           supplier_id?: string | null
           total_amount: number
           updated_at?: string | null
@@ -241,7 +241,7 @@ export type Database = {
           delivery_phone?: string | null
           id?: string
           notes?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["order_status"]
           supplier_id?: string | null
           total_amount?: number
           updated_at?: string | null
@@ -255,6 +255,20 @@ export type Database = {
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_with_contact"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
@@ -264,6 +278,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          image_urls: string[] | null
           is_active: boolean | null
           name: string
           original_price: number | null
@@ -280,6 +295,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           is_active?: boolean | null
           name: string
           original_price?: number | null
@@ -296,6 +312,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           is_active?: boolean | null
           name?: string
           original_price?: number | null
@@ -321,17 +338,33 @@ export type Database = {
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_with_contact"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
         Row: {
           admin_role: string | null
+          avatar_url: string | null
           banned_at: string | null
           banned_reason: string | null
           created_at: string | null
-          full_name: string | null
+          first_name: string | null
           id: string
           is_active: boolean | null
+          last_name: string | null
           phone: string | null
           university: string | null
           updated_at: string | null
@@ -339,12 +372,14 @@ export type Database = {
         }
         Insert: {
           admin_role?: string | null
+          avatar_url?: string | null
           banned_at?: string | null
           banned_reason?: string | null
           created_at?: string | null
-          full_name?: string | null
+          first_name?: string | null
           id?: string
           is_active?: boolean | null
+          last_name?: string | null
           phone?: string | null
           university?: string | null
           updated_at?: string | null
@@ -352,12 +387,14 @@ export type Database = {
         }
         Update: {
           admin_role?: string | null
+          avatar_url?: string | null
           banned_at?: string | null
           banned_reason?: string | null
           created_at?: string | null
-          full_name?: string | null
+          first_name?: string | null
           id?: string
           is_active?: boolean | null
+          last_name?: string | null
           phone?: string | null
           university?: string | null
           updated_at?: string | null
@@ -415,15 +452,15 @@ export type Database = {
       }
       student_listings: {
         Row: {
-          category: string
-          condition: string | null
+          category_id: string | null
+          condition: Database["public"]["Enums"]["item_condition"] | null
           created_at: string
           description: string | null
           id: string
           image_urls: string[] | null
           is_active: boolean | null
           is_sold: boolean | null
-          listing_type: string
+          listing_type: Database["public"]["Enums"]["listing_type"]
           location: string | null
           price: number | null
           title: string
@@ -433,15 +470,15 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
-          category: string
-          condition?: string | null
+          category_id?: string | null
+          condition?: Database["public"]["Enums"]["item_condition"] | null
           created_at?: string
           description?: string | null
           id?: string
           image_urls?: string[] | null
           is_active?: boolean | null
           is_sold?: boolean | null
-          listing_type: string
+          listing_type: Database["public"]["Enums"]["listing_type"]
           location?: string | null
           price?: number | null
           title: string
@@ -451,15 +488,15 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
-          category?: string
-          condition?: string | null
+          category_id?: string | null
+          condition?: Database["public"]["Enums"]["item_condition"] | null
           created_at?: string
           description?: string | null
           id?: string
           image_urls?: string[] | null
           is_active?: boolean | null
           is_sold?: boolean | null
-          listing_type?: string
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           location?: string | null
           price?: number | null
           title?: string
@@ -468,7 +505,15 @@ export type Database = {
           user_id?: string
           views_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "student_listings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suppliers: {
         Row: {
@@ -481,6 +526,7 @@ export type Database = {
           description: string | null
           id: string
           is_verified: boolean | null
+          logo_url: string | null
           updated_at: string | null
           user_id: string
         }
@@ -494,6 +540,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_verified?: boolean | null
+          logo_url?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -507,6 +554,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_verified?: boolean | null
+          logo_url?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -520,6 +568,7 @@ export type Database = {
           flag: string
           id: string
           name: string
+          students_count: string | null
           type: string
           updated_at: string | null
         }
@@ -530,6 +579,7 @@ export type Database = {
           flag: string
           id: string
           name: string
+          students_count?: string | null
           type: string
           updated_at?: string | null
         }
@@ -540,14 +590,166 @@ export type Database = {
           flag?: string
           id?: string
           name?: string
+          students_count?: string | null
           type?: string
           updated_at?: string | null
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      message_conversations: {
+        Row: {
+          conversation_user_id: string | null
+          first_name: string | null
+          is_read: boolean | null
+          last_message_at: string | null
+          last_message_content: string | null
+          last_message_id: string | null
+          last_name: string | null
+        }
+        Relationships: []
+      }
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          phone: string | null
+          university: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: never
+          created_at?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          phone?: never
+          university?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: never
+          created_at?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          phone?: never
+          university?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_stats: {
+        Row: {
+          policy_count: number | null
+          rls_enabled: boolean | null
+          table_name: string | null
+        }
+        Relationships: []
+      }
+      suppliers_public: {
+        Row: {
+          address: string | null
+          business_name: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          contact_whatsapp: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_verified: boolean | null
+          logo_url: string | null
+        }
+        Insert: {
+          address?: never
+          business_name?: string | null
+          contact_email?: never
+          contact_phone?: never
+          contact_whatsapp?: never
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+        }
+        Update: {
+          address?: never
+          business_name?: string | null
+          contact_email?: never
+          contact_phone?: never
+          contact_whatsapp?: never
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+        }
+        Relationships: []
+      }
+      suppliers_with_contact: {
+        Row: {
+          address: string | null
+          business_name: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          contact_whatsapp: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_verified: boolean | null
+          logo_url: string | null
+        }
+        Insert: {
+          address?: never
+          business_name?: string | null
+          contact_email?: never
+          contact_phone?: never
+          contact_whatsapp?: never
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+        }
+        Update: {
+          address?: never
+          business_name?: string | null
+          contact_email?: never
+          contact_phone?: never
+          contact_whatsapp?: never
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_ban_user: {
@@ -582,9 +784,52 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_order_with_profile: {
+        Args: { order_user_id: string }
+        Returns: {
+          full_name: string
+          phone: string
+        }[]
+      }
+      get_supplier_contact: {
+        Args: { supplier_id_param: string }
+        Returns: {
+          address: string
+          contact_email: string
+          contact_phone: string
+          contact_whatsapp: string
+        }[]
+      }
+      get_unread_messages_count: { Args: never; Returns: number }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      mark_message_as_read: {
+        Args: { message_id_param: string }
+        Returns: boolean
+      }
+      user_has_order_with_supplier: {
+        Args: { supplier_id_param: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "super_admin" | "moderator" | "user"
+      item_condition: "new" | "like_new" | "good" | "fair" | "poor"
+      listing_type: "sale" | "exchange" | "free"
+      notification_type: "order" | "message" | "product" | "system"
+      order_status:
+        | "pending"
+        | "confirmed"
+        | "preparing"
+        | "ready"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -711,6 +956,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "super_admin", "moderator", "user"],
+      item_condition: ["new", "like_new", "good", "fair", "poor"],
+      listing_type: ["sale", "exchange", "free"],
+      notification_type: ["order", "message", "product", "system"],
+      order_status: [
+        "pending",
+        "confirmed",
+        "preparing",
+        "ready",
+        "completed",
+        "cancelled",
+      ],
+    },
   },
 } as const

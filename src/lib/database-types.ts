@@ -90,6 +90,7 @@ export interface EnhancedProduct {
   original_price?: number; // numeric(10,2)
   category_id?: string;
   image_url?: string;
+  image_urls?: string[]; // text[] array type
   university_filter?: string;
   is_active: boolean;
   stock_quantity: number; // CHECK >= 0
@@ -145,12 +146,14 @@ export interface EnhancedOrder {
   created_at: string;
   updated_at: string;
   profiles?: {
-    full_name?: string;
+    first_name?: string;
+    last_name?: string;
     phone?: string;
   };
   suppliers?: {
     business_name: string;
     contact_phone?: string;
+    contact_whatsapp?: string;
   };
 }
 
