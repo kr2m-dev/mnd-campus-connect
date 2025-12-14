@@ -596,6 +596,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       message_conversations: {
@@ -780,6 +801,14 @@ export type Database = {
         }[]
       }
       get_unread_messages_count: { Args: never; Returns: number }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       mark_message_as_read: {
         Args: { message_id_param: string }
         Returns: boolean
@@ -790,6 +819,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "super_admin" | "moderator" | "user"
       item_condition: "new" | "like_new" | "good" | "fair" | "poor"
       listing_type: "sale" | "exchange" | "free"
       notification_type: "order" | "message" | "product" | "system"
@@ -927,6 +957,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "super_admin", "moderator", "user"],
       item_condition: ["new", "like_new", "good", "fair", "poor"],
       listing_type: ["sale", "exchange", "free"],
       notification_type: ["order", "message", "product", "system"],
