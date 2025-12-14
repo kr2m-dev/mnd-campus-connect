@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AdminStats } from "@/components/admin/admin-stats";
-import { useIsAdmin, useAllUsers, useAllSuppliers, useAllProducts, useBanUser, useToggleUserActive, useVerifySupplier, useToggleProductActive, useDeleteProductAdmin } from "@/hooks/use-admin";
+import { useIsAdmin, useAllUsers, useAllSuppliers, useAllProducts, useBanUser, useUnbanUser, useToggleUserActive, useVerifySupplier, useToggleProductActive, useDeleteProductAdmin } from "@/hooks/use-admin";
 import { BarChart3, Users, Store, Package, Shield, Trash2, CheckCircle, XCircle } from "lucide-react";
 
 export default function Admin() {
@@ -17,6 +17,7 @@ export default function Admin() {
   const { data: suppliers = [], isLoading: suppliersLoading } = useAllSuppliers();
   const { data: products = [], isLoading: productsLoading } = useAllProducts();
   const banUser = useBanUser();
+  const unbanUser = useUnbanUser();
   const toggleUserActive = useToggleUserActive();
   const verifySupplier = useVerifySupplier();
   const toggleProductActive = useToggleProductActive();
@@ -90,7 +91,7 @@ export default function Admin() {
                           <Button size="sm" variant="outline" onClick={() => toggleUserActive.mutate({ userId: user.user_id, isActive: !user.is_active })}>
                             {user.is_active ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                           </Button>
-                          <Button size="sm" variant={user.banned_at ? "default" : "destructive"} onClick={() => banUser.mutate({ userId: user.user_id, reason: "Violation des règles", unban: !!user.banned_at })}>
+                          <Button size="sm" variant={user.banned_at ? "default" : "destructive"} onClick={() => user.banned_at ? unbanUser.mutate(user.user_id) : banUser.mutate({ userId: user.user_id, reason: "Violation des règles" })}>
                             {user.banned_at ? "Débannir" : "Bannir"}
                           </Button>
                         </div>
