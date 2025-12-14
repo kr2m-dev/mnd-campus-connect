@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/lib/logger";
 
 export interface UploadedImage {
   file: File;
@@ -103,7 +104,7 @@ export const useImageUpload = ({
         path: data.path
       };
     } catch (error: any) {
-      console.error("Erreur lors de l'upload:", error);
+      logger.error("Erreur lors de l'upload:", error);
       toast({
         title: "Erreur d'upload",
         description: error.message || "Impossible d'uploader le fichier",
@@ -168,7 +169,7 @@ export const useImageUpload = ({
 
       return { urls: uploadedUrls, paths: uploadedPaths };
     } catch (error: any) {
-      console.error("Erreur lors de l'upload multiple:", error);
+      logger.error("Erreur lors de l'upload multiple:", error);
       toast({
         title: "Erreur",
         description: "Certains fichiers n'ont pas pu être uploadés",
@@ -196,7 +197,7 @@ export const useImageUpload = ({
 
       return true;
     } catch (error: any) {
-      console.error("Erreur lors de la suppression:", error);
+      logger.error("Erreur lors de la suppression:", error);
       toast({
         title: "Erreur de suppression",
         description: error.message || "Impossible de supprimer le fichier",
@@ -221,7 +222,7 @@ export const useImageUpload = ({
 
       return data?.length || 0;
     } catch (error: any) {
-      console.error("Erreur lors de la suppression multiple:", error);
+      logger.error("Erreur lors de la suppression multiple:", error);
       toast({
         title: "Erreur",
         description: "Certains fichiers n'ont pas pu être supprimés",

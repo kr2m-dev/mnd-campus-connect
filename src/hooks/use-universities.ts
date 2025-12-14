@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from "@/lib/logger";
 
 export interface University {
   id: string;
@@ -25,7 +26,7 @@ export function useUniversities() {
         .order('name', { ascending: true });
 
       if (error) {
-        console.error('Error fetching universities:', error);
+        logger.error('Error fetching universities:', error);
         throw error;
       }
 
@@ -51,7 +52,7 @@ export function useUniversity(universityId: string | undefined) {
         .single();
 
       if (error) {
-        console.error('Error fetching university:', error);
+        logger.error('Error fetching university:', error);
         throw error;
       }
 
@@ -78,7 +79,7 @@ export function useUniversitiesByCity(city: string | undefined) {
         .order('name', { ascending: true });
 
       if (error) {
-        console.error('Error fetching universities by city:', error);
+        logger.error('Error fetching universities by city:', error);
         throw error;
       }
 
@@ -105,7 +106,7 @@ export function useUniversitiesByType(type: 'public' | 'private' | undefined) {
         .order('name', { ascending: true });
 
       if (error) {
-        console.error('Error fetching universities by type:', error);
+        logger.error('Error fetching universities by type:', error);
         throw error;
       }
 

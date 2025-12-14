@@ -9,6 +9,7 @@ import {
   OrderStatus
 } from "@/lib/database-types";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 // ============================================
 // ORDER QUERIES
@@ -343,7 +344,7 @@ export const useUpdateOrderStatus = () => {
       toast.success("Statut mis à jour");
     },
     onError: (error) => {
-      console.error("Error updating order status:", error);
+      logger.error("Error updating order status:", error);
       toast.error("Erreur lors de la mise à jour du statut");
     },
   });

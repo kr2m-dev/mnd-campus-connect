@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 export interface Favorite {
   id: string;
@@ -175,7 +176,7 @@ export const useToggleFavorite = () => {
       }
     },
     onError: (error: any, variables) => {
-      console.error("Error toggling favorite:", error);
+      logger.error("Error toggling favorite:", error);
       if (error.code === '23505') {
         toast.error("Ce produit est déjà dans vos favoris");
       } else {

@@ -26,6 +26,7 @@ import { useCart, useRemoveFromCart } from "@/hooks/use-cart";
 import { useCreateOrder } from "@/hooks/use-orders";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ export default function Checkout() {
           .single();
 
         if (error) {
-          console.error("Error loading profile:", error);
+          logger.error("Error loading profile:", error);
           return;
         }
 
@@ -73,7 +74,7 @@ export default function Checkout() {
           }));
         }
       } catch (error) {
-        console.error("Error loading profile data:", error);
+        logger.error("Error loading profile data:", error);
       }
     };
 
@@ -135,7 +136,7 @@ export default function Checkout() {
 
         // Skip if no valid supplier
         if (supplierId === "unknown") {
-          console.warn("Skipping order creation: no supplier_id for items", supplierItems);
+          logger.warn("Skipping order creation: no supplier_id for items", supplierItems);
           continue;
         }
 
@@ -149,9 +150,9 @@ export default function Checkout() {
           notes: formData.notes
         };
 
-        console.log("Creating order with data:", orderData);
+        logger.log("Creating order with data:", orderData);
         const createdOrder = await createOrder.mutateAsync(orderData);
-        console.log("Order created:", createdOrder);
+        logger.log("Order created:", createdOrder);
 
         // Create order items
         const orderItemsData = supplierItems.map(item => ({
@@ -163,13 +164,13 @@ export default function Checkout() {
           subtotal: (item.products?.price || 0) * item.quantity
         }));
 
-        console.log("Creating order items:", orderItemsData);
+        logger.log("Creating order items:", orderItemsData);
         const { error: itemsError } = await supabase
           .from("order_items")
           .insert(orderItemsData);
 
         if (itemsError) {
-          console.error("Error creating order items:", itemsError);
+          logger.error("Error creating order items:", itemsError);
           throw itemsError;
         }
 
@@ -189,7 +190,7 @@ export default function Checkout() {
       toast.success("Commande créée avec succès!");
       navigate("/orders");
     } catch (error) {
-      console.error("Error creating order:", error);
+      logger.error("Error creating order:", error);
       toast.error("Erreur lors de la création de la commande");
     } finally {
       setIsSubmitting(false);

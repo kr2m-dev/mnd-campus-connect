@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Eye, EyeOff, Lock, ArrowLeft, CheckCircle } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -40,9 +41,9 @@ export default function ResetPassword() {
         const refreshToken = params.get('refresh_token');
         const type = params.get('type');
 
-        console.log('URL Hash:', hash);
-        console.log('Access Token:', accessToken ? 'Present' : 'Missing');
-        console.log('Type:', type);
+        logger.log('URL Hash:', hash);
+        logger.log('Access Token:', accessToken ? 'Present' : 'Missing');
+        logger.log('Type:', type);
 
         if (accessToken && refreshToken && type === 'recovery') {
           // Set the session from URL hash parameters
@@ -52,7 +53,7 @@ export default function ResetPassword() {
           });
 
           if (error) {
-            console.error('Error setting session:', error);
+            logger.error('Error setting session:', error);
             toast({
               title: "Lien invalide",
               description: "Le lien de réinitialisation est invalide ou a expiré",
@@ -82,7 +83,7 @@ export default function ResetPassword() {
           }
         }
       } catch (error) {
-        console.error('Session check error:', error);
+        logger.error('Session check error:', error);
         toast({
           title: "Erreur",
           description: "Une erreur est survenue lors de la vérification",

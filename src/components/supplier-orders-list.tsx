@@ -13,6 +13,7 @@ import { Package, Clock, CheckCircle, XCircle, AlertCircle, User, MapPin, Phone 
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useUpdateOrderStatus } from "@/hooks/use-orders";
+import { logger } from "@/lib/logger";
 
 interface Order {
   id: string;
@@ -213,7 +214,7 @@ export const SupplierOrdersList = ({ orders, loading }: SupplierOrdersListProps)
                   <Select
                     value={order.status}
                     onValueChange={(value) => {
-                      console.log('Status change:', { orderId: order.id, from: order.status, to: value });
+                      logger.log('Status change:', { orderId: order.id, from: order.status, to: value });
                       handleStatusChange(order.id, value);
                     }}
                   >

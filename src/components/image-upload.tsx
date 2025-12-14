@@ -3,6 +3,7 @@ import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { uploadFile, deleteFile, validateFile, type StorageBucket } from '@/lib/storage-helper';
 import { toast } from 'sonner';
+import { logger } from "@/lib/logger";
 
 interface ImageUploadProps {
   bucket: StorageBucket;
@@ -67,7 +68,7 @@ export function ImageUpload({
       toast.success('Image téléchargée avec succès');
       onUploadSuccess(result.url, result.path);
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Upload error:', error);
       toast.error('Erreur lors du téléchargement');
       setPreviewUrl(currentImageUrl);
     } finally {
@@ -98,7 +99,7 @@ export function ImageUpload({
       onDelete();
       toast.success('Image supprimée avec succès');
     } catch (error) {
-      console.error('Delete error:', error);
+      logger.error('Delete error:', error);
       toast.error('Erreur lors de la suppression');
     }
   };

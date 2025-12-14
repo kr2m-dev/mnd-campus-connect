@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, User, MapPin, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { logger } from "@/lib/logger";
 
 interface WhatsAppOrderDialogProps {
   isOpen: boolean;
@@ -74,7 +75,7 @@ export const WhatsAppOrderDialog = ({
       formattedPhone = '+221' + formattedPhone; // Senegal country code
     }
 
-    console.log("Formatted Phone:", formattedPhone);
+    logger.log("Formatted Phone:", formattedPhone);
 
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');

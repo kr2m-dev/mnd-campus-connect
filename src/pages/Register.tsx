@@ -11,7 +11,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { useUniversities, getUniversityById } from "@/hooks/use-universities";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, GraduationCap, Building, Store, ArrowRight, Sparkles, CheckCircle, Phone } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, GraduationCap, Building, Store, ArrowRight, Sparkles, CheckCircle, Phone, AlertCircle } from "lucide-react";
+import { validateRegistration, getPasswordStrength, type RegistrationData } from "@/lib/validation";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -35,38 +36,54 @@ export default function Register() {
     universityId: "",
   });
 
+  const [errors, setErrors] = useState<{
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+    confirmPassword?: string;
+    universityId?: string;
+  }>({});
+
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
+
+    // Clear error for this field when user starts typing
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
+
+    // Update password strength indicator
+    if (name === 'password') {
+      setPasswordStrength(getPasswordStrength(value));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Erreur",
-        description: "Les mots de passe ne correspondent pas",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Comprehensive validation
+    const validationResult = validateRegistration(formData as RegistrationData);
 
-    if (formData.password.length < 6) {
-      toast({
-        title: "Erreur",
-        description: "Le mot de passe doit contenir au moins 6 caractères",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!validationResult.isValid) {
+      setErrors(validationResult.errors);
 
-    if (!formData.universityId) {
+      // Show first error in toast
+      const firstError = Object.values(validationResult.errors)[0];
       toast({
-        title: "Erreur",
-        description: "Veuillez sélectionner votre université",
+        title: "Erreur de validation",
+        description: firstError,
         variant: "destructive",
       });
       return;
@@ -74,18 +91,23 @@ export default function Register() {
 
     const selectedUniversity = getUniversityById(universities, formData.universityId);
 
+    // Use sanitized data
     const result = await register({
-      email: formData.email,
-      password: formData.password,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      phone: formData.phone,
+      email: validationResult.sanitized!.email,
+      password: formData.password, // Password is not sanitized, only validated
+      firstName: validationResult.sanitized!.firstName,
+      lastName: validationResult.sanitized!.lastName,
+      phone: validationResult.sanitized!.phone,
       userType: "client", // Par défaut, les inscriptions depuis /register sont des clients
       universityId: formData.universityId,
       universityName: selectedUniversity?.name || "",
     });
 
     if (result.success) {
+      toast({
+        title: "Inscription réussie",
+        description: "Votre compte a été créé avec succès. Veuillez vous connecter.",
+      });
       navigate("/login");
     }
   };
@@ -157,10 +179,18 @@ export default function Register() {
                       placeholder="Modou"
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="pl-12 h-11 border-2 focus:border-primary transition-all"
+                      className={`pl-12 h-11 border-2 focus:border-primary transition-all ${errors.firstName ? 'border-red-500' : ''}`}
                       required
+                      aria-invalid={!!errors.firstName}
+                      aria-describedby={errors.firstName ? "firstName-error" : undefined}
                     />
                   </div>
+                  {errors.firstName && (
+                    <p id="firstName-error" className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.firstName}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName" className="text-sm font-semibold">Nom</Label>
@@ -175,10 +205,18 @@ export default function Register() {
                       placeholder="DIOP"
                       value={formData.lastName}
                       onChange={handleChange}
-                      className="pl-12 h-11 border-2 focus:border-primary transition-all"
+                      className={`pl-12 h-11 border-2 focus:border-primary transition-all ${errors.lastName ? 'border-red-500' : ''}`}
                       required
+                      aria-invalid={!!errors.lastName}
+                      aria-describedby={errors.lastName ? "lastName-error" : undefined}
                     />
                   </div>
+                  {errors.lastName && (
+                    <p id="lastName-error" className="text-sm text-red-500 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.lastName}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -228,10 +266,18 @@ export default function Register() {
                     placeholder="modou.diop@university.edu"
                     value={formData.email}
                     onChange={handleChange}
-                    className="pl-12 h-11 border-2 focus:border-primary transition-all"
+                    className={`pl-12 h-11 border-2 focus:border-primary transition-all ${errors.email ? 'border-red-500' : ''}`}
                     required
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "email-error" : undefined}
                   />
                 </div>
+                {errors.email && (
+                  <p id="email-error" className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               {/* Phone Field */}
@@ -245,13 +291,21 @@ export default function Register() {
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="77 123 45 67"
+                    placeholder="+221771234567 ou 771234567"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="pl-12 h-11 border-2 focus:border-primary transition-all"
+                    className={`pl-12 h-11 border-2 focus:border-primary transition-all ${errors.phone ? 'border-red-500' : ''}`}
                     required
+                    aria-invalid={!!errors.phone}
+                    aria-describedby={errors.phone ? "phone-error" : undefined}
                   />
                 </div>
+                {errors.phone && (
+                  <p id="phone-error" className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.phone}
+                  </p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -265,11 +319,13 @@ export default function Register() {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Minimum 6 caractères"
+                    placeholder="Min 8 caractères, majuscule, chiffre, symbole"
                     value={formData.password}
                     onChange={handleChange}
-                    className="pl-12 pr-12 h-11 border-2 focus:border-primary transition-all"
+                    className={`pl-12 pr-12 h-11 border-2 focus:border-primary transition-all ${errors.password ? 'border-red-500' : ''}`}
                     required
+                    aria-invalid={!!errors.password}
+                    aria-describedby={errors.password ? "password-error" : undefined}
                   />
                   <button
                     type="button"
@@ -279,6 +335,31 @@ export default function Register() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {/* Password Strength Indicator */}
+                {formData.password && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full transition-all duration-300"
+                          style={{
+                            width: `${(passwordStrength.score / 4) * 100}%`,
+                            backgroundColor: passwordStrength.color
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium" style={{ color: passwordStrength.color }}>
+                        {passwordStrength.label}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {errors.password && (
+                  <p id="password-error" className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.password}
+                  </p>
+                )}
               </div>
 
               {/* Confirm Password Field */}
@@ -295,8 +376,10 @@ export default function Register() {
                     placeholder="Retapez votre mot de passe"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="pl-12 pr-12 h-11 border-2 focus:border-primary transition-all"
+                    className={`pl-12 pr-12 h-11 border-2 focus:border-primary transition-all ${errors.confirmPassword ? 'border-red-500' : ''}`}
                     required
+                    aria-invalid={!!errors.confirmPassword}
+                    aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
                   />
                   <button
                     type="button"
@@ -306,6 +389,12 @@ export default function Register() {
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {errors.confirmPassword && (
+                  <p id="confirmPassword-error" className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.confirmPassword}
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}

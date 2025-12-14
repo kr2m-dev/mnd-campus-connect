@@ -1,0 +1,45 @@
+# Configuration Netlify pour CampusLink
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# Headers de sécurité HTTP
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Empêche l'affichage du site dans une iframe (protection contre le clickjacking)
+    X-Frame-Options = "DENY"
+
+    # Empêche le navigateur de deviner le type MIME
+    X-Content-Type-Options = "nosniff"
+
+    # Active la protection XSS intégrée du navigateur
+    X-XSS-Protection = "1; mode=block"
+
+    # Contrôle les informations du referrer envoyées
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Désactive les API dangereuses
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+    # Force HTTPS (à activer seulement si le site est en HTTPS)
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+    # Content Security Policy - Protège contre XSS et injections
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://zdvemexeuorsbcermvqr.supabase.co;
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: https: blob:;
+      font-src 'self' data:;
+      connect-src 'self' https://zdvemexeuorsbcermvqr.supabase.co wss://zdvemexeuorsbcermvqr.supabase.co;
+      frame-ancestors 'none';
+      base-uri 'self';
+      form-action 'self'
+    """
+
+# Redirections (si nécessaire)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

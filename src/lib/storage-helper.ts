@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from "@/lib/logger";
 
 export type StorageBucket = 'product-images' | 'student-listings' | 'avatars' | 'supplier-logos';
 
@@ -51,7 +52,7 @@ export async function uploadFile({
       });
 
     if (error) {
-      console.error('Upload error:', error);
+      logger.error('Upload error:', error);
       return { url: null, path: null, error };
     }
 
@@ -62,7 +63,7 @@ export async function uploadFile({
 
     return { url: publicUrl, path: data.path, error: null };
   } catch (error) {
-    console.error('Upload exception:', error);
+    logger.error('Upload exception:', error);
     return {
       url: null,
       path: null,
@@ -105,13 +106,13 @@ export async function deleteFile(
     const { error } = await supabase.storage.from(bucket).remove([path]);
 
     if (error) {
-      console.error('Delete error:', error);
+      logger.error('Delete error:', error);
       return error;
     }
 
     return null;
   } catch (error) {
-    console.error('Delete exception:', error);
+    logger.error('Delete exception:', error);
     return error instanceof Error ? error : new Error('Unknown error');
   }
 }
@@ -130,13 +131,13 @@ export async function deleteMultipleFiles(
     const { error } = await supabase.storage.from(bucket).remove(paths);
 
     if (error) {
-      console.error('Delete error:', error);
+      logger.error('Delete error:', error);
       return error;
     }
 
     return null;
   } catch (error) {
-    console.error('Delete exception:', error);
+    logger.error('Delete exception:', error);
     return error instanceof Error ? error : new Error('Unknown error');
   }
 }

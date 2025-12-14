@@ -35,6 +35,7 @@ import { OrderStatus } from "@/lib/database-types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 const statusConfig: Record<OrderStatus, { label: string; icon: any; color: string; bgColor: string }> = {
   pending: {
@@ -105,7 +106,7 @@ export default function SupplierOrders() {
     try {
       await updateOrderStatus.mutateAsync({ orderId, status: newStatus });
     } catch (error) {
-      console.error("Error updating order status:", error);
+      logger.error("Error updating order status:", error);
     }
   };
 

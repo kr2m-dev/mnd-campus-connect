@@ -17,6 +17,7 @@ import { UniversitySelector } from "@/components/ui/university-selector";
 import { useAuth } from "@/hooks/use-auth";
 import { useCurrentSupplier } from "@/hooks/use-supplier";
 import { getUniversityById } from "@/data/universities";
+import { logger } from "@/lib/logger";
 
 interface University {
   id: string;
@@ -106,7 +107,7 @@ const Index = () => {
   const handleSupplierAccess = () => {
     setShowSupplierAccess(true);
     // In a real app, this would navigate to the supplier login/register page
-    console.log("Navigate to supplier access");
+    logger.log("Navigate to supplier access");
   };
 
   const handleSelectUniversity = () => {

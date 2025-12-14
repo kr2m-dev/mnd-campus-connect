@@ -10,9 +10,11 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Store, Building, Phone, MapPin, ArrowRight, Sparkles, CheckCircle, Image } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Store, Building, Phone, MapPin, ArrowRight, Sparkles, CheckCircle, Image, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ImageUpload } from "@/components/image-upload";
+import { logger } from "@/lib/logger";
+import { validateSupplierRegistration, getPasswordStrength, type SupplierRegistrationData } from "@/lib/validation";
 
 export default function SupplierRegister() {
   const navigate = useNavigate();
@@ -40,61 +42,74 @@ export default function SupplierRegister() {
     logoUrl: "",
   });
 
+  const [errors, setErrors] = useState<{
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    businessName?: string;
+    description?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    contactWhatsapp?: string;
+    address?: string;
+  }>({});
+
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
+
+    // Clear error for this field when user starts typing
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
+
+    // Update password strength indicator
+    if (name === 'password') {
+      setPasswordStrength(getPasswordStrength(value));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validations
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Erreur",
-        description: "Les mots de passe ne correspondent pas",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Comprehensive validation
+    const validationResult = validateSupplierRegistration(formData as SupplierRegistrationData);
 
-    if (formData.password.length < 6) {
-      toast({
-        title: "Erreur",
-        description: "Le mot de passe doit contenir au moins 6 caractères",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!validationResult.isValid) {
+      setErrors(validationResult.errors);
 
-    if (!formData.businessName) {
+      // Show first error in toast
+      const firstError = Object.values(validationResult.errors)[0];
       toast({
-        title: "Erreur",
-        description: "Le nom de l'entreprise est requis",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.contactWhatsapp) {
-      toast({
-        title: "Erreur",
-        description: "Le numéro WhatsApp est requis pour recevoir les commandes",
+        title: "Erreur de validation",
+        description: firstError,
         variant: "destructive",
       });
       return;
     }
 
     try {
+      // Use sanitized data
+      const sanitized = validationResult.sanitized!;
+
       // 1. Créer le compte utilisateur
       const result = await register({
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.contactPhone || formData.contactWhatsapp, // Utiliser le téléphone de contact ou WhatsApp
+        email: sanitized.email,
+        password: formData.password, // Password is not sanitized, only validated
+        firstName: sanitized.firstName,
+        lastName: sanitized.lastName,
+        phone: sanitized.contactPhone || sanitized.contactWhatsapp, // Utiliser le téléphone de contact ou WhatsApp
         userType: "fournisseur",
         universityId: "", // Pas d'université pour les fournisseurs
         universityName: "",
@@ -104,23 +119,23 @@ export default function SupplierRegister() {
         return;
       }
 
-      // 2. Créer le profil fournisseur
+      // 2. Créer le profil fournisseur avec données sanitisées
       const { error: supplierError } = await supabase
         .from("suppliers")
         .insert({
           user_id: result.user?.id,
-          business_name: formData.businessName,
-          description: formData.description || null,
-          contact_email: formData.contactEmail || formData.email,
-          contact_phone: formData.contactPhone || null,
-          contact_whatsapp: formData.contactWhatsapp,
-          address: formData.address || null,
-          logo_url: formData.logoUrl || null,
+          business_name: sanitized.businessName,
+          description: sanitized.description || null,
+          contact_email: sanitized.contactEmail || sanitized.email,
+          contact_phone: sanitized.contactPhone || null,
+          contact_whatsapp: sanitized.contactWhatsapp,
+          address: sanitized.address || null,
+          logo_url: formData.logoUrl || null, // Logo URL from upload
           is_verified: false,
         });
 
       if (supplierError) {
-        console.error("Erreur lors de la création du profil fournisseur:", supplierError);
+        logger.error("Erreur lors de la création du profil fournisseur:", supplierError);
         toast({
           title: "Erreur",
           description: "Compte créé mais erreur lors de la création du profil fournisseur",
@@ -140,7 +155,7 @@ export default function SupplierRegister() {
       }, 2000);
 
     } catch (error: any) {
-      console.error("Erreur lors de l'inscription:", error);
+      logger.error("Erreur lors de l'inscription:", error);
       toast({
         title: "Erreur",
         description: error.message || "Une erreur est survenue lors de l'inscription",
@@ -227,9 +242,17 @@ export default function SupplierRegister() {
                         placeholder="Modou"
                         value={formData.firstName}
                         onChange={handleChange}
-                        className="h-11 border-2 focus:border-primary transition-all"
+                        className={`h-11 border-2 focus:border-primary transition-all ${errors.firstName ? 'border-red-500' : ''}`}
                         required
+                        aria-invalid={!!errors.firstName}
+                        aria-describedby={errors.firstName ? "firstName-error" : undefined}
                       />
+                      {errors.firstName && (
+                        <p id="firstName-error" className="text-sm text-red-500 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.firstName}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName" className="text-sm font-semibold">Nom *</Label>
@@ -240,9 +263,17 @@ export default function SupplierRegister() {
                         placeholder="DIOP"
                         value={formData.lastName}
                         onChange={handleChange}
-                        className="h-11 border-2 focus:border-primary transition-all"
+                        className={`h-11 border-2 focus:border-primary transition-all ${errors.lastName ? 'border-red-500' : ''}`}
                         required
+                        aria-invalid={!!errors.lastName}
+                        aria-describedby={errors.lastName ? "lastName-error" : undefined}
                       />
+                      {errors.lastName && (
+                        <p id="lastName-error" className="text-sm text-red-500 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.lastName}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -257,59 +288,101 @@ export default function SupplierRegister() {
                         placeholder="votre.email@example.com"
                         value={formData.email}
                         onChange={handleChange}
-                        className="pl-10 h-11 border-2 focus:border-primary transition-all"
+                        className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.email ? 'border-red-500' : ''}`}
                         required
+                        aria-invalid={!!errors.email}
+                        aria-describedby={errors.email ? "email-error" : undefined}
                       />
                     </div>
+                    {errors.email && (
+                      <p id="email-error" className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="text-sm font-semibold">Mot de passe *</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="password"
-                          name="password"
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Min. 6 caractères"
-                          value={formData.password}
-                          onChange={handleChange}
-                          className="pl-10 pr-10 h-11 border-2 focus:border-primary transition-all"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary"
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-semibold">Mot de passe *</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Min 8 caractères, majuscule, chiffre, symbole"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className={`pl-10 pr-10 h-11 border-2 focus:border-primary transition-all ${errors.password ? 'border-red-500' : ''}`}
+                        required
+                        aria-invalid={!!errors.password}
+                        aria-describedby={errors.password ? "password-error" : undefined}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword" className="text-sm font-semibold">Confirmer *</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Confirmer"
-                          value={formData.confirmPassword}
-                          onChange={handleChange}
-                          className="pl-10 pr-10 h-11 border-2 focus:border-primary transition-all"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary"
-                        >
-                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
+                    {/* Password Strength Indicator */}
+                    {formData.password && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full transition-all duration-300"
+                              style={{
+                                width: `${(passwordStrength.score / 4) * 100}%`,
+                                backgroundColor: passwordStrength.color
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs font-medium" style={{ color: passwordStrength.color }}>
+                            {passwordStrength.label}
+                          </span>
+                        </div>
                       </div>
+                    )}
+                    {errors.password && (
+                      <p id="password-error" className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.password}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-sm font-semibold">Confirmer le mot de passe *</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Retapez votre mot de passe"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        className={`pl-10 pr-10 h-11 border-2 focus:border-primary transition-all ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                        required
+                        aria-invalid={!!errors.confirmPassword}
+                        aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
+                    {errors.confirmPassword && (
+                      <p id="confirmPassword-error" className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.confirmPassword}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -329,9 +402,17 @@ export default function SupplierRegister() {
                       placeholder="Ma Super Entreprise"
                       value={formData.businessName}
                       onChange={handleChange}
-                      className="h-11 border-2 focus:border-primary transition-all"
+                      className={`h-11 border-2 focus:border-primary transition-all ${errors.businessName ? 'border-red-500' : ''}`}
                       required
+                      aria-invalid={!!errors.businessName}
+                      aria-describedby={errors.businessName ? "businessName-error" : undefined}
                     />
+                    {errors.businessName && (
+                      <p id="businessName-error" className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.businessName}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -342,9 +423,17 @@ export default function SupplierRegister() {
                       placeholder="Décrivez votre entreprise et vos produits..."
                       value={formData.description}
                       onChange={handleChange}
-                      className="border-2 focus:border-primary transition-all resize-none"
+                      className={`border-2 focus:border-primary transition-all resize-none ${errors.description ? 'border-red-500' : ''}`}
                       rows={3}
+                      aria-invalid={!!errors.description}
+                      aria-describedby={errors.description ? "description-error" : undefined}
                     />
+                    {errors.description && (
+                      <p id="description-error" className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.description}
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -359,9 +448,17 @@ export default function SupplierRegister() {
                           placeholder="contact@entreprise.com"
                           value={formData.contactEmail}
                           onChange={handleChange}
-                          className="pl-10 h-11 border-2 focus:border-primary transition-all"
+                          className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.contactEmail ? 'border-red-500' : ''}`}
+                          aria-invalid={!!errors.contactEmail}
+                          aria-describedby={errors.contactEmail ? "contactEmail-error" : undefined}
                         />
                       </div>
+                      {errors.contactEmail && (
+                        <p id="contactEmail-error" className="text-sm text-red-500 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.contactEmail}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="contactPhone" className="text-sm font-semibold">Téléphone</Label>
@@ -371,12 +468,20 @@ export default function SupplierRegister() {
                           id="contactPhone"
                           name="contactPhone"
                           type="tel"
-                          placeholder="77 123 45 67"
+                          placeholder="+221771234567 ou 771234567"
                           value={formData.contactPhone}
                           onChange={handleChange}
-                          className="pl-10 h-11 border-2 focus:border-primary transition-all"
+                          className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.contactPhone ? 'border-red-500' : ''}`}
+                          aria-invalid={!!errors.contactPhone}
+                          aria-describedby={errors.contactPhone ? "contactPhone-error" : undefined}
                         />
                       </div>
+                      {errors.contactPhone && (
+                        <p id="contactPhone-error" className="text-sm text-red-500 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.contactPhone}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -388,16 +493,25 @@ export default function SupplierRegister() {
                         id="contactWhatsapp"
                         name="contactWhatsapp"
                         type="tel"
-                        placeholder="77 123 45 67"
+                        placeholder="+221771234567 ou 771234567"
                         value={formData.contactWhatsapp}
                         onChange={handleChange}
-                        className="pl-10 h-11 border-2 focus:border-primary transition-all"
+                        className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.contactWhatsapp ? 'border-red-500' : ''}`}
                         required
+                        aria-invalid={!!errors.contactWhatsapp}
+                        aria-describedby={errors.contactWhatsapp ? "contactWhatsapp-error" : undefined}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Les commandes seront envoyées directement sur ce numéro WhatsApp
-                    </p>
+                    {errors.contactWhatsapp ? (
+                      <p id="contactWhatsapp-error" className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.contactWhatsapp}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Les commandes seront envoyées directement sur ce numéro WhatsApp
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -411,9 +525,17 @@ export default function SupplierRegister() {
                         placeholder="123 Rue Example, Dakar"
                         value={formData.address}
                         onChange={handleChange}
-                        className="pl-10 h-11 border-2 focus:border-primary transition-all"
+                        className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.address ? 'border-red-500' : ''}`}
+                        aria-invalid={!!errors.address}
+                        aria-describedby={errors.address ? "address-error" : undefined}
                       />
                     </div>
+                    {errors.address && (
+                      <p id="address-error" className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.address}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">

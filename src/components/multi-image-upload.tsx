@@ -3,6 +3,7 @@ import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { uploadFile, deleteFile, validateFile, type StorageBucket } from '@/lib/storage-helper';
 import { toast } from 'sonner';
+import { logger } from "@/lib/logger";
 
 interface MultiImageUploadProps {
   bucket: StorageBucket;
@@ -80,7 +81,7 @@ export function MultiImageUpload({
         toast.success(`${successfulUploads.length} image(s) téléchargée(s) avec succès`);
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Upload error:', error);
       toast.error('Erreur lors du téléchargement');
     } finally {
       setIsUploading(false);
@@ -106,7 +107,7 @@ export function MultiImageUpload({
       onUploadSuccess(updatedImages);
       toast.success('Image supprimée avec succès');
     } catch (error) {
-      console.error('Delete error:', error);
+      logger.error('Delete error:', error);
       toast.error('Erreur lors de la suppression');
     }
   };

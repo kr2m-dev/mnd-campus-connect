@@ -36,6 +36,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { createWhatsAppLink } from "@/lib/phone-utils";
 import { useState } from "react";
+import { logger } from "@/lib/logger";
 
 const statusConfig: Record<OrderStatus, {
   label: string;
@@ -160,7 +161,7 @@ export default function OrderDetails() {
       await cancelOrder.mutateAsync(orderId);
       setShowCancelDialog(false);
     } catch (error) {
-      console.error("Error cancelling order:", error);
+      logger.error("Error cancelling order:", error);
     } finally {
       setIsCancelling(false);
     }
