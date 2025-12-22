@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string | null
@@ -753,7 +783,23 @@ export type Database = {
     }
     Functions: {
       admin_ban_user: {
-        Args: { ban_reason?: string; target_user_id: string }
+        Args: {
+          ban_reason?: string
+          should_unban?: boolean
+          target_user_id: string
+        }
+        Returns: boolean
+      }
+      admin_delete_product: {
+        Args: { target_product_id: string }
+        Returns: boolean
+      }
+      admin_toggle_product_active: {
+        Args: { new_is_active: boolean; target_product_id: string }
+        Returns: boolean
+      }
+      admin_toggle_user_active: {
+        Args: { new_is_active: boolean; target_user_id: string }
         Returns: boolean
       }
       admin_unban_user: { Args: { target_user_id: string }; Returns: boolean }
@@ -766,6 +812,10 @@ export type Database = {
           new_university?: string
           target_user_id: string
         }
+        Returns: boolean
+      }
+      admin_verify_supplier: {
+        Args: { new_is_verified: boolean; target_supplier_id: string }
         Returns: boolean
       }
       get_all_users_admin: {
