@@ -11,14 +11,14 @@ import { ProductsTable } from "@/components/admin/products-table";
 import { OrdersTable } from "@/components/admin/orders-table";
 import { ReviewsTable } from "@/components/admin/reviews-table";
 import {
-  useIsAdmin,
-  useAllUsers,
-  useAllSuppliers,
-  useAllProducts,
   useAllOrders,
   useAllReviews,
 } from "@/hooks/use-admin";
-import { BarChart3, Users, Store, Package, Shield, ShoppingCart, Star } from "lucide-react";
+import { BarChart3, Users, Store, Package, Shield, ShoppingCart, Star,  } from "lucide-react";
+import { useIsAdmin, useAllUsers, useAllSuppliers, useAllProducts, useBanUser, useUnbanUser, useToggleUserActive, useVerifySupplier, useToggleProductActive, useDeleteProductAdmin } from "@/hooks/use-admin";
+import { Trash2, CheckCircle, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -28,6 +28,12 @@ export default function Admin() {
   const { data: products = [], isLoading: productsLoading } = useAllProducts();
   const { data: orders = [], isLoading: ordersLoading } = useAllOrders();
   const { data: reviews = [], isLoading: reviewsLoading } = useAllReviews();
+  const banUser = useBanUser();
+  const unbanUser = useUnbanUser();
+  const toggleUserActive = useToggleUserActive();
+  const verifySupplier = useVerifySupplier();
+  const toggleProductActive = useToggleProductActive();
+  const deleteProduct = useDeleteProductAdmin();
 
   const handleUniversityChange = () => {};
 
@@ -129,6 +135,31 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <UsersTable users={users} isLoading={usersLoading} />
+                {usersLoading ? <div className="text-center py-8">Chargement...</div> : (
+                  <div className="space-y-2">
+                    {users.map((user: any) => (
+                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{user.full_name || 'Utilisateur'}</p>
+                          <p className="text-sm text-muted-foreground">ID: {user.user_id?.slice(0, 8)}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant={user.is_active ? "default" : "secondary"}>{user.is_active ? "Actif" : "Inactif"}</Badge>
+                            {user.banned_at && <Badge variant="destructive">Banni</Badge>}
+                            {user.admin_role && <Badge variant="outline">Admin</Badge>}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => toggleUserActive.mutate({ userId: user.user_id, isActive: !user.is_active })}>
+                            {user.is_active ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                          </Button>
+                          <Button size="sm" variant={user.banned_at ? "default" : "destructive"} onClick={() => user.banned_at ? unbanUser.mutate(user.user_id) : banUser.mutate({ userId: user.user_id, reason: "Violation des règles" })}>
+                            {user.banned_at ? "Débannir" : "Bannir"}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

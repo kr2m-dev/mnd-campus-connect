@@ -225,42 +225,62 @@ export const useAdminStats = () => {
   });
 };
 
-// Hook pour bannir/débannir un utilisateur (SECURE - uses RPC)
+// Hook pour bannir un utilisateur (SECURE - uses RPC)
 export const useBanUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, reason, unban }: { userId: string; reason?: string; unban?: boolean }) => {
-      // Use secure server-side RPC function instead of direct mutation
+    mutationFn: async ({ userId, reason }: { userId: string; reason?: string }) => {
       const { data, error } = await supabase.rpc('admin_ban_user', {
         target_user_id: userId,
-        ban_reason: reason || null,
-        should_unban: unban || false
+        ban_reason: reason || null
       });
 
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-users"] });
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
-      toast.success(variables.unban ? "Utilisateur débanni" : "Utilisateur banni");
+      toast.success("Utilisateur banni");
     },
     onError: (error: any) => {
-      const message = error.message || "Erreur lors de l'opération";
-      toast.error(message);
+      toast.error(error.message || "Erreur lors du bannissement");
     },
   });
 };
 
-// Hook pour activer/désactiver un utilisateur (SECURE - uses RPC)
+// Hook pour débannir un utilisateur (SECURE - uses RPC)
+export const useUnbanUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.rpc('admin_unban_user', {
+        target_user_id: userId
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
+      toast.success("Utilisateur débanni");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Erreur lors du débannissement");
+    },
+  });
+};
+
+// Hook pour activer/désactiver un utilisateur (uses admin_update_user_profile RPC)
 export const useToggleUserActive = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
-      // Use secure server-side RPC function instead of direct mutation
-      const { data, error } = await supabase.rpc('admin_toggle_user_active', {
+      const { data, error } = await supabase.rpc('admin_update_user_profile', {
         target_user_id: userId,
         new_is_active: isActive
       });
@@ -274,23 +294,23 @@ export const useToggleUserActive = () => {
       toast.success("Statut utilisateur mis à jour");
     },
     onError: (error: any) => {
-      const message = error.message || "Erreur lors de la mise à jour";
-      toast.error(message);
+      toast.error(error.message || "Erreur lors de la mise à jour");
     },
   });
 };
 
-// Hook pour vérifier un fournisseur (SECURE - uses RPC)
+// Hook pour vérifier un fournisseur (direct table update with RLS)
 export const useVerifySupplier = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ supplierId, isVerified }: { supplierId: string; isVerified: boolean }) => {
-      // Use secure server-side RPC function instead of direct mutation
-      const { data, error } = await supabase.rpc('admin_verify_supplier', {
-        target_supplier_id: supplierId,
-        new_is_verified: isVerified
-      });
+      const { data, error } = await supabase
+        .from("suppliers")
+        .update({ is_verified: isVerified })
+        .eq("id", supplierId)
+        .select()
+        .single();
 
       if (error) throw error;
       return data;
@@ -301,25 +321,23 @@ export const useVerifySupplier = () => {
       toast.success("Statut fournisseur mis à jour");
     },
     onError: (error: any) => {
-      const message = error.message || "Erreur lors de la vérification";
-      toast.error(message);
+      toast.error(error.message || "Erreur lors de la vérification");
     },
   });
 };
 
-// Hook pour supprimer un produit (admin) (SECURE - uses RPC)
+// Hook pour supprimer un produit (admin - direct table delete with RLS)
 export const useDeleteProductAdmin = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (productId: string) => {
-      // Use secure server-side RPC function instead of direct mutation
-      const { data, error } = await supabase.rpc('admin_delete_product', {
-        target_product_id: productId
-      });
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productId);
 
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-products"] });
@@ -327,23 +345,23 @@ export const useDeleteProductAdmin = () => {
       toast.success("Produit supprimé");
     },
     onError: (error: any) => {
-      const message = error.message || "Erreur lors de la suppression";
-      toast.error(message);
+      toast.error(error.message || "Erreur lors de la suppression");
     },
   });
 };
 
-// Hook pour activer/désactiver un produit (admin) (SECURE - uses RPC)
+// Hook pour activer/désactiver un produit (admin - direct table update with RLS)
 export const useToggleProductActive = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ productId, isActive }: { productId: string; isActive: boolean }) => {
-      // Use secure server-side RPC function instead of direct mutation
-      const { data, error } = await supabase.rpc('admin_toggle_product_active', {
-        target_product_id: productId,
-        new_is_active: isActive
-      });
+      const { data, error } = await supabase
+        .from("products")
+        .update({ is_active: isActive })
+        .eq("id", productId)
+        .select()
+        .single();
 
       if (error) throw error;
       return data;
@@ -354,8 +372,7 @@ export const useToggleProductActive = () => {
       toast.success("Statut produit mis à jour");
     },
     onError: (error: any) => {
-      const message = error.message || "Erreur lors de la mise à jour";
-      toast.error(message);
+      toast.error(error.message || "Erreur lors de la mise à jour");
     },
   });
 };
