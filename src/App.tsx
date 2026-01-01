@@ -51,7 +51,7 @@ const App = () => (
               <Products />
             </CustomerRoute>
           } />
-          <Route path="/products/:id" element={
+          <Route path="/products/:name" element={
             <CustomerRoute>
               <ProductDetails />
             </CustomerRoute>

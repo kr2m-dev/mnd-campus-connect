@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, BarChart3, Package, ShoppingCart, Star, Settings } from "lucide-react";
+import { slugify } from "@/lib/utils";
+import { Trash2, Edit, Plus, BarChart3, Package, ShoppingCart, Star, Settings, Eye } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -346,7 +347,16 @@ export default function Supplier() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => navigate(`/products/${slugify(product.name)}`)}
+                            title="Voir les détails"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => navigate(`/add-product?id=${product.id}`)}
+                            title="Modifier"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -354,6 +364,7 @@ export default function Supplier() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteProduct(product.id)}
+                            title="Supprimer"
                           >
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>

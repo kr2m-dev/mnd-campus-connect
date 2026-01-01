@@ -359,3 +359,53 @@ export const useToggleProductActive = () => {
     },
   });
 };
+
+// Hook pour récupérer tous les avis (admin)
+export const useAllReviews = () => {
+  return useQuery({
+    queryKey: ["all-reviews"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select(`
+          *,
+          profiles!reviews_user_id_fkey (
+            full_name,
+            email
+          ),
+          products (
+            name,
+            image_url
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};
+
+// Hook pour supprimer un avis (admin)
+export const useDeleteReview = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (reviewId: string) => {
+      const { error } = await supabase
+        .from("reviews")
+        .delete()
+        .eq("id", reviewId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-reviews"] });
+      toast.success("Avis supprimé");
+    },
+    onError: (error: any) => {
+      const message = error.message || "Erreur lors de la suppression";
+      toast.error(message);
+    },
+  });
+};

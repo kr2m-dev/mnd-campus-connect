@@ -4,12 +4,14 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { slugify } from "@/lib/utils";
 import {
   Heart,
   ShoppingCart,
   Trash2,
   Star,
-  Package
+  Package,
+  Eye
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useFavorites, useRemoveFavorite } from "@/hooks/use-favorites";
@@ -184,24 +186,35 @@ export default function Favorites() {
                       </div>
 
                       {/* Actions */}
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleRemoveFavorite(product.id)}
-                          className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={() => navigate(`/products/${slugify(product.name)}`)}
+                          className="w-full"
                         >
-                          <Trash2 className="w-4 h-4 mr-1" />
-                          Retirer
+                          <Eye className="w-4 h-4 mr-1" />
+                          Voir détails
                         </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleAddToCart(product.id)}
-                          className="bg-primary hover:bg-primary-dark"
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-1" />
-                          Panier
-                        </Button>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRemoveFavorite(product.id)}
+                            className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Retirer
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAddToCart(product.id)}
+                            className="bg-primary hover:bg-primary-dark"
+                          >
+                            <ShoppingCart className="w-4 h-4 mr-1" />
+                            Panier
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

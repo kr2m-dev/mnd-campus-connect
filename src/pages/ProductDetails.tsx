@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useProducts } from "@/hooks/use-products";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useToggleFavorite, useIsFavorite } from "@/hooks/use-favorites";
+import { matchSlug } from "@/lib/utils";
 import { useState } from "react";
 import {
   Star,
@@ -28,13 +29,13 @@ import {
 } from "lucide-react";
 
 export default function ProductDetails() {
-  const { id } = useParams<{ id: string }>();
+  const { name } = useParams<{ name: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
 
   const { data: products = [], isLoading } = useProducts();
-  const product = products.find((p) => p.id === id);
+  const product = products.find((p) => name && matchSlug(p.name, name));
 
   const { data: isFavorite = false } = useIsFavorite(user?.id, product?.id);
   const addToCart = useAddToCart();
@@ -118,9 +119,9 @@ export default function ProductDetails() {
       <div className="container mx-auto px-4 py-8 pt-24">
         {/* Bouton retour */}
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={() => navigate(-1)}
-          className="mb-6 hover:bg-muted"
+          className="mb-6 hover:bg-primary hover:text-primary-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour

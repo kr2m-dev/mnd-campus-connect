@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { slugify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +90,7 @@ export default function Products() {
   };
 
   const handleViewDetails = (product: any) => {
-    navigate(`/products/${product.id}`);
+    navigate(`/products/${slugify(product.name)}`);
   };
 
   // Dummy handlers for Header component

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { slugify } from "@/lib/utils";
 import {
   ShoppingCart,
   Plus,
@@ -200,7 +201,12 @@ export default function Cart() {
                       <div className="flex-1 space-y-2">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-semibold">{product.name}</h3>
+                            <h3
+                              className="font-semibold hover:text-primary cursor-pointer transition-colors"
+                              onClick={() => navigate(`/products/${slugify(product.name)}`)}
+                            >
+                              {product.name}
+                            </h3>
                             {product.suppliers && (
                               <p className="text-sm text-muted-foreground">
                                 par {product.suppliers.business_name}
