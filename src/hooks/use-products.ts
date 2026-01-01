@@ -46,11 +46,6 @@ export const useProducts = (filters?: ProductFilters) => {
       }
 
       const { data, error } = await query;
-      console.log("=== useProducts Query Result ===");
-      console.log("Error:", error);
-      console.log("Data sample (first item):", data?.[0]);
-      console.log("Data sample suppliers:", data?.[0]?.suppliers);
-      console.log("================================");
       if (error) throw error;
       return data as EnhancedProduct[];
     },

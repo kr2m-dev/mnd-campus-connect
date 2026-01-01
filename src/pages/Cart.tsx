@@ -63,22 +63,16 @@ export default function Cart() {
 
   const handleUniversityChange = () => {};
 
-  // Redirect if not authenticated
-  if (!user) {
-    navigate("/login");
-    return null;
-  }
-
-  // Group cart items by supplier
+  // Group cart items by supplier - MUST be before conditional return
   const supplierGroups = useMemo(() => {
     const groups = new Map<string, SupplierGroup>();
-    
+
     cartItems.forEach((item: any) => {
       const supplier = item.products?.suppliers;
       if (!supplier) return;
-      
+
       const supplierId = supplier.id;
-      
+
       if (!groups.has(supplierId)) {
         groups.set(supplierId, {
           supplierId,
@@ -87,12 +81,18 @@ export default function Cart() {
           items: []
         });
       }
-      
+
       groups.get(supplierId)!.items.push(item);
     });
-    
+
     return Array.from(groups.values());
   }, [cartItems]);
+
+  // Redirect if not authenticated - AFTER all hooks
+  if (!user) {
+    navigate("/login");
+    return null;
+  }
 
   const handleUpdateQuantity = (cartItemId: string, newQuantity: number) => {
     if (newQuantity === 0) {
@@ -209,13 +209,14 @@ export default function Cart() {
             <h1 className="text-3xl font-bold">Mon Panier</h1>
             <p className="text-muted-foreground">
               {totalItems} article{totalItems > 1 ? 's' : ''} de {supplierGroups.length} fournisseur{supplierGroups.length > 1 ? 's' : ''}
+              <p>Pour une meilleure prise en charge de vos commandes, veuillez commander par fournisseur</p>
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Cart Items grouped by supplier */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {supplierGroups.map((group) => (
               <SupplierCartSection
                 key={group.supplierId}
@@ -240,9 +241,9 @@ export default function Cart() {
           </div>
 
           {/* Order Summary */}
-          <div className="space-y-6">
+          {/* <div className="space-y-6"> */}
             {/* Promo Code */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Tag className="w-5 h-5" />
@@ -285,10 +286,10 @@ export default function Cart() {
                   <p>• WELCOME10 : -10% première commande</p>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Order Summary */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5" />
@@ -355,10 +356,10 @@ export default function Cart() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Delivery Info */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="w-5 h-5" />
@@ -372,10 +373,10 @@ export default function Cart() {
                   <p>📦 Retrait possible en point relais</p>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* How it works */}
-            <Card className="bg-primary/5 border-primary/20">
+            {/* <Card className="bg-primary/5 border-primary/20">
               <CardContent className="pt-4">
                 <h4 className="font-semibold mb-2 text-sm">💡 Comment ça marche ?</h4>
                 <ul className="text-xs text-muted-foreground space-y-1">
@@ -385,8 +386,8 @@ export default function Cart() {
                   <li>4. Les autres produits restent dans votre panier</li>
                 </ul>
               </CardContent>
-            </Card>
-          </div>
+            </Card> */}
+          {/* </div> */}
         </div>
       </div>
 
