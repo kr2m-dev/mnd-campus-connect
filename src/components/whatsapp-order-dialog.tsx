@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, User, MapPin, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { logger } from "@/lib/logger";
+import { cn } from "@/lib/utils";
 
 interface WhatsAppOrderDialogProps {
   isOpen: boolean;
@@ -32,11 +33,11 @@ interface WhatsAppOrderDialogProps {
   }>;
 }
 
-export const WhatsAppOrderDialog = ({ 
-  isOpen, 
-  onClose, 
+export const WhatsAppOrderDialog = ({
+  isOpen,
+  onClose,
   product,
-  cartItems 
+  cartItems
 }: WhatsAppOrderDialogProps) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
@@ -46,36 +47,73 @@ export const WhatsAppOrderDialog = ({
     phone: ""
   });
 
+  // Log when component receives props
+  console.log("=== WhatsAppOrderDialog Props ===");
+  console.log("isOpen:", isOpen);
+  console.log("product:", product);
+  console.log("cartItems:", cartItems);
+  console.log("================================");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     let message = "";
     let whatsappNumber = "";
 
+    console.log("=== WhatsApp Order Debug Start ===");
+
     if (product) {
       // Single product order
+      console.log("Mode: Single Product Order");
+      console.log("Full product object:", product);
+      console.log("product.suppliers:", product.suppliers);
+      console.log("product.suppliers?.contact_whatsapp:", product.suppliers?.contact_whatsapp);
+
       whatsappNumber = product.suppliers?.contact_whatsapp || "";
+      console.log("whatsappNumber (raw):", whatsappNumber);
+
       message = `Bonjour,\n\nJe souhaite commander:\n\n*Produit:* ${product.name}\n*Prix:* ${product.price} CFA\n\n*Mes informations:*\n- Nom: ${formData.firstName} ${formData.lastName}\n- Lieu: ${formData.location}\n- Téléphone: ${formData.phone}\n\nMerci!`;
     } else if (cartItems && cartItems.length > 0) {
       // Cart order - use first supplier's WhatsApp
+      console.log("Mode: Cart Order");
+      console.log("Full cartItems:", cartItems);
+      console.log("First item:", cartItems[0]);
+      console.log("First item products:", cartItems[0]?.products);
+      console.log("First item suppliers:", cartItems[0]?.products?.suppliers);
+      console.log("First item contact_whatsapp:", cartItems[0]?.products?.suppliers?.contact_whatsapp);
+
       whatsappNumber = cartItems[0]?.products?.suppliers?.contact_whatsapp || "";
-      
+      console.log("whatsappNumber (raw):", whatsappNumber);
+
       const itemsText = cartItems
         .map(item => `- ${item.products.name} (x${item.quantity}) - ${item.products.price * item.quantity} CFA`)
         .join('\n');
-      
+
       const total = cartItems.reduce((sum, item) => sum + (item.products.price * item.quantity), 0);
-      
+
       message = `Bonjour,\n\nJe souhaite commander:\n\n${itemsText}\n\n*Total:* ${total} CFA\n\n*Mes informations:*\n- Nom: ${formData.firstName} ${formData.lastName}\n- Lieu: ${formData.location}\n- Téléphone: ${formData.phone}\n\nMerci!`;
     }
 
+    console.log("whatsappNumber before formatting:", whatsappNumber);
+    console.log("whatsappNumber type:", typeof whatsappNumber);
+    console.log("whatsappNumber length:", whatsappNumber.length);
+
     // Format phone number (remove spaces, dashes, and add country code if needed)
     let formattedPhone = whatsappNumber.replace(/[\s-]/g, '');
+    console.log("After removing spaces/dashes:", formattedPhone);
+
     if (!formattedPhone.startsWith('+')) {
+      console.log("Does not start with +, adding +221");
       formattedPhone = '+221' + formattedPhone; // Senegal country code
+    } else {
+      console.log("Already starts with +");
     }
 
+    console.log("Final formatted phone:", formattedPhone);
     logger.log("Formatted Phone:", formattedPhone);
+    console.log("WhatsApp Message:", message);
+    console.log("WhatsApp Number:", formattedPhone);
+    console.log("=== WhatsApp Order Debug End ===");
 
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');

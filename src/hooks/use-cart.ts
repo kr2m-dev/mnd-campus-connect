@@ -22,7 +22,8 @@ export const useCart = (userId?: string) => {
             supplier_id,
             suppliers (
               id,
-              business_name
+              business_name,
+              contact_whatsapp
             ),
             categories (
               name
