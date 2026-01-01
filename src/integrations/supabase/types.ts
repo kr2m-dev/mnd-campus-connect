@@ -649,18 +649,6 @@ export type Database = {
       }
     }
     Views: {
-      message_conversations: {
-        Row: {
-          conversation_user_id: string | null
-          first_name: string | null
-          is_read: boolean | null
-          last_message_at: string | null
-          last_message_content: string | null
-          last_message_id: string | null
-          last_name: string | null
-        }
-        Relationships: []
-      }
       security_stats: {
         Row: {
           policy_count: number | null
