@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, XCircle, Search, AlertCircle } from "lucide-react";
-import { useBanUser, useToggleUserActive } from "@/hooks/use-admin";
+import { useBanUser, useUnbanUser, useToggleUserActive } from "@/hooks/use-admin";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +25,7 @@ export const UsersTable = ({ users, isLoading }: UsersTableProps) => {
   const [search, setSearch] = useState("");
   const [userToBan, setUserToBan] = useState<any>(null);
   const banUser = useBanUser();
+  const unbanUser = useUnbanUser();
   const toggleUserActive = useToggleUserActive();
 
   const filteredUsers = users.filter((user) =>
@@ -35,11 +36,16 @@ export const UsersTable = ({ users, isLoading }: UsersTableProps) => {
 
   const handleBanUser = () => {
     if (userToBan) {
-      banUser.mutate({
-        userId: userToBan.user_id,
-        reason: "Violation des règles de la plateforme",
-        unban: !!userToBan.banned_at
-      });
+      if (userToBan.banned_at) {
+        // User is banned, so unban them
+        unbanUser.mutate(userToBan.user_id);
+      } else {
+        // User is not banned, so ban them
+        banUser.mutate({
+          userId: userToBan.user_id,
+          reason: "Violation des règles de la plateforme"
+        });
+      }
       setUserToBan(null);
     }
   };

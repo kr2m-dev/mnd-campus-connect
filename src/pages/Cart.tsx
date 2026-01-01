@@ -1,31 +1,51 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { slugify } from "@/lib/utils";
 import {
   ShoppingCart,
-  Plus,
-  Minus,
-  Trash2,
   CreditCard,
   Truck,
   MapPin,
   Tag,
-  AlertCircle,
   CheckCircle,
-  Gift,
-  Percent,
-  MessageCircle
+  Trash2
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { useCart, useUpdateCartQuantity, useRemoveFromCart } from "@/hooks/use-cart";
-import { WhatsAppOrderDialog } from "@/components/whatsapp-order-dialog";
+import { SupplierCartSection } from "@/components/cart/supplier-cart-section";
+import { SupplierOrderDialog } from "@/components/cart/supplier-order-dialog";
+
+interface SupplierGroup {
+  supplierId: string;
+  supplierName: string;
+  supplierWhatsapp?: string;
+  items: Array<{
+    id: string;
+    quantity: number;
+    products: {
+      id: string;
+      name: string;
+      price: number;
+      original_price?: number;
+      image_url?: string;
+      stock_quantity?: number;
+      suppliers?: {
+        id: string;
+        business_name: string;
+        contact_whatsapp?: string;
+      };
+      categories?: {
+        name: string;
+      };
+    };
+  }>;
+}
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -33,20 +53,46 @@ export default function Cart() {
   const { data: cartItems = [], isLoading } = useCart(user?.id);
   const updateQuantity = useUpdateCartQuantity();
   const removeFromCart = useRemoveFromCart();
+  
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
-  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  
+  // State for supplier order dialog
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [selectedSupplierGroup, setSelectedSupplierGroup] = useState<SupplierGroup | null>(null);
 
-  // Dummy handlers for Header component
   const handleUniversityChange = () => {};
-  const handleSupplierAccess = () => navigate('/supplier');
-  const handleStudentExchange = () => {};
 
   // Redirect if not authenticated
   if (!user) {
     navigate("/login");
     return null;
   }
+
+  // Group cart items by supplier
+  const supplierGroups = useMemo(() => {
+    const groups = new Map<string, SupplierGroup>();
+    
+    cartItems.forEach((item: any) => {
+      const supplier = item.products?.suppliers;
+      if (!supplier) return;
+      
+      const supplierId = supplier.id;
+      
+      if (!groups.has(supplierId)) {
+        groups.set(supplierId, {
+          supplierId,
+          supplierName: supplier.business_name,
+          supplierWhatsapp: supplier.contact_whatsapp,
+          items: []
+        });
+      }
+      
+      groups.get(supplierId)!.items.push(item);
+    });
+    
+    return Array.from(groups.values());
+  }, [cartItems]);
 
   const handleUpdateQuantity = (cartItemId: string, newQuantity: number) => {
     if (newQuantity === 0) {
@@ -64,6 +110,11 @@ export default function Cart() {
     }
   };
 
+  const handleOrderSupplier = (group: SupplierGroup) => {
+    setSelectedSupplierGroup(group);
+    setOrderDialogOpen(true);
+  };
+
   const applyPromoCode = () => {
     if (promoCode.toLowerCase() === "student20") {
       setAppliedPromo("student20");
@@ -72,7 +123,6 @@ export default function Cart() {
       setAppliedPromo("welcome10");
       setPromoCode("");
     } else {
-      // Invalid promo code
       setPromoCode("");
     }
   };
@@ -82,12 +132,12 @@ export default function Cart() {
   };
 
   // Calculations
-  const subtotal = cartItems.reduce((total, item) => {
+  const subtotal = cartItems.reduce((total: number, item: any) => {
     const price = item.products?.price || 0;
     return total + (price * item.quantity);
   }, 0);
   
-  const totalSavings = cartItems.reduce((total, item) => {
+  const totalSavings = cartItems.reduce((total: number, item: any) => {
     const price = item.products?.price || 0;
     const originalPrice = item.products?.original_price;
     if (originalPrice) {
@@ -102,14 +152,12 @@ export default function Cart() {
   const deliveryFee = subtotal > 50000 ? 0 : 1500;
   const total = subtotal - promoDiscount + deliveryFee;
 
-  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const totalItems = cartItems.reduce((total: number, item: any) => total + item.quantity, 0);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Header
-          onUniversityChange={handleUniversityChange}
-        />
+        <Header onUniversityChange={handleUniversityChange} />
         <div className="flex items-center justify-center pt-20 h-[calc(100vh-5rem)]">
           <div className="text-center">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -123,9 +171,7 @@ export default function Cart() {
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <Header
-          onUniversityChange={handleUniversityChange}
-        />
+        <Header onUniversityChange={handleUniversityChange} />
 
         <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
           <div className="text-center py-16">
@@ -144,15 +190,14 @@ export default function Cart() {
             </Button>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <Header
-        onUniversityChange={handleUniversityChange}
-      />
+      <Header onUniversityChange={handleUniversityChange} />
 
       <div className="container mx-auto px-4 py-8 pt-24 max-w-6xl">
         {/* Header */}
@@ -163,125 +208,25 @@ export default function Cart() {
           <div>
             <h1 className="text-3xl font-bold">Mon Panier</h1>
             <p className="text-muted-foreground">
-              {totalItems} article{totalItems > 1 ? 's' : ''} dans votre panier
+              {totalItems} article{totalItems > 1 ? 's' : ''} de {supplierGroups.length} fournisseur{supplierGroups.length > 1 ? 's' : ''}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
-            {cartItems.map((item) => {
-              const product = item.products;
-              if (!product) return null;
-              
-              const discount = product.original_price
-                ? Math.round((1 - product.price / product.original_price) * 100)
-                : 0;
-
-              return (
-                <Card key={item.id} className="overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="flex gap-4 p-4">
-                      {/* Product Image */}
-                      <div className="relative w-24 h-24 bg-muted rounded-lg flex-shrink-0 overflow-hidden">
-                        <img
-                          src={product.image_url || "/placeholder.svg"}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                        {product.original_price && (
-                          <Badge variant="destructive" className="absolute top-1 left-1 text-xs">
-                            -{discount}%
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3
-                              className="font-semibold hover:text-primary cursor-pointer transition-colors"
-                              onClick={() => navigate(`/products/${slugify(product.name)}`)}
-                            >
-                              {product.name}
-                            </h3>
-                            {product.suppliers && (
-                              <p className="text-sm text-muted-foreground">
-                                par {product.suppliers.business_name}
-                              </p>
-                            )}
-                            {product.categories && (
-                              <Badge variant="secondary" className="text-xs">
-                                {product.categories.name}
-                              </Badge>
-                            )}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        {/* Price and Quantity */}
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-lg">{product.price} CFA</span>
-                              {product.original_price && (
-                                <span className="text-sm text-muted-foreground line-through">
-                                  {product.original_price} CFA
-                                </span>
-                              )}
-                            </div>
-                            {product.original_price && (
-                              <p className="text-xs text-green-600">
-                                Économie: {((product.original_price - product.price) * item.quantity)} CFA
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Quantity Controls */}
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-                              disabled={item.quantity <= 1}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="w-8 text-center font-medium">
-                              {item.quantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                              disabled={item.quantity >= (product.stock_quantity || 0)}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        {item.quantity >= (product.stock_quantity || 0) && (
-                          <p className="text-xs text-orange-600 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            Stock maximum atteint
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          {/* Cart Items grouped by supplier */}
+          <div className="lg:col-span-2 space-y-6">
+            {supplierGroups.map((group) => (
+              <SupplierCartSection
+                key={group.supplierId}
+                supplierId={group.supplierId}
+                supplierName={group.supplierName}
+                items={group.items}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveItem}
+                onOrder={() => handleOrderSupplier(group)}
+              />
+            ))}
 
             {/* Continue Shopping */}
             <div className="text-center pt-4">
@@ -317,10 +262,10 @@ export default function Cart() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">
+                      <span className="text-sm font-medium text-green-800 dark:text-green-200">
                         Code {appliedPromo.toUpperCase()} appliqué
                       </span>
                     </div>
@@ -347,27 +292,27 @@ export default function Cart() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="w-5 h-5" />
-                  Résumé de la commande
+                  Résumé
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Sous-total ({totalItems} articles)</span>
-                    <span>{subtotal} CFA</span>
+                    <span>{subtotal.toLocaleString()} CFA</span>
                   </div>
 
                   {totalSavings > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Économies promotions</span>
-                      <span>-{totalSavings} CFA</span>
+                      <span>-{totalSavings.toLocaleString()} CFA</span>
                     </div>
                   )}
 
                   {promoDiscount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Code promo ({appliedPromo?.toUpperCase()})</span>
-                      <span>-{promoDiscount} CFA</span>
+                      <span>-{promoDiscount.toLocaleString()} CFA</span>
                     </div>
                   )}
 
@@ -377,7 +322,7 @@ export default function Cart() {
                       Livraison
                     </span>
                     <span className={deliveryFee === 0 ? "text-green-600" : ""}>
-                      {deliveryFee === 0 ? "GRATUITE" : `${deliveryFee} CFA`}
+                      {deliveryFee === 0 ? "GRATUITE" : `${deliveryFee.toLocaleString()} CFA`}
                     </span>
                   </div>
 
@@ -392,7 +337,7 @@ export default function Cart() {
 
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>{total} CFA</span>
+                  <span>{total.toLocaleString()} CFA</span>
                 </div>
 
                 <div className="space-y-3">
@@ -403,16 +348,6 @@ export default function Cart() {
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
                     Procéder au paiement
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    size="lg"
-                    onClick={() => setWhatsappDialogOpen(true)}
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Contacter via WhatsApp
                   </Button>
 
                   <div className="text-xs text-center text-muted-foreground">
@@ -438,15 +373,36 @@ export default function Cart() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* How it works */}
+            <Card className="bg-primary/5 border-primary/20">
+              <CardContent className="pt-4">
+                <h4 className="font-semibold mb-2 text-sm">💡 Comment ça marche ?</h4>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>1. Cliquez sur "Commander" pour chaque fournisseur</li>
+                  <li>2. Sélectionnez les produits à inclure</li>
+                  <li>3. Envoyez votre commande via WhatsApp</li>
+                  <li>4. Les autres produits restent dans votre panier</li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
 
-      <WhatsAppOrderDialog
-        isOpen={whatsappDialogOpen}
-        onClose={() => setWhatsappDialogOpen(false)}
-        cartItems={cartItems}
-      />
+      {/* Supplier Order Dialog */}
+      {selectedSupplierGroup && (
+        <SupplierOrderDialog
+          isOpen={orderDialogOpen}
+          onClose={() => {
+            setOrderDialogOpen(false);
+            setSelectedSupplierGroup(null);
+          }}
+          supplierName={selectedSupplierGroup.supplierName}
+          supplierWhatsapp={selectedSupplierGroup.supplierWhatsapp}
+          items={selectedSupplierGroup.items}
+        />
+      )}
 
       <Footer />
     </div>
