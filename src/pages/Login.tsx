@@ -5,17 +5,38 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store, ArrowRight, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, Store, ArrowRight, Sparkles, Phone, Globe } from "lucide-react";
+
+// Country codes for phone numbers
+const countryCodes = [
+  { code: "+221", country: "Sénégal", flag: "🇸🇳" },
+  { code: "+225", country: "Côte d'Ivoire", flag: "🇨🇮" },
+  { code: "+223", country: "Mali", flag: "🇲🇱" },
+  { code: "+224", country: "Guinée", flag: "🇬🇳" },
+  { code: "+226", country: "Burkina Faso", flag: "🇧🇫" },
+  { code: "+227", country: "Niger", flag: "🇳🇪" },
+  { code: "+228", country: "Togo", flag: "🇹🇬" },
+  { code: "+229", country: "Bénin", flag: "🇧🇯" },
+  { code: "+237", country: "Cameroun", flag: "🇨🇲" },
+  { code: "+241", country: "Gabon", flag: "🇬🇦" },
+  { code: "+33", country: "France", flag: "🇫🇷" },
+  { code: "+1", country: "USA/Canada", flag: "🇺🇸" },
+];
+
+type IdentifierMode = "email" | "phone";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, resetPassword, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [identifierMode, setIdentifierMode] = useState<IdentifierMode>("email");
+  const [countryCode, setCountryCode] = useState("+221");
 
   // Dummy handlers for Header component
   const handleUniversityChange = () => { };
@@ -24,6 +45,7 @@ export default function Login() {
 
   const [formData, setFormData] = useState({
     email: "",
+    phone: "",
     password: "",
   });
 
@@ -39,17 +61,43 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.email || !formData.password) {
+    let emailToUse = formData.email;
+    
+    if (identifierMode === "phone") {
+      // Convert phone to the generated email format used during registration
+      const phoneNumber = countryCode + formData.phone.replace(/^0+/, '');
+      emailToUse = `${phoneNumber.replace('+', '')}@phone.campuslink.sn`;
+      
+      if (!formData.phone || formData.phone.length < 7) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez entrer un numéro de téléphone valide",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      if (!formData.email) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez entrer votre email",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (!formData.password) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs",
+        description: "Veuillez entrer votre mot de passe",
         variant: "destructive",
       });
       return;
     }
 
     await login({
-      email: formData.email,
+      email: emailToUse,
       password: formData.password,
     });
     // La redirection est gérée automatiquement dans le hook useAuth
@@ -197,24 +245,101 @@ export default function Login() {
             <Card className="shadow-2xl border-none bg-gradient-to-br from-background/95 to-background backdrop-blur-xl overflow-hidden">
               <CardContent className="p-6 md:p-8">
                 <form onSubmit={handleSubmit} className="space-y-5">
-                  {/* Email Field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
-                    <div className="relative group">
-                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <Mail className="w-3 h-3 text-primary" />
-                      </div>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="votre.email@university.edu"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="pl-12 h-12 border-2 focus:border-primary transition-all"
-                        required
-                      />
+                  {/* Identifier Mode Toggle */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">Identifiant</Label>
+                    
+                    {/* Toggle Tabs */}
+                    <div className="flex rounded-xl bg-muted p-1 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setIdentifierMode("email")}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                          identifierMode === "email"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Mail className="w-4 h-4" />
+                        Email
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIdentifierMode("phone")}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                          identifierMode === "phone"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Phone className="w-4 h-4" />
+                        WhatsApp
+                      </button>
                     </div>
+
+                    {/* Email Input */}
+                    {identifierMode === "email" && (
+                      <div className="relative group">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <Mail className="w-3 h-3 text-primary" />
+                        </div>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          placeholder="votre.email@university.edu"
+                          value={formData.email}
+                          onChange={handleChange}
+                          className="pl-12 h-12 border-2 focus:border-primary transition-all"
+                          required={identifierMode === "email"}
+                        />
+                      </div>
+                    )}
+
+                    {/* Phone Input with Country Code */}
+                    {identifierMode === "phone" && (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          {/* Country Code Selector */}
+                          <Select value={countryCode} onValueChange={setCountryCode}>
+                            <SelectTrigger className="w-[130px] h-12 border-2 focus:border-primary">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {countryCodes.map((country) => (
+                                <SelectItem key={country.code} value={country.code}>
+                                  <div className="flex items-center gap-2">
+                                    <span>{country.flag}</span>
+                                    <span className="font-medium">{country.code}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          {/* Phone Number Input */}
+                          <div className="relative group flex-1">
+                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-green-500/10 rounded-lg flex items-center justify-center">
+                              <Phone className="w-3 h-3 text-green-600" />
+                            </div>
+                            <Input
+                              id="phone"
+                              name="phone"
+                              type="tel"
+                              placeholder="77 123 45 67"
+                              value={formData.phone}
+                              onChange={handleChange}
+                              className="pl-12 h-12 border-2 focus:border-primary transition-all"
+                              required={identifierMode === "phone"}
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Globe className="w-3 h-3" />
+                          Utilisez le numéro WhatsApp de votre inscription
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Password Field */}
