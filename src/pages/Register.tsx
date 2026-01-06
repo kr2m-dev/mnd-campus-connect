@@ -11,8 +11,26 @@ import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { useUniversities, getUniversityById } from "@/hooks/use-universities";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, GraduationCap, Building, Store, ArrowRight, Sparkles, CheckCircle, Phone, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, GraduationCap, Building, Store, ArrowRight, Sparkles, CheckCircle, Phone, AlertCircle, Globe } from "lucide-react";
 import { validateRegistration, getPasswordStrength, type RegistrationData } from "@/lib/validation";
+
+// Country codes for phone numbers
+const countryCodes = [
+  { code: "+221", country: "Sénégal", flag: "🇸🇳" },
+  { code: "+225", country: "Côte d'Ivoire", flag: "🇨🇮" },
+  { code: "+223", country: "Mali", flag: "🇲🇱" },
+  { code: "+224", country: "Guinée", flag: "🇬🇳" },
+  { code: "+226", country: "Burkina Faso", flag: "🇧🇫" },
+  { code: "+227", country: "Niger", flag: "🇳🇪" },
+  { code: "+228", country: "Togo", flag: "🇹🇬" },
+  { code: "+229", country: "Bénin", flag: "🇧🇯" },
+  { code: "+237", country: "Cameroun", flag: "🇨🇲" },
+  { code: "+241", country: "Gabon", flag: "🇬🇦" },
+  { code: "+33", country: "France", flag: "🇫🇷" },
+  { code: "+1", country: "USA/Canada", flag: "🇺🇸" },
+];
+
+type IdentifierMode = "email" | "phone";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -20,6 +38,8 @@ export default function Register() {
   const { data: universities, isLoading: universitiesLoading } = useUniversities();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [identifierMode, setIdentifierMode] = useState<IdentifierMode>("email");
+  const [countryCode, setCountryCode] = useState("+221");
 
   // Dummy handlers for Header component
   const handleUniversityChange = () => { };
@@ -73,8 +93,35 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Prepare data based on identifier mode
+    const submitData = { ...formData };
+    
+    if (identifierMode === "phone") {
+      // For phone mode, create a placeholder email and use phone as primary identifier
+      const phoneNumber = countryCode + formData.phone.replace(/^0+/, ''); // Remove leading zeros
+      submitData.phone = phoneNumber;
+      // Generate a placeholder email from phone (for Supabase auth which requires email)
+      submitData.email = `${phoneNumber.replace('+', '')}@phone.campuslink.sn`;
+    }
+
     // Comprehensive validation
-    const validationResult = validateRegistration(formData as RegistrationData);
+    const validationResult = validateRegistration(submitData as RegistrationData);
+
+    // If in phone mode, skip email validation error (since we generated it)
+    if (identifierMode === "phone") {
+      delete validationResult.errors.email;
+      // Validate phone instead
+      if (!formData.phone || formData.phone.length < 7) {
+        validationResult.errors.phone = "Numéro de téléphone invalide (min 7 chiffres)";
+        validationResult.isValid = false;
+      }
+    } else {
+      // Skip phone validation in email mode
+      delete validationResult.errors.phone;
+    }
+
+    // Recalculate isValid
+    validationResult.isValid = Object.keys(validationResult.errors).length === 0;
 
     if (!validationResult.isValid) {
       setErrors(validationResult.errors);
@@ -93,11 +140,11 @@ export default function Register() {
 
     // Use sanitized data
     const result = await register({
-      email: validationResult.sanitized!.email,
+      email: identifierMode === "phone" ? submitData.email : validationResult.sanitized!.email,
       password: formData.password, // Password is not sanitized, only validated
       firstName: validationResult.sanitized!.firstName,
       lastName: validationResult.sanitized!.lastName,
-      phone: validationResult.sanitized!.phone,
+      phone: identifierMode === "phone" ? submitData.phone : (validationResult.sanitized?.phone || ""),
       userType: "client", // Par défaut, les inscriptions depuis /register sont des clients
       universityId: formData.universityId,
       universityName: selectedUniversity?.name || "",
@@ -254,61 +301,120 @@ export default function Register() {
                       </Select>
                     </div>
 
-                    {/* Email Field */}
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
-                      <div className="relative group">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                          <Mail className="w-3 h-3 text-blue-600" />
-                        </div>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          placeholder="modou.diop@university.edu"
-                          value={formData.email}
-                          onChange={handleChange}
-                          className={`pl-12 h-11 border-2 focus:border-primary transition-all ${errors.email ? 'border-red-500' : ''}`}
-                          required
-                          aria-invalid={!!errors.email}
-                          aria-describedby={errors.email ? "email-error" : undefined}
-                        />
+                    {/* Identifier Mode Toggle */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold">Identifiant de connexion *</Label>
+                      
+                      {/* Toggle Tabs */}
+                      <div className="flex rounded-xl bg-muted p-1 gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setIdentifierMode("email")}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                            identifierMode === "email"
+                              ? "bg-background text-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <Mail className="w-4 h-4" />
+                          Email
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIdentifierMode("phone")}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                            identifierMode === "phone"
+                              ? "bg-background text-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <Phone className="w-4 h-4" />
+                          WhatsApp
+                        </button>
                       </div>
-                      {errors.email && (
-                        <p id="email-error" className="text-sm text-red-500 flex items-center gap-1">
-                          <AlertCircle className="w-4 h-4" />
-                          {errors.email}
-                        </p>
+
+                      {/* Email Input */}
+                      {identifierMode === "email" && (
+                        <div className="space-y-2">
+                          <div className="relative group">
+                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                              <Mail className="w-3 h-3 text-blue-600" />
+                            </div>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              placeholder="modou.diop@university.edu"
+                              value={formData.email}
+                              onChange={handleChange}
+                              className={`pl-12 h-11 border-2 focus:border-primary transition-all ${errors.email ? 'border-red-500' : ''}`}
+                              required={identifierMode === "email"}
+                              aria-invalid={!!errors.email}
+                              aria-describedby={errors.email ? "email-error" : undefined}
+                            />
+                          </div>
+                          {errors.email && (
+                            <p id="email-error" className="text-sm text-red-500 flex items-center gap-1">
+                              <AlertCircle className="w-4 h-4" />
+                              {errors.email}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Phone Input with Country Code */}
+                      {identifierMode === "phone" && (
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            {/* Country Code Selector */}
+                            <Select value={countryCode} onValueChange={setCountryCode}>
+                              <SelectTrigger className="w-[130px] h-11 border-2 focus:border-primary">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                {countryCodes.map((country) => (
+                                  <SelectItem key={country.code} value={country.code}>
+                                    <div className="flex items-center gap-2">
+                                      <span>{country.flag}</span>
+                                      <span className="font-medium">{country.code}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            
+                            {/* Phone Number Input */}
+                            <div className="relative group flex-1">
+                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-green-500/10 rounded-lg flex items-center justify-center">
+                                <Phone className="w-3 h-3 text-green-600" />
+                              </div>
+                              <Input
+                                id="phone"
+                                name="phone"
+                                type="tel"
+                                placeholder="77 123 45 67"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                className={`pl-12 h-11 border-2 focus:border-primary transition-all ${errors.phone ? 'border-red-500' : ''}`}
+                                required={identifierMode === "phone"}
+                                aria-invalid={!!errors.phone}
+                                aria-describedby={errors.phone ? "phone-error" : undefined}
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Globe className="w-3 h-3" />
+                            Numéro WhatsApp pour recevoir les notifications
+                          </p>
+                          {errors.phone && (
+                            <p id="phone-error" className="text-sm text-red-500 flex items-center gap-1">
+                              <AlertCircle className="w-4 h-4" />
+                              {errors.phone}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
-
-                    {/* Phone Field */}
-                    {/* <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-semibold">Téléphone</Label>
-                <div className="relative group">
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-green-500/10 rounded-lg flex items-center justify-center">
-                    <Phone className="w-3 h-3 text-green-600" />
-                  </div>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="+221771234567 ou 771234567"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className={`pl-12 h-11 border-2 focus:border-primary transition-all ${errors.phone ? 'border-red-500' : ''}`}
-                    required
-                    aria-invalid={!!errors.phone}
-                    aria-describedby={errors.phone ? "phone-error" : undefined}
-                  />
-                </div> */}
-                    {/* {errors.phone && (
-                  <p id="phone-error" className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.phone}
-                  </p>
-                )} */}
-                    {/* </div> */}
 
                     {/* Password Field */}
                     <div className="space-y-2">
