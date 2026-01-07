@@ -93,44 +93,61 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Prepare data based on identifier mode
-    const submitData = { ...formData };
+    const errors: typeof formData & { universityId?: string } = {} as any;
+    
+    // Validate names
+    if (!formData.firstName || formData.firstName.trim().length < 2) {
+      errors.firstName = "Prénom requis (min 2 caractères)";
+    }
+    if (!formData.lastName || formData.lastName.trim().length < 2) {
+      errors.lastName = "Nom requis (min 2 caractères)";
+    }
+    
+    // Validate university
+    if (!formData.universityId) {
+      errors.universityId = "Veuillez sélectionner votre université";
+    }
+    
+    // Validate based on mode
+    let finalEmail = formData.email;
+    let finalPhone = formData.phone;
     
     if (identifierMode === "phone") {
-      // For phone mode, create a placeholder email and use phone as primary identifier
-      const phoneNumber = countryCode + formData.phone.replace(/^0+/, ''); // Remove leading zeros
-      submitData.phone = phoneNumber;
-      // Generate a placeholder email from phone (for Supabase auth which requires email)
-      submitData.email = `${phoneNumber.replace('+', '')}@phone.campuslink.sn`;
-    }
-
-    // Comprehensive validation
-    const validationResult = validateRegistration(submitData as RegistrationData);
-
-    // If in phone mode, skip email validation error (since we generated it)
-    if (identifierMode === "phone") {
-      delete validationResult.errors.email;
-      // Validate phone instead
-      if (!formData.phone || formData.phone.length < 7) {
-        validationResult.errors.phone = "Numéro de téléphone invalide (min 7 chiffres)";
-        validationResult.isValid = false;
+      // Phone mode validation
+      const phoneDigits = formData.phone.replace(/\D/g, '');
+      if (!phoneDigits || phoneDigits.length < 7) {
+        (errors as any).phone = "Numéro de téléphone invalide (min 7 chiffres)";
+      } else {
+        // Create phone number with country code
+        finalPhone = countryCode + phoneDigits.replace(/^0+/, '');
+        // Generate placeholder email for Supabase (using 'phone' subdomain)
+        finalEmail = `phone${phoneDigits}@campuslink.sn`;
       }
     } else {
-      // Skip phone validation in email mode
-      delete validationResult.errors.phone;
+      // Email mode validation
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!formData.email || !emailPattern.test(formData.email)) {
+        (errors as any).email = "Adresse email invalide";
+      }
+    }
+    
+    // Validate password
+    if (!formData.password || formData.password.length < 6) {
+      (errors as any).password = "Mot de passe requis (min 6 caractères)";
+    }
+    
+    // Validate password confirmation
+    if (formData.password !== formData.confirmPassword) {
+      (errors as any).confirmPassword = "Les mots de passe ne correspondent pas";
     }
 
-    // Recalculate isValid
-    validationResult.isValid = Object.keys(validationResult.errors).length === 0;
-
-    if (!validationResult.isValid) {
-      setErrors(validationResult.errors);
-
-      // Show first error in toast
-      const firstError = Object.values(validationResult.errors)[0];
+    // Check for errors
+    const errorKeys = Object.keys(errors).filter(key => (errors as any)[key]);
+    if (errorKeys.length > 0) {
+      setErrors(errors as any);
       toast({
         title: "Erreur de validation",
-        description: firstError,
+        description: (errors as any)[errorKeys[0]],
         variant: "destructive",
       });
       return;
@@ -138,14 +155,13 @@ export default function Register() {
 
     const selectedUniversity = getUniversityById(universities, formData.universityId);
 
-    // Use sanitized data
     const result = await register({
-      email: identifierMode === "phone" ? submitData.email : validationResult.sanitized!.email,
-      password: formData.password, // Password is not sanitized, only validated
-      firstName: validationResult.sanitized!.firstName,
-      lastName: validationResult.sanitized!.lastName,
-      phone: identifierMode === "phone" ? submitData.phone : (validationResult.sanitized?.phone || ""),
-      userType: "client", // Par défaut, les inscriptions depuis /register sont des clients
+      email: finalEmail,
+      password: formData.password,
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      phone: finalPhone,
+      userType: "client",
       universityId: formData.universityId,
       universityName: selectedUniversity?.name || "",
     });
