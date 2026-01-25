@@ -101,15 +101,25 @@ export const useAuth = () => {
         // Vérifier si l'utilisateur est un fournisseur
         const userType = authData.user.user_metadata?.user_type;
         
-        toast({
-          title: "Connexion réussie !",
-          description: "Vous êtes maintenant connecté",
-        });
-
-        // Rediriger vers la page fournisseur si c'est un fournisseur
+        // Vérifier si c'est un fournisseur et s'il a un profil fournisseur
         if (userType === 'fournisseur') {
+          // Vérifier si le profil fournisseur existe
+          const { data: supplierProfile } = await supabase
+            .from("suppliers")
+            .select("id")
+            .eq("user_id", authData.user.id)
+            .maybeSingle();
+          
+          toast({
+            title: "Connexion réussie !",
+            description: "Bienvenue sur votre espace fournisseur",
+          });
           navigate('/supplier');
         } else {
+          toast({
+            title: "Connexion réussie !",
+            description: "Vous êtes maintenant connecté",
+          });
           navigate('/');
         }
 

@@ -146,16 +146,17 @@ export function validatePhone(phone: string): ValidationResult {
 
 /**
  * Validate password strength
+ * Simplified: minimum 6 characters
  */
 export function validatePassword(password: string): ValidationResult {
   if (!password) {
     return { isValid: false, error: 'Mot de passe est requis' };
   }
 
-  if (password.length < 8) {
+  if (password.length < 6) {
     return {
       isValid: false,
-      error: 'Mot de passe doit contenir au moins 8 caractères'
+      error: 'Mot de passe doit contenir au moins 6 caractères'
     };
   }
 
@@ -164,57 +165,6 @@ export function validatePassword(password: string): ValidationResult {
       isValid: false,
       error: 'Mot de passe trop long (max 128 caractères)'
     };
-  }
-
-  // Check for at least one lowercase letter
-  if (!/[a-z]/.test(password)) {
-    return {
-      isValid: false,
-      error: 'Mot de passe doit contenir au moins une lettre minuscule'
-    };
-  }
-
-  // Check for at least one uppercase letter
-  if (!/[A-Z]/.test(password)) {
-    return {
-      isValid: false,
-      error: 'Mot de passe doit contenir au moins une lettre majuscule'
-    };
-  }
-
-  // Check for at least one number
-  if (!/\d/.test(password)) {
-    return {
-      isValid: false,
-      error: 'Mot de passe doit contenir au moins un chiffre'
-    };
-  }
-
-  // Check for at least one special character
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    return {
-      isValid: false,
-      error: 'Mot de passe doit contenir au moins un caractère spécial (!@#$%^&*...)'
-    };
-  }
-
-  // Check for common patterns (basic)
-  const commonPatterns = [
-    /^123456/,
-    /^password/i,
-    /^qwerty/i,
-    /^abc123/i,
-    /^admin/i,
-    /^passer123/i,
-  ];
-
-  for (const pattern of commonPatterns) {
-    if (pattern.test(password)) {
-      return {
-        isValid: false,
-        error: 'Mot de passe trop commun, veuillez en choisir un plus sécurisé'
-      };
-    }
   }
 
   return { isValid: true };
