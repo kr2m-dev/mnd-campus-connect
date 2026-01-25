@@ -24,10 +24,12 @@ export const useProducts = (filters?: ProductFilters) => {
         .eq("is_active", filters?.is_active ?? true)
         .order("created_at", { ascending: false });
 
-      // Apply filters using indexed columns for better performance
+      // Filtre par université - affiche les produits de l'université OU les produits globaux (sans filtre)
       if (filters?.university) {
+        // Afficher: produits de cette université OU produits sans filtre université (globaux)
         query = query.or(`university_filter.eq.${filters.university},university_filter.is.null,university_filter.eq.`);
       }
+      // Si pas d'université sélectionnée, on affiche TOUS les produits actifs
 
       if (filters?.category_id) {
         query = query.eq("category_id", filters.category_id);

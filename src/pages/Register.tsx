@@ -167,10 +167,19 @@ export default function Register() {
     });
 
     if (result.success) {
-      toast({
-        title: "Inscription réussie",
-        description: "Votre compte a été créé avec succès. Veuillez vous connecter.",
-      });
+      // Message différent selon le mode d'inscription
+      if (identifierMode === "email") {
+        toast({
+          title: "📧 Vérifiez votre email !",
+          description: "Un email de confirmation vous a été envoyé. Cliquez sur le lien pour activer votre compte.",
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: "✅ Inscription réussie !",
+          description: "Votre compte a été créé. Vous pouvez maintenant vous connecter.",
+        });
+      }
       navigate("/login");
     }
   };

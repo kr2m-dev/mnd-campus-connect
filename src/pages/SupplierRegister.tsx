@@ -6,21 +6,42 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Store, Building, Phone, MapPin, ArrowRight, Sparkles, CheckCircle, Image, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Store, Building, Phone, MapPin, ArrowRight, Sparkles, CheckCircle, Image, AlertCircle, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ImageUpload } from "@/components/image-upload";
 import { logger } from "@/lib/logger";
-import { validateSupplierRegistration, getPasswordStrength, type SupplierRegistrationData } from "@/lib/validation";
+import { getPasswordStrength, sanitizeText, sanitizeName, sanitizePhone } from "@/lib/validation";
+
+// Country codes for phone numbers
+const countryCodes = [
+  { code: "+221", country: "Sénégal", flag: "🇸🇳" },
+  { code: "+225", country: "Côte d'Ivoire", flag: "🇨🇮" },
+  { code: "+223", country: "Mali", flag: "🇲🇱" },
+  { code: "+224", country: "Guinée", flag: "🇬🇳" },
+  { code: "+226", country: "Burkina Faso", flag: "🇧🇫" },
+  { code: "+227", country: "Niger", flag: "🇳🇪" },
+  { code: "+228", country: "Togo", flag: "🇹🇬" },
+  { code: "+229", country: "Bénin", flag: "🇧🇯" },
+  { code: "+237", country: "Cameroun", flag: "🇨🇲" },
+  { code: "+241", country: "Gabon", flag: "🇬🇦" },
+  { code: "+33", country: "France", flag: "🇫🇷" },
+  { code: "+1", country: "USA/Canada", flag: "🇺🇸" },
+];
+
+type IdentifierMode = "email" | "phone";
 
 export default function SupplierRegister() {
   const navigate = useNavigate();
   const { register, loading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [identifierMode, setIdentifierMode] = useState<IdentifierMode>("email");
+  const [countryCode, setCountryCode] = useState("+221");
 
   // Dummy handlers for Header component
   const handleUniversityChange = () => {};
@@ -28,6 +49,7 @@ export default function SupplierRegister() {
   const [formData, setFormData] = useState({
     // Données utilisateur
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     firstName: "",
@@ -46,6 +68,7 @@ export default function SupplierRegister() {
     firstName?: string;
     lastName?: string;
     email?: string;
+    phone?: string;
     password?: string;
     confirmPassword?: string;
     businessName?: string;
@@ -83,35 +106,94 @@ export default function SupplierRegister() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Comprehensive validation
-    const validationResult = validateSupplierRegistration(formData as SupplierRegistrationData);
+    const validationErrors: typeof errors = {};
+    
+    // Validate names
+    if (!formData.firstName || formData.firstName.trim().length < 2) {
+      validationErrors.firstName = "Prénom requis (min 2 caractères)";
+    }
+    if (!formData.lastName || formData.lastName.trim().length < 2) {
+      validationErrors.lastName = "Nom requis (min 2 caractères)";
+    }
+    
+    // Validate based on mode (email or phone)
+    let finalEmail = formData.email;
+    let finalPhone = formData.contactWhatsapp || formData.phone;
+    
+    if (identifierMode === "phone") {
+      // Phone mode - use WhatsApp number for auth
+      const phoneDigits = (formData.contactWhatsapp || formData.phone).replace(/\D/g, '');
+      if (!phoneDigits || phoneDigits.length < 7) {
+        validationErrors.contactWhatsapp = "Numéro WhatsApp invalide (min 7 chiffres)";
+      } else {
+        finalPhone = countryCode + phoneDigits.replace(/^0+/, '');
+        finalEmail = `phone${phoneDigits}@campuslink.sn`;
+      }
+    } else {
+      // Email mode
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!formData.email || !emailPattern.test(formData.email)) {
+        validationErrors.email = "Adresse email invalide";
+      }
+    }
+    
+    // Validate password
+    if (!formData.password || formData.password.length < 6) {
+      validationErrors.password = "Mot de passe requis (min 6 caractères)";
+    }
+    
+    // Validate password confirmation
+    if (formData.password !== formData.confirmPassword) {
+      validationErrors.confirmPassword = "Les mots de passe ne correspondent pas";
+    }
+    
+    // Validate business info
+    if (!formData.businessName || formData.businessName.trim().length < 2) {
+      validationErrors.businessName = "Nom de l'entreprise requis (min 2 caractères)";
+    }
+    
+    // Validate WhatsApp (required for orders - only in email mode since phone mode uses phone as WhatsApp)
+    if (identifierMode === "email" && formData.contactWhatsapp) {
+      const phoneDigits = formData.contactWhatsapp.replace(/\D/g, '');
+      if (phoneDigits.length < 7) {
+        validationErrors.contactWhatsapp = "Numéro WhatsApp invalide (min 7 chiffres)";
+      }
+    } else if (identifierMode === "email" && !formData.contactWhatsapp) {
+      validationErrors.contactWhatsapp = "Numéro WhatsApp requis pour recevoir les commandes";
+    }
 
-    if (!validationResult.isValid) {
-      setErrors(validationResult.errors);
-
-      // Show first error in toast
-      const firstError = Object.values(validationResult.errors)[0];
+    // Check for errors
+    const errorKeys = Object.keys(validationErrors).filter(key => (validationErrors as any)[key]);
+    if (errorKeys.length > 0) {
+      setErrors(validationErrors);
       toast({
         title: "Erreur de validation",
-        description: firstError,
+        description: (validationErrors as any)[errorKeys[0]],
         variant: "destructive",
       });
       return;
     }
 
     try {
-      // Use sanitized data
-      const sanitized = validationResult.sanitized!;
+      // Sanitize data
+      const sanitizedFirstName = sanitizeName(formData.firstName);
+      const sanitizedLastName = sanitizeName(formData.lastName);
+      const sanitizedBusinessName = sanitizeText(formData.businessName);
+      const sanitizedDescription = sanitizeText(formData.description);
+      const sanitizedAddress = sanitizeText(formData.address);
+      const sanitizedContactEmail = formData.contactEmail ? sanitizeText(formData.contactEmail).toLowerCase() : '';
+      const sanitizedContactPhone = formData.contactPhone ? sanitizePhone(formData.contactPhone) : '';
+      const sanitizedContactWhatsapp = sanitizePhone(formData.contactWhatsapp || formData.phone);
 
       // 1. Créer le compte utilisateur
       const result = await register({
-        email: sanitized.email,
-        password: formData.password, // Password is not sanitized, only validated
-        firstName: sanitized.firstName,
-        lastName: sanitized.lastName,
-        phone: sanitized.contactPhone || sanitized.contactWhatsapp, // Utiliser le téléphone de contact ou WhatsApp
+        email: finalEmail,
+        password: formData.password,
+        firstName: sanitizedFirstName,
+        lastName: sanitizedLastName,
+        phone: finalPhone,
         userType: "fournisseur",
-        universityId: "", // Pas d'université pour les fournisseurs
+        universityId: "",
         universityName: "",
       });
 
@@ -119,40 +201,47 @@ export default function SupplierRegister() {
         return;
       }
 
-      // 2. Créer le profil fournisseur avec données sanitisées
+      // 2. Créer le profil fournisseur
       const { error: supplierError } = await supabase
         .from("suppliers")
         .insert({
           user_id: result.user?.id,
-          business_name: sanitized.businessName,
-          description: sanitized.description || null,
-          contact_email: sanitized.contactEmail || sanitized.email,
-          contact_phone: sanitized.contactPhone || null,
-          contact_whatsapp: sanitized.contactWhatsapp,
-          address: sanitized.address || null,
-          logo_url: formData.logoUrl || null, // Logo URL from upload
+          business_name: sanitizedBusinessName,
+          description: sanitizedDescription || null,
+          contact_email: sanitizedContactEmail || finalEmail,
+          contact_phone: sanitizedContactPhone || null,
+          contact_whatsapp: sanitizedContactWhatsapp,
+          address: sanitizedAddress || null,
+          logo_url: formData.logoUrl || null,
           is_verified: false,
         });
 
       if (supplierError) {
         logger.error("Erreur lors de la création du profil fournisseur:", supplierError);
         toast({
-          title: "Erreur",
-          description: "Compte créé mais erreur lors de la création du profil fournisseur",
+          title: "⚠️ Compte créé partiellement",
+          description: "Votre compte a été créé mais le profil fournisseur n'a pas pu être complété. Contactez le support.",
           variant: "destructive",
         });
+        navigate("/login");
         return;
       }
 
-      toast({
-        title: "Inscription réussie !",
-        description: "Votre compte fournisseur a été créé avec succès. Vérifiez votre email pour confirmer votre compte.",
-      });
+      // Message selon le mode d'inscription
+      if (identifierMode === "email") {
+        toast({
+          title: "📧 Vérifiez votre email !",
+          description: "Un email de confirmation vous a été envoyé. Cliquez sur le lien pour activer votre compte fournisseur.",
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: "✅ Inscription réussie !",
+          description: "Votre compte fournisseur a été créé. Vous pouvez maintenant vous connecter.",
+        });
+      }
 
-      // Rediriger vers la page de connexion
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      navigate("/login");
 
     } catch (error: any) {
       logger.error("Erreur lors de l'inscription:", error);
@@ -277,28 +366,112 @@ export default function SupplierRegister() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-semibold">Email *</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="votre.email@example.com"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.email ? 'border-red-500' : ''}`}
-                        required
-                        aria-invalid={!!errors.email}
-                        aria-describedby={errors.email ? "email-error" : undefined}
-                      />
+                  {/* Identifier Mode Toggle */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">Identifiant de connexion *</Label>
+                    
+                    {/* Toggle Tabs */}
+                    <div className="flex rounded-xl bg-muted p-1 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setIdentifierMode("email")}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                          identifierMode === "email"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Mail className="w-4 h-4" />
+                        Email
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIdentifierMode("phone")}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                          identifierMode === "phone"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Phone className="w-4 h-4" />
+                        WhatsApp
+                      </button>
                     </div>
-                    {errors.email && (
-                      <p id="email-error" className="text-sm text-red-500 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.email}
-                      </p>
+
+                    {/* Email Input */}
+                    {identifierMode === "email" && (
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="votre.email@example.com"
+                            value={formData.email}
+                            onChange={handleChange}
+                            className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.email ? 'border-red-500' : ''}`}
+                            required={identifierMode === "email"}
+                            aria-invalid={!!errors.email}
+                            aria-describedby={errors.email ? "email-error" : undefined}
+                          />
+                        </div>
+                        {errors.email && (
+                          <p id="email-error" className="text-sm text-red-500 flex items-center gap-1">
+                            <AlertCircle className="w-4 h-4" />
+                            {errors.email}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Phone Input with Country Code */}
+                    {identifierMode === "phone" && (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          {/* Country Code Selector */}
+                          <Select value={countryCode} onValueChange={setCountryCode}>
+                            <SelectTrigger className="w-[130px] h-11 border-2 focus:border-primary">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {countryCodes.map((country) => (
+                                <SelectItem key={country.code} value={country.code}>
+                                  <div className="flex items-center gap-2">
+                                    <span>{country.flag}</span>
+                                    <span className="font-medium">{country.code}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          {/* Phone Number Input */}
+                          <div className="relative flex-1">
+                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                              id="phone"
+                              name="phone"
+                              type="tel"
+                              placeholder="77 123 45 67"
+                              value={formData.phone}
+                              onChange={handleChange}
+                              className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.phone ? 'border-red-500' : ''}`}
+                              required={identifierMode === "phone"}
+                            />
+                          </div>
+                        </div>
+                        {errors.phone && (
+                          <p className="text-sm text-red-500 flex items-center gap-1">
+                            <AlertCircle className="w-4 h-4" />
+                            {errors.phone}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Globe className="w-3 h-3" />
+                          Ce numéro sera aussi utilisé comme WhatsApp pour recevoir les commandes
+                        </p>
+                      </div>
                     )}
                   </div>
 
@@ -310,7 +483,7 @@ export default function SupplierRegister() {
                         id="password"
                         name="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Min 8 caractères, majuscule, chiffre, symbole"
+                        placeholder="Min 6 caractères"
                         value={formData.password}
                         onChange={handleChange}
                         className={`pl-10 pr-10 h-11 border-2 focus:border-primary transition-all ${errors.password ? 'border-red-500' : ''}`}
@@ -485,34 +658,37 @@ export default function SupplierRegister() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="contactWhatsapp" className="text-sm font-semibold">WhatsApp * (pour recevoir les commandes)</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-600" />
-                      <Input
-                        id="contactWhatsapp"
-                        name="contactWhatsapp"
-                        type="tel"
-                        placeholder="+221771234567 ou 771234567"
-                        value={formData.contactWhatsapp}
-                        onChange={handleChange}
-                        className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.contactWhatsapp ? 'border-red-500' : ''}`}
-                        required
-                        aria-invalid={!!errors.contactWhatsapp}
-                        aria-describedby={errors.contactWhatsapp ? "contactWhatsapp-error" : undefined}
-                      />
+                  {/* WhatsApp field - only show if email mode (in phone mode, the phone number is used) */}
+                  {identifierMode === "email" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="contactWhatsapp" className="text-sm font-semibold">WhatsApp * (pour recevoir les commandes)</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-green-600" />
+                        <Input
+                          id="contactWhatsapp"
+                          name="contactWhatsapp"
+                          type="tel"
+                          placeholder="+221771234567 ou 771234567"
+                          value={formData.contactWhatsapp}
+                          onChange={handleChange}
+                          className={`pl-10 h-11 border-2 focus:border-primary transition-all ${errors.contactWhatsapp ? 'border-red-500' : ''}`}
+                          required
+                          aria-invalid={!!errors.contactWhatsapp}
+                          aria-describedby={errors.contactWhatsapp ? "contactWhatsapp-error" : undefined}
+                        />
+                      </div>
+                      {errors.contactWhatsapp ? (
+                        <p id="contactWhatsapp-error" className="text-sm text-red-500 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.contactWhatsapp}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Les commandes seront envoyées directement sur ce numéro WhatsApp
+                        </p>
+                      )}
                     </div>
-                    {errors.contactWhatsapp ? (
-                      <p id="contactWhatsapp-error" className="text-sm text-red-500 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.contactWhatsapp}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Les commandes seront envoyées directement sur ce numéro WhatsApp
-                      </p>
-                    )}
-                  </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="address" className="text-sm font-semibold">Adresse</Label>
