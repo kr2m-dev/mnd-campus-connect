@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
 import { slugify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -55,8 +56,10 @@ const iconMap: Record<string, React.ElementType> = {
 
 export default function Products() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") || "");
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -103,19 +106,28 @@ export default function Products() {
     ? getUniversityById(user.user_metadata.university_id)
     : null;
 
+  const getPrimaryUniversityForProduct = (product: any) => {
+    if (!product.university_filter) return null;
+    const firstId = String(product.university_filter)
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean)[0];
+    if (!firstId) return null;
+    return senegalUniversities.find((u) => u.id === firstId) || null;
+  };
+
   // Determine which university to filter by
   const getFilterUniversity = () => {
     if (showAllUniversities) {
-      // Si une université spécifique est sélectionnée, l'utiliser
+      // Si une université spécifique est sélectionnée, utiliser son ID
       if (selectedUniversityId) {
-        const university = getUniversityById(selectedUniversityId);
-        return university?.name;
+        return selectedUniversityId;
       }
       // Sinon, ne pas filtrer par université (undefined)
       return undefined;
     }
-    // Par défaut, filtrer par l'université de l'utilisateur
-    return userUniversity?.name;
+    // Par défaut, filtrer par l'université de l'utilisateur (ID)
+    return userUniversity?.id;
   };
 
   // Build filters using enhanced types
@@ -171,6 +183,8 @@ export default function Products() {
 
     // Obtenir les images du produit (compatibilité ancienne/nouvelle structure)
     const productImages = product.image_urls || (product.image_url ? [product.image_url] : []);
+
+    const primaryUniversity = getPrimaryUniversityForProduct(product);
 
     if (viewMode === "list") {
       return (
@@ -239,10 +253,10 @@ export default function Products() {
                 </div>
 
                 {/* University Badge - Only show when viewing products from other universities */}
-                {showAllUniversities && product.university_filter && (
+                {showAllUniversities && primaryUniversity && (
                   <Badge variant="secondary" className="text-xs mb-2">
-                    {senegalUniversities.find(u => u.name === product.university_filter)?.flag || ''}{' '}
-                    {product.university_filter}
+                    {primaryUniversity.flag}{' '}
+                    {primaryUniversity.name}
                   </Badge>
                 )}
 
@@ -374,10 +388,10 @@ export default function Products() {
             </div>
 
             {/* University Badge - Only show when viewing products from other universities */}
-            {showAllUniversities && product.university_filter && (
+            {showAllUniversities && primaryUniversity && (
               <Badge variant="secondary" className="text-xs mb-2">
-                {senegalUniversities.find(u => u.name === product.university_filter)?.flag || ''}{' '}
-                {product.university_filter}
+                {primaryUniversity.flag}{' '}
+                {primaryUniversity.name}
               </Badge>
             )}
 

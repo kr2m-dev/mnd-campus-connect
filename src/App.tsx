@@ -33,6 +33,7 @@ import MyOrders from "./pages/MyOrders";
 import OrderDetails from "./pages/OrderDetails";
 import SupplierOrders from "./pages/SupplierOrders";
 import AddProduct from "./pages/AddProduct";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/supplier-register" element={<SupplierRegister />} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/legal-notice" element={<LegalNotice />} />
