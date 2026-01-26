@@ -52,6 +52,7 @@ export const Header = ({
   const { data: cartItems = [] } = useCart(user?.id);
   const { data: unreadCount = 0 } = useUnreadNotificationsCount(user?.id);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Calculate total cart items count
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
@@ -63,6 +64,16 @@ export const Header = ({
 
   const handleNavigate = (path: string) => {
     navigate(path);
+    setMobileMenuOpen(false);
+  };
+
+  const executeSearch = () => {
+    const trimmed = searchTerm.trim();
+    if (!trimmed) {
+      navigate("/products");
+    } else {
+      navigate(`/products?search=${encodeURIComponent(trimmed)}`);
+    }
     setMobileMenuOpen(false);
   };
 
@@ -203,6 +214,13 @@ export const Header = ({
               <Input
                 placeholder="Rechercher des produits..."
                 className="pl-10 pr-4 w-full h-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    executeSearch();
+                  }
+                }}
               />
             </div>
           </div>
@@ -392,6 +410,13 @@ export const Header = ({
                       <Input
                         placeholder="Rechercher des produits..."
                         className="pl-10 h-10"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            executeSearch();
+                          }
+                        }}
                       />
                     </div>
                   )}
