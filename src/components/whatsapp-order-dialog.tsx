@@ -71,11 +71,21 @@ export const WhatsAppOrderDialog = ({
       message = `Bonjour,\n\nJe souhaite commander:\n\n${itemsText}\n\n*Total:* ${total} CFA\n\n*Mes informations:*\n- Nom: ${formData.firstName} ${formData.lastName}\n- Lieu: ${formData.location}\n- Téléphone: ${formData.phone}\n\nMerci!`;
     }
 
-    const whatsappUrl = createWhatsAppLink(whatsappNumber, message);
-    if (!whatsappUrl) {
+    // Vérifier si le numéro WhatsApp est disponible
+    if (!whatsappNumber) {
       logger.error("WhatsApp number is missing for this order");
+      // Afficher une alerte à l'utilisateur
+      alert("Le numéro WhatsApp du fournisseur n'est pas disponible. Veuillez contacter le support.");
       return;
     }
+
+    const whatsappUrl = createWhatsAppLink(whatsappNumber, message);
+    if (!whatsappUrl) {
+      logger.error("Failed to create WhatsApp link");
+      alert("Impossible de créer le lien WhatsApp. Veuillez réessayer.");
+      return;
+    }
+    
     window.open(whatsappUrl, "_blank");
     onClose();
   };

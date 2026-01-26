@@ -80,6 +80,12 @@ export const SupplierOrderDialog = ({
     
     if (orderItems.length === 0) return;
 
+    // Vérifier si le numéro WhatsApp est disponible
+    if (!supplierWhatsapp) {
+      alert("Le numéro WhatsApp du fournisseur n'est pas disponible. Veuillez contacter le support.");
+      return;
+    }
+
     // Build WhatsApp message
     const itemsText = orderItems
       .map(item => `• ${item.products.name} (x${item.quantity}) - ${(item.products.price * item.quantity).toLocaleString()} CFA`)
@@ -101,7 +107,11 @@ ${itemsText}
 Merci !`;
 
     const whatsappUrl = createWhatsAppLink(supplierWhatsapp, message);
-    if (!whatsappUrl) return;
+    if (!whatsappUrl) {
+      alert("Impossible de créer le lien WhatsApp. Veuillez réessayer.");
+      return;
+    }
+    
     window.open(whatsappUrl, "_blank");
     
     // Reset excluded items when closing
