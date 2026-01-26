@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, User, MapPin, Phone, X, Store } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { createWhatsAppLink } from "@/lib/phone-utils";
 
 interface CartItem {
   id: string;
@@ -99,14 +100,9 @@ ${itemsText}
 
 Merci !`;
 
-    // Format phone number
-    let formattedPhone = (supplierWhatsapp || "").replace(/[\s-]/g, '');
-    if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+221' + formattedPhone;
-    }
-
-    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    const whatsappUrl = createWhatsAppLink(supplierWhatsapp, message);
+    if (!whatsappUrl) return;
+    window.open(whatsappUrl, "_blank");
     
     // Reset excluded items when closing
     setExcludedItemIds(new Set());

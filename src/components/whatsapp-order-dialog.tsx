@@ -8,6 +8,7 @@ import { MessageCircle, User, MapPin, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
+import { createWhatsAppLink } from "@/lib/phone-utils";
 
 interface WhatsAppOrderDialogProps {
   isOpen: boolean;
@@ -70,14 +71,12 @@ export const WhatsAppOrderDialog = ({
       message = `Bonjour,\n\nJe souhaite commander:\n\n${itemsText}\n\n*Total:* ${total} CFA\n\n*Mes informations:*\n- Nom: ${formData.firstName} ${formData.lastName}\n- Lieu: ${formData.location}\n- Téléphone: ${formData.phone}\n\nMerci!`;
     }
 
-    // Format phone number (remove spaces, dashes, and add country code if needed)
-    let formattedPhone = whatsappNumber.replace(/[\s-]/g, '');
-    if (!formattedPhone.startsWith('+')) {
-      formattedPhone = '+221' + formattedPhone; // Senegal country code
+    const whatsappUrl = createWhatsAppLink(whatsappNumber, message);
+    if (!whatsappUrl) {
+      logger.error("WhatsApp number is missing for this order");
+      return;
     }
-
-    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, "_blank");
     onClose();
   };
 
