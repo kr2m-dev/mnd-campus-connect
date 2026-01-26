@@ -209,7 +209,9 @@ export default function Cart() {
             <h1 className="text-3xl font-bold">Mon Panier</h1>
             <p className="text-muted-foreground">
               {totalItems} article{totalItems > 1 ? 's' : ''} de {supplierGroups.length} fournisseur{supplierGroups.length > 1 ? 's' : ''}
-              <p>Pour une meilleure prise en charge de vos commandes, veuillez commander par fournisseur</p>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Pour une meilleure prise en charge de vos commandes, veuillez commander par fournisseur
             </p>
           </div>
         </div>

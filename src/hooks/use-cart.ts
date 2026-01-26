@@ -8,7 +8,8 @@ export const useCart = (userId?: string) => {
     queryFn: async () => {
       if (!userId) return [];
       
-      // Récupérer les articles du panier avec les produits
+      // Récupérer les articles du panier avec les produits ET les fournisseurs directement
+      // La RLS permet de lire les fournisseurs (vérifiés ou via l'utilisateur connecté)
       const { data: cartData, error: cartError } = await supabase
         .from("cart_items")
         .select(`
@@ -23,6 +24,13 @@ export const useCart = (userId?: string) => {
             supplier_id,
             categories (
               name
+            ),
+            suppliers (
+              id,
+              business_name,
+              contact_whatsapp,
+              contact_phone,
+              is_verified
             )
           )
         `)
@@ -31,35 +39,7 @@ export const useCart = (userId?: string) => {
       if (cartError) throw cartError;
       if (!cartData || cartData.length === 0) return [];
 
-      // Récupérer les IDs uniques des fournisseurs
-      const supplierIds = [...new Set(
-        cartData
-          .map((item: any) => item.products?.supplier_id)
-          .filter(Boolean)
-      )];
-
-      // Récupérer les informations des fournisseurs via la vue suppliers_with_contact
-      // Cette vue expose contact_whatsapp pour les utilisateurs ayant des commandes
-      const { data: suppliersData } = await supabase
-        .from("suppliers_with_contact")
-        .select("id, business_name, contact_whatsapp")
-        .in("id", supplierIds);
-
-      // Créer un map des fournisseurs
-      const suppliersMap = new Map(
-        (suppliersData || []).map((s: any) => [s.id, s])
-      );
-
-      // Enrichir les articles avec les informations des fournisseurs
-      const enrichedData = cartData.map((item: any) => ({
-        ...item,
-        products: item.products ? {
-          ...item.products,
-          suppliers: suppliersMap.get(item.products.supplier_id) || null
-        } : null
-      }));
-
-      return enrichedData;
+      return cartData;
     },
     enabled: !!userId,
   });
