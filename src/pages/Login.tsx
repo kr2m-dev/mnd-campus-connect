@@ -65,10 +65,12 @@ export default function Login() {
     
     if (identifierMode === "phone") {
       // Convert phone to the generated email format used during registration
-      const phoneNumber = countryCode + formData.phone.replace(/^0+/, '');
-      emailToUse = `${phoneNumber.replace('+', '')}@phone.campuslink.sn`;
+      const phoneDigits = formData.phone.replace(/\D/g, '').replace(/^0+/, '');
+      const countryCodeDigits = countryCode.replace('+', '');
+      // Use the same predictable format as in Register.tsx
+      emailToUse = `phone.${countryCodeDigits}${phoneDigits}@temp-users.campuslink.dev`;
       
-      if (!formData.phone || formData.phone.length < 7) {
+      if (!formData.phone || formData.phone.replace(/\D/g, '').length < 7) {
         toast({
           title: "Erreur",
           description: "Veuillez entrer un numéro de téléphone valide",

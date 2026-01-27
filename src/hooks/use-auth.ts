@@ -13,6 +13,7 @@ export interface RegisterData {
   userType: string;
   universityId: string;
   universityName: string;
+  skipEmailConfirmation?: boolean;
 }
 
 export interface LoginData {
@@ -49,28 +50,54 @@ export const useAuth = () => {
   const register = async (data: RegisterData) => {
     try {
       setLoading(true);
+      
+      // Build signup options
+      const signUpOptions: any = {
+        data: {
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone: data.phone,
+          user_type: data.userType,
+          university_id: data.universityId,
+          university_name: data.universityName,
+          is_phone_registration: data.skipEmailConfirmation || false,
+        }
+      };
+      
+      // Only add emailRedirectTo for email-based registration (not phone)
+      if (!data.skipEmailConfirmation) {
+        signUpOptions.emailRedirectTo = `${window.location.origin}/auth/callback`;
+      }
+      
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            first_name: data.firstName,
-            last_name: data.lastName,
-            phone: data.phone,
-            user_type: data.userType,
-            university_id: data.universityId,
-            university_name: data.universityName,
-          }
-        }
+        options: signUpOptions
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific Supabase Auth errors
+        if (error.message.includes('email_address_invalid') || error.message.includes('invalid')) {
+          // For phone registration, provide a more helpful message
+          if (data.skipEmailConfirmation) {
+            toast({
+              title: "Configuration requise",
+              description: "L'inscription par téléphone nécessite de désactiver la confirmation email dans Supabase. Veuillez utiliser une adresse email valide ou contacter l'administrateur.",
+              variant: "destructive",
+              duration: 10000,
+            });
+            return { success: false, error: "Configuration email requise" };
+          }
+        }
+        throw error;
+      }
 
       if (authData.user) {
         toast({
           title: "Inscription réussie !",
-          description: "Vérifiez votre email pour confirmer votre compte",
+          description: data.skipEmailConfirmation 
+            ? "Votre compte a été créé. Vous pouvez maintenant vous connecter."
+            : "Vérifiez votre email pour confirmer votre compte",
         });
         return { success: true, user: authData.user };
       }
