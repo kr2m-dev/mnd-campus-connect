@@ -111,6 +111,7 @@ export default function Register() {
     // Validate based on mode
     let finalEmail = formData.email;
     let finalPhone = formData.phone;
+    let isPhoneRegistration = false;
     
     if (identifierMode === "phone") {
       // Phone mode validation
@@ -118,10 +119,16 @@ export default function Register() {
       if (!phoneDigits || phoneDigits.length < 7) {
         (errors as any).phone = "Numéro de téléphone invalide (min 7 chiffres)";
       } else {
-        // Create phone number with country code
-        finalPhone = countryCode + phoneDigits.replace(/^0+/, '');
-        // Generate placeholder email for Supabase (using 'phone' subdomain)
-        finalEmail = `phone${phoneDigits}@campuslink.sn`;
+        // Create phone number with country code (remove leading zeros)
+        const cleanedDigits = phoneDigits.replace(/^0+/, '');
+        const countryCodeDigits = countryCode.replace('+', '');
+        finalPhone = countryCode + cleanedDigits;
+        
+        // Generate a predictable email format for phone-based registration
+        // This email format must be accepted by Supabase's email validator
+        // Using a format: <phone>@<hash>.temp.campuslink.app where hash adds uniqueness
+        finalEmail = `phone.${countryCodeDigits}${cleanedDigits}@temp-users.campuslink.dev`;
+        isPhoneRegistration = true;
       }
     } else {
       // Email mode validation
@@ -164,6 +171,7 @@ export default function Register() {
       userType: "client",
       universityId: formData.universityId,
       universityName: selectedUniversity?.name || "",
+      skipEmailConfirmation: isPhoneRegistration,
     });
 
     if (result.success) {
