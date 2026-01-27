@@ -818,6 +818,10 @@ export type Database = {
         Args: { message_id_param: string }
         Returns: boolean
       }
+      supplier_has_active_products: {
+        Args: { _supplier_id: string }
+        Returns: boolean
+      }
       user_has_order_with_supplier: {
         Args: { supplier_id_param: string }
         Returns: boolean
