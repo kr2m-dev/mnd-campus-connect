@@ -62,22 +62,37 @@ export default function Login() {
     e.preventDefault();
 
     let emailToUse = formData.email;
+    let alternativeEmail: string | null = null;
     
     if (identifierMode === "phone") {
-      // Convert phone to the generated email format used during registration
-      const phoneDigits = formData.phone.replace(/\D/g, '').replace(/^0+/, '');
-      const countryCodeDigits = countryCode.replace('+', '');
-      // Use the same predictable format as in Register.tsx
-      emailToUse = `phone.${countryCodeDigits}${phoneDigits}@temp-users.campuslink.dev`;
-      
-      if (!formData.phone || formData.phone.replace(/\D/g, '').length < 7) {
+      // Validate phone first
+      const rawPhoneDigits = formData.phone.replace(/\D/g, '');
+      if (!rawPhoneDigits || rawPhoneDigits.length < 7) {
         toast({
           title: "Erreur",
-          description: "Veuillez entrer un numéro de téléphone valide",
+          description: "Veuillez entrer un numéro de téléphone valide (min 7 chiffres)",
           variant: "destructive",
         });
         return;
       }
+      
+      // Remove leading zeros to match registration format
+      const phoneDigits = rawPhoneDigits.replace(/^0+/, '');
+      const countryCodeDigits = countryCode.replace('+', '');
+      
+      // NEW format (current): phone.221XXXXXXXX@temp-users.campuslink.dev
+      emailToUse = `phone.${countryCodeDigits}${phoneDigits}@temp-users.campuslink.dev`;
+      
+      // OLD format (legacy accounts): phoneXXXXXXXXX@campuslink.sn
+      alternativeEmail = `phone${phoneDigits}@campuslink.sn`;
+      
+      console.log('Login phone debug:', {
+        rawInput: formData.phone,
+        phoneDigits,
+        countryCodeDigits,
+        primaryEmail: emailToUse,
+        legacyEmail: alternativeEmail
+      });
     } else {
       if (!formData.email) {
         toast({
@@ -98,11 +113,20 @@ export default function Login() {
       return;
     }
 
-    await login({
+    // Try primary email format first
+    let result = await login({
       email: emailToUse,
       password: formData.password,
     });
-    // La redirection est gérée automatiquement dans le hook useAuth
+    
+    // If failed and we have an alternative (legacy) email format, try that
+    if (!result.success && alternativeEmail && identifierMode === "phone") {
+      console.log('Primary login failed, trying legacy email format:', alternativeEmail);
+      result = await login({
+        email: alternativeEmail,
+        password: formData.password,
+      });
+    }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
