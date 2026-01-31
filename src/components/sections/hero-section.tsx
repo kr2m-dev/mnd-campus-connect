@@ -133,14 +133,14 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
 
-                <Button
+                {/* <Button
                   size="lg"
                   onClick={() => window.location.href = '/supplier'}
                   className="bg-primary hover:bg-primary-dark text-primary-foreground btn-glow group"
                 >
                   <Store className="w-5 h-5 mr-2" />
                   Devenir Fournisseur
-                </Button>
+                </Button> */}
               </>
             )}
           </div>

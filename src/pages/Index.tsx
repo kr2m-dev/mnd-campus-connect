@@ -160,7 +160,7 @@ const Index = () => {
         <WhyCampusLink />
 
         {/* 5. Stats Section */}
-        <StatsSection />
+        {/* <StatsSection /> */}
 
         {/* 6. Student Exchange - Conditional */}
         {user && userUniversity ? (
@@ -179,7 +179,7 @@ const Index = () => {
         {/* <PopularSuppliers /> */}
 
         {/* 8. Testimonials */}
-        <Testimonials />
+        {/* <Testimonials /> */}
 
         {/* 9. Mobile App */}
         <MobileApp />
