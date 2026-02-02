@@ -126,8 +126,10 @@ export default function SupplierRegister() {
       if (!phoneDigits || phoneDigits.length < 7) {
         validationErrors.contactWhatsapp = "Numéro WhatsApp invalide (min 7 chiffres)";
       } else {
-        finalPhone = countryCode + phoneDigits.replace(/^0+/, '');
-        finalEmail = `phone${phoneDigits}@campuslink.sn`;
+        const cleanedDigits = phoneDigits.replace(/^0+/, '');
+        const countryCodeDigits = countryCode.replace('+', '');
+        finalPhone = countryCode + cleanedDigits;
+        finalEmail = `phone.${countryCodeDigits}${cleanedDigits}@sencampuslink.com`;
       }
     } else {
       // Email mode

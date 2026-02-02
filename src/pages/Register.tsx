@@ -126,8 +126,7 @@ export default function Register() {
         
         // Generate a predictable email format for phone-based registration
         // This email format must be accepted by Supabase's email validator
-        // Using a format: <phone>@<hash>.temp.campuslink.app where hash adds uniqueness
-        finalEmail = `phone.${countryCodeDigits}${cleanedDigits}@temp-users.campuslink.dev`;
+        finalEmail = `phone.${countryCodeDigits}${cleanedDigits}@sencampuslink.com`;
         isPhoneRegistration = true;
       }
     } else {
