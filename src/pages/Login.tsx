@@ -80,11 +80,11 @@ export default function Login() {
       const phoneDigits = rawPhoneDigits.replace(/^0+/, '');
       const countryCodeDigits = countryCode.replace('+', '');
       
-      // NEW format (current): phone.221XXXXXXXX@temp-users.campuslink.dev
-      emailToUse = `phone.${countryCodeDigits}${phoneDigits}@temp-users.campuslink.dev`;
+      // NEW format (current): phone.221XXXXXXXX@sencampuslink.com
+      emailToUse = `phone.${countryCodeDigits}${phoneDigits}@sencampuslink.com`;
       
-      // OLD format (legacy accounts): phoneXXXXXXXXX@campuslink.sn
-      alternativeEmail = `phone${phoneDigits}@campuslink.sn`;
+      // OLD format (legacy accounts): phoneXXXXXXXXX@temp-users.campuslink.dev
+      alternativeEmail = `phone.${countryCodeDigits}${phoneDigits}@temp-users.campuslink.dev`;
       
       console.log('Login phone debug:', {
         rawInput: formData.phone,

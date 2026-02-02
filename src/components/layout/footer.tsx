@@ -213,11 +213,11 @@ export const Footer = () => {
 
             <div className="space-y-3 text-sm">
               <a
-                href="mailto:contact@campuslink.com"
+                href="mailto:contact@sencampuslink.com"
                 className="flex items-center space-x-2 text-secondary-foreground/80 hover:text-secondary-foreground transition-colors"
               >
                 <Mail className="w-4 h-4 text-primary" />
-                <span>contact@campuslink.com</span>
+                <span>contact@sencampuslink.com</span>
               </a>
 
               <a

@@ -84,10 +84,10 @@ export default function Contact() {
                       Envoyez-nous un email
                     </p>
                     <a
-                      href="mailto:contact@mndproduits.com"
+                      href="mailto:contact@sencampuslink.com"
                       className="text-sm text-primary hover:underline"
                     >
-                      contact@mndproduits.com
+                      contact@sencampuslink.com
                     </a>
                   </div>
                 </div>

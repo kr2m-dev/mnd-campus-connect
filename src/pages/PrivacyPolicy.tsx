@@ -201,7 +201,7 @@ export default function PrivacyPolicy() {
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h4 className="font-semibold mb-2 text-green-800">Comment exercer vos droits :</h4>
                 <p className="text-green-700 text-sm mb-2">
-                  Contactez-nous à <strong>privacy@mndproduits.com</strong> ou via votre espace personnel.
+                  Contactez-nous à <strong>privacy@sencampuslink.com</strong> ou via votre espace personnel.
                 </p>
                 <p className="text-green-700 text-sm">
                   Nous répondrons à votre demande dans un délai de 30 jours maximum.
@@ -253,7 +253,7 @@ export default function PrivacyPolicy() {
                   <div>
                     <h4 className="font-semibold mb-2">Délégué à la Protection des Données</h4>
                     <p className="text-sm text-muted-foreground">
-                      Email : privacy@mndproduits.com<br />
+                      Email : privacy@sencampuslink.com<br />
                       Téléphone : +221 77 123 45 67
                     </p>
                   </div>
