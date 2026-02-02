@@ -48,6 +48,7 @@ export const SuppliersTable = ({ suppliers, isLoading }: SuppliersTableProps) =>
           <TableHeader>
             <TableRow>
               <TableHead>Entreprise</TableHead>
+              <TableHead>Genre</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Adresse</TableHead>
               <TableHead>Produits</TableHead>
@@ -82,6 +83,9 @@ export const SuppliersTable = ({ suppliers, isLoading }: SuppliersTableProps) =>
                         </p>
                       </div>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    {supplier.genre || '-'}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1 text-sm">
