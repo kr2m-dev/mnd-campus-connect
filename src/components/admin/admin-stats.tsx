@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Store, Package, ShoppingCart, DollarSign, MousePointer2, Eye } from "lucide-react";
+import { Users, Store, Package, ShoppingCart, DollarSign } from "lucide-react";
 import { useAdminStats } from "@/hooks/use-admin";
 
 export const AdminStats = () => {
@@ -33,8 +33,6 @@ export const AdminStats = () => {
         <Card><CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><Package className="w-4 h-4" />Produits</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{stats.products.total}</div><p className="text-xs text-muted-foreground">Actifs: {stats.products.active} | Inactifs: {stats.products.inactive}</p></CardContent></Card>
         <Card><CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><ShoppingCart className="w-4 h-4" />Commandes</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{stats.orders.total}</div></CardContent></Card>
         <Card><CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><DollarSign className="w-4 h-4" />CA Total</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{stats.orders.revenue} CFA</div></CardContent></Card>
-        <Card><CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><MousePointer2 className="w-4 h-4" />Interactions</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{stats.interactions?.total || 0}</div><p className="text-xs text-muted-foreground">Clics, likes, etc.</p></CardContent></Card>
-        <Card><CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><Eye className="w-4 h-4" />Visites</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{stats.visits?.total || 0}</div><p className="text-xs text-muted-foreground">Pages vues</p></CardContent></Card>
       </div>
     </div>
   );

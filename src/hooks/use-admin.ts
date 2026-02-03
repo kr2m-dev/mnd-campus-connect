@@ -10,12 +10,10 @@ export const useIsAdmin = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
 
-      // Check if user ID exists in the admins table
-      const { data, error } = await supabase
-        .from("admins")
-        .select("user_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      // Check admin status using RPC function
+      const { data, error } = await supabase.rpc('is_admin', {
+        _user_id: user.id
+      });
 
       if (error) {
         console.error("Error checking admin status:", error);
@@ -126,13 +124,11 @@ export const useAdminStats = () => {
     queryKey: ["admin-stats"],
     queryFn: async () => {
       // Récupérer toutes les données en parallèle
-      const [usersRes, suppliersRes, productsRes, ordersRes, interactionsRes, visitsRes] = await Promise.all([
+      const [usersRes, suppliersRes, productsRes, ordersRes] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: false }),
         supabase.from("suppliers").select("*", { count: "exact", head: false }),
         supabase.from("products").select("*", { count: "exact", head: false }),
         supabase.from("orders").select("*", { count: "exact", head: false }),
-        supabase.from("interactions").select("*", { count: "exact", head: false }),
-        supabase.from("site_visits").select("*", { count: "exact", head: false }),
       ]);
 
       if (usersRes.error) throw usersRes.error;
@@ -144,8 +140,6 @@ export const useAdminStats = () => {
       const suppliers = suppliersRes.data || [];
       const products = productsRes.data || [];
       const orders = ordersRes.data || [];
-      const interactions = interactionsRes.data || [];
-      const visits = visitsRes.data || [];
 
       // Calculs
       const totalUsers = users.length;
@@ -164,9 +158,6 @@ export const useAdminStats = () => {
       const totalOrders = orders.length;
       const totalRevenue = orders.reduce((sum, order: any) =>
         sum + Number(order.total_amount), 0);
-
-      const totalInteractions = interactions.length;
-      const totalVisits = visits.length;
 
       // Inscriptions des 7 derniers jours
       const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -232,12 +223,6 @@ export const useAdminStats = () => {
         orders: {
           total: totalOrders,
           revenue: totalRevenue,
-        },
-        interactions: {
-          total: totalInteractions,
-        },
-        visits: {
-          total: totalVisits,
         },
         signupsByDay,
         ordersByDay,
