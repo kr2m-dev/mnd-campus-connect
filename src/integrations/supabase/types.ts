@@ -44,6 +44,21 @@ export type Database = {
         }
         Relationships: []
       }
+      admins: {
+        Row: {
+          created_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string | null
@@ -647,6 +662,39 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_verifications: {
+        Row: {
+          attempts: number
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          code: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       security_stats: {
@@ -773,6 +821,14 @@ export type Database = {
         Args: { new_is_verified: boolean; target_supplier_id: string }
         Returns: boolean
       }
+      create_whatsapp_verification: {
+        Args: { phone_number: string }
+        Returns: {
+          code: string
+          expires_at: string
+        }[]
+      }
+      generate_verification_code: { Args: never; Returns: string }
       get_all_users_admin: {
         Args: never
         Returns: {
@@ -824,6 +880,10 @@ export type Database = {
       }
       user_has_order_with_supplier: {
         Args: { supplier_id_param: string }
+        Returns: boolean
+      }
+      verify_whatsapp_code: {
+        Args: { verification_code: string }
         Returns: boolean
       }
     }
