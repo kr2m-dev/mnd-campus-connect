@@ -205,7 +205,7 @@ export default function Login() {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300"
+                    className="w-full bg-gradient-to-r from-primary to-primary-glow text-primary-foreground hover:shadow-glow transition-all duration-300"
                     disabled={loading}
                   >
                     Envoyer le lien de réinitialisation
@@ -409,7 +409,7 @@ export default function Login() {
                   {/* Submit Button */}
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-gradient-primary hover:shadow-glow transition-all duration-300 text-base font-semibold"
+                    className="w-full h-12 bg-gradient-to-r from-primary to-primary-glow text-primary-foreground hover:shadow-glow transition-all duration-300 text-base font-semibold"
                     disabled={loading}
                   >
                     {loading ? (
