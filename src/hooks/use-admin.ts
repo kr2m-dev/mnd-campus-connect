@@ -305,26 +305,24 @@ export const useToggleUserActive = () => {
   });
 };
 
-// Hook pour vérifier un fournisseur (direct table update with RLS)
+// Hook pour vérifier un fournisseur (SECURE - uses RPC)
 export const useVerifySupplier = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ supplierId, isVerified }: { supplierId: string; isVerified: boolean }) => {
-      const { data, error } = await supabase
-        .from("suppliers")
-        .update({ is_verified: isVerified })
-        .eq("id", supplierId)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('admin_verify_supplier', {
+        target_supplier_id: supplierId,
+        new_is_verified: isVerified,
+      });
 
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["all-suppliers"] });
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
-      toast.success("Statut fournisseur mis à jour");
+      toast.success(variables.isVerified ? "Fournisseur vérifié ✅" : "Vérification retirée");
     },
     onError: (error: any) => {
       toast.error(error.message || "Erreur lors de la vérification");
