@@ -52,7 +52,7 @@ export const FinalCTA = () => {
             <Button
               size="lg"
               onClick={handleCTA}
-              className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 h-auto shadow-2xl group"
+              className="bg-primary text-white hover:bg-primary/90 text-lg px-8 py-6 h-auto shadow-2xl group"
             >
               {user ? "Découvrir les produits" : "Créer un compte gratuit"}
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
