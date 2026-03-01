@@ -303,7 +303,7 @@ export const Header = ({
                   variant="default"
                   size="sm"
                   onClick={() => handleNavigate("/register")}
-                  className="bg-gradient-primary hover:bg-green-600 h-9"
+                  className="bg-primary text-white hover:bg-primary/90 h-9"
                 >
                   <UserPlus className="w-4 h-4 lg:mr-2" />
                   <span className="hidden lg:inline">Inscription</span>
