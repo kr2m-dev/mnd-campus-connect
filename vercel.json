@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/((?!api/.*).*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -29,7 +32,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://zdvemexeuorsbcermvqr.supabase.co; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://zdvemexeuorsbcermvqr.supabase.co wss://zdvemexeuorsbcermvqr.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://zdvemexeuorsbcermvqr.supabase.co https://blink.new; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://zdvemexeuorsbcermvqr.supabase.co wss://zdvemexeuorsbcermvqr.supabase.co https://fonts.googleapis.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         }
       ]
     }
