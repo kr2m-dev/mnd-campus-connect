@@ -255,7 +255,7 @@ export default function Login() {
               <img
                 src={authImage}
                 alt="Illustration de connexion"
-                className="w-64 h-auto object-contain drop-shadow-xl"
+                className="w-40 sm:w-56 h-auto object-contain drop-shadow-xl"
               />
             </div>
 

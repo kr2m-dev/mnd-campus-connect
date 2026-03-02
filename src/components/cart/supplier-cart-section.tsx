@@ -53,20 +53,21 @@ export const SupplierCartSection = ({
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="bg-muted/50 py-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Store className="w-5 h-5 text-primary" />
-            {supplierName}
-            <Badge variant="secondary" className="ml-2">
+      <CardHeader className="bg-muted/50 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg min-w-0">
+            <Store className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <span className="truncate">{supplierName}</span>
+            <Badge variant="secondary" className="ml-1 flex-shrink-0">
               {totalItems} article{totalItems > 1 ? 's' : ''}
             </Badge>
           </CardTitle>
           <Button
             onClick={onOrder}
-            className="bg-green-600 hover:bg-green-700"
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 flex-shrink-0"
           >
-            <MessageCircle className="w-4 h-4 mr-2" />
+            <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
             Commander
           </Button>
         </div>
@@ -82,10 +83,10 @@ export const SupplierCartSection = ({
             : 0;
 
           return (
-            <div key={item.id} className="flex gap-4 p-4">
+            <div key={item.id} className="flex gap-3 sm:gap-4 p-3 sm:p-4">
               {/* Product Image */}
-              <div 
-                className="relative w-20 h-20 bg-muted rounded-lg flex-shrink-0 overflow-hidden cursor-pointer"
+              <div
+                className="relative w-16 h-16 sm:w-20 sm:h-20 bg-muted rounded-lg flex-shrink-0 overflow-hidden cursor-pointer"
                 onClick={() => navigate(`/products/${slugify(product.name)}`)}
               >
                 <img

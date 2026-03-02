@@ -128,7 +128,7 @@ export default function ProductDetails() {
         </Button>
 
         {/* Contenu principal */}
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-12">
+        <div className="grid md:grid-cols-2 gap-5 sm:gap-8 lg:gap-12 mb-8 sm:mb-12">
           {/* Section Images */}
           <div className="space-y-4">
             <div className="relative bg-card rounded-lg overflow-hidden shadow-card">
@@ -166,7 +166,7 @@ export default function ProductDetails() {
           <div className="space-y-6">
             {/* Titre et Rating */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">{product.name}</h1>
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{product.name}</h1>
 
               {/* Rating */}
               <div className="flex items-center gap-3 mb-4">
@@ -196,11 +196,11 @@ export default function ProductDetails() {
             {/* Prix */}
             <div className="space-y-2">
               <div className="flex items-baseline gap-4">
-                <span className="text-4xl font-bold text-primary">
+                <span className="text-2xl sm:text-4xl font-bold text-primary">
                   {product.price} CFA
                 </span>
                 {product.original_price && (
-                  <span className="text-xl text-muted-foreground line-through">
+                  <span className="text-base sm:text-xl text-muted-foreground line-through">
                     {product.original_price} CFA
                   </span>
                 )}
@@ -304,39 +304,37 @@ export default function ProductDetails() {
             <Separator />
 
             {/* Actions */}
-            <div className="space-y-4 pt-4">
-              <div className="flex gap-3">
+            <div className="space-y-3 pt-3 sm:pt-4">
+              <div className="flex gap-2 sm:gap-3">
                 <Button
                   onClick={() => handleToggleFavorite(product.id, isFavorite)}
                   variant="outline"
-                  size="lg"
                   className={`flex-1 ${isFavorite ? "text-red-500 border-red-500 hover:bg-red-50" : ""}`}
                 >
-                  <Heart className={`w-5 h-5 mr-2 ${isFavorite ? "fill-current" : ""}`} />
-                  {isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  <Heart className={`w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 ${isFavorite ? "fill-current" : ""}`} />
+                  <span className="hidden xs:inline">{isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}</span>
+                  <span className="xs:hidden">{isFavorite ? "Retirer" : "Favoris"}</span>
                 </Button>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <Button
                   onClick={handleWhatsAppOrder}
                   variant="outline"
-                  size="lg"
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-600"
                   disabled={product.stock_quantity <= 0}
                 >
-                  <MessageCircle className="w-5 h-5 mr-2" />
+                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                   Commander via WhatsApp
                 </Button>
               </div>
 
               <Button
                 onClick={() => handleAddToCart(product.id)}
-                size="lg"
-                className="w-full bg-primary hover:bg-primary-dark text-lg py-7"
+                className="w-full bg-primary hover:bg-primary-dark py-5 sm:py-7 text-sm sm:text-lg"
                 disabled={product.stock_quantity <= 0}
               >
-                <ShoppingCart className="w-6 h-6 mr-2" />
+                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 mr-1.5 sm:mr-2" />
                 {product.stock_quantity <= 0 ? "Rupture de stock" : "Ajouter au panier"}
               </Button>
             </div>

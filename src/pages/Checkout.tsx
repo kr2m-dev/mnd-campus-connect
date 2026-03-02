@@ -419,7 +419,6 @@ export default function Checkout() {
                   onClick={handleSubmit}
                   disabled={!isFormValid || isSubmitting}
                   className="w-full bg-gradient-primary"
-                  size="lg"
                 >
                   {isSubmitting ? (
                     <>

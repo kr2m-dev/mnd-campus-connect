@@ -16,7 +16,7 @@ export const FinalCTA = () => {
   };
 
   return (
-    <section className="py-20 md:py-32 relative overflow-hidden">
+    <section className="py-12 md:py-32 relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-green-600" />
 
@@ -38,32 +38,30 @@ export const FinalCTA = () => {
           </div>
 
           {/* Heading */}
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6">
             Prêt à simplifier votre vie étudiante ?
           </h2>
 
           {/* Description */}
-          <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-lg md:text-xl text-white/90 mb-6 sm:mb-10 max-w-2xl mx-auto">
             Rejoignez des milliers d'étudiants qui utilisent déjà CampusLink pour leurs achats quotidiens
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             <Button
-              size="lg"
               onClick={handleCTA}
-              className="bg-primary text-white hover:bg-primary/90 text-lg px-8 py-6 h-auto shadow-2xl group"
+              className="bg-primary text-white hover:bg-primary/90 text-sm sm:text-lg px-5 sm:px-8 py-3 sm:py-6 h-auto shadow-2xl group w-full sm:w-auto"
             >
               {user ? "Découvrir les produits" : "Créer un compte gratuit"}
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
 
             {!user && (
               <Button
-                size="lg"
                 variant="outline"
                 onClick={() => navigate("/login")}
-                className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-6 h-auto"
+                className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-sm sm:text-lg px-5 sm:px-8 py-3 sm:py-6 h-auto w-full sm:w-auto"
               >
                 J'ai déjà un compte
               </Button>
@@ -71,7 +69,7 @@ export const FinalCTA = () => {
           </div>
 
           {/* Trust indicators */}
-          <div className="mt-12 flex flex-wrap justify-center gap-8 text-white/80 text-sm">
+          <div className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-4 sm:gap-8 text-white/80 text-xs sm:text-sm">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-white rounded-full" />
               <span>Gratuit et sans engagement</span>

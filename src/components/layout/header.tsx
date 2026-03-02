@@ -6,16 +6,12 @@ import {
   User,
   Menu,
   Search,
-  Bell,
-  Store,
-  Users,
   MapPin,
   LogIn,
   UserPlus,
   Package,
   Shield,
   LayoutDashboard,
-  Heart,
   ShoppingBag,
   ClipboardList,
   X
@@ -148,8 +144,8 @@ export const Header = ({
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center gap-2 sm:gap-4 px-3 sm:px-4">
-        {/* Logo */}
+      <div className="w-full flex justify-center items-center h-16 gap-2 sm:gap-4 px-3 sm:px-4">
+                {/* Logo */}
         <div className="flex items-center flex-shrink-0">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => handleNavigate("/")}>
             <img
@@ -163,28 +159,8 @@ export const Header = ({
           </div>
         </div>
 
-        {/* University Display - masqué pour les fournisseurs */}
-        {(user && userUniversity && !supplier) ? (
-          <div className="hidden lg:flex items-center flex-shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleNavigate("/profile")}
-              className="flex items-center space-x-1.5 hover:bg-primary h-9"
-            >
-              <span className="text-base">{userUniversity.flag}</span>
-              <div className="flex flex-col items-start">
-                <span className="text-xs font-medium truncate max-w-28 lg:max-w-32">
-                  {userUniversity.name.split(' ').slice(0, 2).join(' ')}
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  {userUniversity.city}
-                </span>
-              </div>
-              <User className="w-3 h-3 hidden xl:block" />
-            </Button>
-          </div>
-        ) : selectedUniversity && !user ? (
+        {/* University Display - visible uniquement pour les visiteurs non connectés */}
+        {selectedUniversity && !user ? (
           <div className="hidden lg:flex items-center flex-shrink-0">
             <Button
               variant="outline"
@@ -208,25 +184,27 @@ export const Header = ({
 
         {/* Search Bar - prend tout l'espace restant - masqué pour les fournisseurs */}
         {!supplier ? (
-          <div className="hidden md:flex flex-1 min-w-0 max-w-md lg:max-w-lg xl:max-w-2xl">
+          <div className="hidden md:flex w-40 lg:w-56 xl:w-72">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <button
+                onClick={executeSearch}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                tabIndex={-1}
+              >
+                <Search className="w-4 h-4" />
+              </button>
               <Input
-                placeholder="Rechercher des produits..."
+                placeholder="Rechercher... (Entrée)"
                 className="pl-10 pr-4 w-full h-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    executeSearch();
-                  }
+                  if (e.key === "Enter") executeSearch();
                 }}
               />
             </div>
           </div>
-        ) : (
-          <div className="hidden md:flex flex-1" />
-        )}
+        ) : null}
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 flex-shrink-0">
@@ -357,28 +335,8 @@ export const Header = ({
 
               <div className="flex-1 overflow-y-auto">
                 <div className="flex flex-col space-y-4 p-4">
-                  {/* University Display Mobile - masqué pour les fournisseurs */}
-                  {(user && userUniversity && !supplier) ? (
-                    <div className="p-3 bg-muted rounded-lg">
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleNavigate("/profile")}
-                        className="w-full justify-start p-0 h-auto hover:bg-transparent"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <span className="text-2xl">{userUniversity.flag}</span>
-                          <div className="flex flex-col items-start">
-                            <span className="text-sm font-medium">
-                              {userUniversity.name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {userUniversity.city}, {userUniversity.country}
-                            </span>
-                          </div>
-                        </div>
-                      </Button>
-                    </div>
-                  ) : selectedUniversity && !user ? (
+                  {/* University Display Mobile - visible uniquement pour les visiteurs non connectés */}
+                  {selectedUniversity && !user ? (
                     <div className="p-3 bg-muted rounded-lg">
                       <Button
                         variant="ghost"
@@ -406,16 +364,20 @@ export const Header = ({
                   {/* Barre de recherche mobile - masquée pour les fournisseurs */}
                   {!supplier && (
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <button
+                        onClick={executeSearch}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                        tabIndex={-1}
+                      >
+                        <Search className="w-4 h-4" />
+                      </button>
                       <Input
-                        placeholder="Rechercher des produits..."
+                        placeholder="Rechercher... (Entrée)"
                         className="pl-10 h-10"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            executeSearch();
-                          }
+                          if (e.key === "Enter") executeSearch();
                         }}
                       />
                     </div>

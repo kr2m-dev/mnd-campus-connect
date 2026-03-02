@@ -81,7 +81,7 @@ export function ProductImageCarousel({
           e.stopPropagation();
           goToPrevious();
         }}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 opacity-70 group-hover:opacity-100 transition-opacity"
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 opacity-70 hover:opacity-100 transition-opacity"
       >
         <ChevronLeft className="w-6 h-6" />
       </Button>
@@ -93,13 +93,13 @@ export function ProductImageCarousel({
           e.stopPropagation();
           goToNext();
         }}
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 opacity-70 group-hover:opacity-100 transition-opacity"
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 opacity-70 hover:opacity-100 transition-opacity"
       >
         <ChevronRight className="w-6 h-6" />
       </Button>
 
       {/* Indicateurs de position */}
-      <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5 bg-black/40 px-3 py-1.5 rounded-full z-20">
+      <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5 bg-black/40 px-3 py-1.5 rounded-full z-30">
         {images.map((_, index) => (
           <button
             key={index}

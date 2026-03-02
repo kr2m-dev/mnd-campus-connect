@@ -106,16 +106,16 @@ export default function StudentExchangePage() {
       <main className="py-8 pt-24 min-h-screen bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto px-4">
           {/* Header avec design amélioré */}
-          <div className="mb-12">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-primary/10 rounded-xl">
-                    <Package className="w-8 h-8 text-primary" />
+          <div className="mb-6 sm:mb-12">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-4 sm:mb-6">
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 bg-primary/10 rounded-xl">
+                    <Package className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                   </div>
                   <div>
-                    <h1 className="text-3xl md:text-4xl font-bold">
-                      Espace <span className="bg-gradient-primary bg-clip-text text-transparent">Échange Étudiant</span>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+                      Espace <span className="text-primary">Échange Étudiant</span>
                     </h1>
                     <p className="text-muted-foreground mt-1">
                       Achetez, vendez ou échangez avec d'autres étudiants
@@ -136,27 +136,26 @@ export default function StudentExchangePage() {
               </div>
               <Button
                 onClick={handleCreateListing}
-                size="lg"
                 className="btn-glow shadow-lg hover:shadow-xl transition-all w-full md:w-auto"
               >
-                <Plus className="w-5 h-5 mr-2" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                 Créer une annonce
               </Button>
             </div>
           </div>
 
           {/* Filters avec design moderne */}
-          <Card className="mb-8 shadow-card">
-            <CardContent className="p-6 space-y-6">
+          <Card className="mb-6 sm:mb-8 shadow-card">
+            <CardContent className="p-3 sm:p-6 space-y-4 sm:space-y-6">
               {/* Search avec icône */}
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Rechercher des annonces par titre ou description..."
+                  placeholder="Rechercher des annonces..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-12 text-base shadow-sm"
+                  className="pl-9 sm:pl-12 h-9 sm:h-12 text-sm sm:text-base shadow-sm"
                 />
               </div>
 
@@ -247,15 +246,15 @@ export default function StudentExchangePage() {
                         : "Soyez le premier à publier une annonce !"}
                     </p>
                   </div>
-                  <Button onClick={handleCreateListing} size="lg" className="btn-glow">
-                    <Plus className="w-5 h-5 mr-2" />
+                  <Button onClick={handleCreateListing} className="btn-glow">
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                     Créer une annonce
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {listings.map((listing, listingIndex) => {
                 const Icon = categoryIcons[listing.categories?.name || "Autres"] || Package;
                 const imageUrl = listing.image_urls?.[0] || "/placeholder.svg";

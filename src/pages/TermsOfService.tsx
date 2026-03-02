@@ -26,7 +26,7 @@ export default function TermsOfService() {
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Conditions{" "}
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
+            <span className="text-primary">
               d'utilisation
             </span>
           </h1>

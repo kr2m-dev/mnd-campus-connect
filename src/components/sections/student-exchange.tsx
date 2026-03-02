@@ -64,18 +64,18 @@ export const StudentExchange = ({ onAccessExchange, selectedUniversity }: Studen
   const displayedListings = listings.slice(0, 3);
 
   return (
-    <section className="py-16 config-background">
+    <section className="py-10 sm:py-16 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-12">
-          <Badge variant="secondary" className="mb-4 bg-accent/10 text-accent border-accent/20">
+        <div className="text-center mb-8 sm:mb-12">
+          <Badge variant="secondary" className="mb-3 sm:mb-4 bg-accent/10 text-accent border-accent/20">
             <Users className="w-3 h-3 mr-1" />
             Communauté étudiante
           </Badge>
-          
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
             Espace{" "}
-            <span className="bg-gradient-accent bg-clip-text text-transparent">
+            <span className="text-accent">
               Échange Étudiant
             </span>
           </h2>
@@ -105,8 +105,8 @@ export const StudentExchange = ({ onAccessExchange, selectedUniversity }: Studen
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="text-center p-6 shadow-card hover:shadow-elegant transition-all interactive-scale">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
+          <Card className="text-center p-4 sm:p-6 shadow-card hover:shadow-elegant transition-all interactive-scale">
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <Shield className="w-6 h-6 text-primary" />
             </div>
@@ -116,9 +116,9 @@ export const StudentExchange = ({ onAccessExchange, selectedUniversity }: Studen
             </p>
           </Card>
           
-          <Card className="text-center p-6 shadow-card hover:shadow-elegant transition-all interactive-scale">
-            <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="w-6 h-6 text-accent" />
+          <Card className="text-center p-4 sm:p-6 shadow-card hover:shadow-elegant transition-all interactive-scale">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
             </div>
             <h3 className="font-semibold mb-2">Communication</h3>
             <p className="text-sm text-muted-foreground">
@@ -126,9 +126,9 @@ export const StudentExchange = ({ onAccessExchange, selectedUniversity }: Studen
             </p>
           </Card>
           
-          <Card className="text-center p-6 shadow-card hover:shadow-elegant transition-all interactive-scale">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="w-6 h-6 text-primary" />
+          <Card className="text-center p-4 sm:p-6 shadow-card hover:shadow-elegant transition-all interactive-scale">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             </div>
             <h3 className="font-semibold mb-2">Économique</h3>
             <p className="text-sm text-muted-foreground">

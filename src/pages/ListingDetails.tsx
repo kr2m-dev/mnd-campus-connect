@@ -322,10 +322,9 @@ export default function ListingDetails() {
               <div className="space-y-3 pt-4">
                 <Button
                   onClick={handleContact}
-                  size="lg"
-                  className="w-full bg-primary hover:bg-primary-dark text-lg py-7"
+                  className="w-full bg-primary hover:bg-primary-dark text-sm sm:text-lg py-4 sm:py-7 h-auto"
                 >
-                  <MessageCircle className="w-6 h-6 mr-2" />
+                  <MessageCircle className="w-4 h-4 sm:w-6 sm:h-6 mr-1.5 sm:mr-2" />
                   Contacter le vendeur
                 </Button>
               </div>

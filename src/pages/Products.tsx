@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { slugify } from "@/lib/utils";
@@ -66,8 +66,16 @@ export default function Products() {
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [showAllUniversities, setShowAllUniversities] = useState(false);
-  const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null);
+  // If a university param is in the URL (from home page selector), pre-select it
+  const urlUniversityId = searchParams.get("university");
+  const [showAllUniversities, setShowAllUniversities] = useState(() => !!urlUniversityId);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(() => urlUniversityId);
+  // Sync searchQuery when URL params change (e.g. searching from the header while already on this page)
+  useEffect(() => {
+    const urlSearch = searchParams.get("search") || "";
+    setSearchQuery(urlSearch);
+  }, [searchParams]);
+
   const addToCart = useAddToCart();
   const toggleFavorite = useToggleFavorite();
 
@@ -130,9 +138,20 @@ export default function Products() {
     return userUniversity?.id;
   };
 
+  const activeUniversityFilter = getFilterUniversity();
+
   // Build filters using enhanced types
   const filters: ProductFilters = {
-    university: getFilterUniversity(),
+    university: activeUniversityFilter,
+    category_id: selectedCategory !== "all" ? selectedCategory : undefined,
+    search: searchQuery || undefined,
+    min_price: priceRange.min ? parseFloat(priceRange.min) : undefined,
+    max_price: priceRange.max ? parseFloat(priceRange.max) : undefined,
+    is_active: true,
+  };
+
+  // Fallback filters without university — used when the selected university has no products
+  const fallbackFilters: ProductFilters = {
     category_id: selectedCategory !== "all" ? selectedCategory : undefined,
     search: searchQuery || undefined,
     min_price: priceRange.min ? parseFloat(priceRange.min) : undefined,
@@ -141,10 +160,21 @@ export default function Products() {
   };
 
   const { data: products = [], isLoading } = useProducts(filters);
+  // Only run the fallback query when a university filter is active
+  const { data: allProducts = [], isLoading: isLoadingFallback } = useProducts(
+    fallbackFilters,
+    !!activeUniversityFilter
+  );
+
+  // When the university filter yields no results, fall back to all products
+  const isFallback = !isLoading && products.length === 0 && !!activeUniversityFilter;
+  const displayProducts = isFallback ? allProducts : products;
+  const isPageLoading = isLoading || (!!activeUniversityFilter && isLoadingFallback);
+
   const { data: categories = [] } = useCategories();
 
   // Sort products (filtering is now done by the hook with indexes)
-  const sortedProducts = [...products].sort((a, b) => {
+  const sortedProducts = [...displayProducts].sort((a, b) => {
     switch (sortBy) {
       case "price-low":
         return a.price - b.price;
@@ -159,7 +189,7 @@ export default function Products() {
     }
   });
 
-  if (isLoading) {
+  if (isPageLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header
@@ -318,28 +348,6 @@ export default function Products() {
               aspectRatio="square"
             />
 
-            {/* Overlay Actions */}
-            <div className="absolute inset-0 bg-secondary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-10">
-              <Button size="sm" variant="secondary" onClick={() => handleViewDetails(product)}>
-                <Eye className="w-4 h-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => handleToggleFavorite(product.id, isFavorite)}
-                className={isFavorite ? "text-red-500" : ""}
-              >
-                <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
-              </Button>
-              <Button
-                size="sm"
-                className="bg-primary hover:bg-primary-dark"
-                onClick={() => handleAddToCart(product.id)}
-              >
-                <ShoppingCart className="w-4 h-4" />
-              </Button>
-            </div>
-
             {/* Badges */}
             <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
               {discount > 0 && (
@@ -418,17 +426,29 @@ export default function Products() {
           </div>
         </CardContent>
 
-        <CardFooter className="p-4 pt-0 flex gap-2">
-          <Button 
-            variant="outline"
-            size="sm"
-            className="bg-green-600 hover:bg-green-700 text-white border-green-600"
-            onClick={() => handleWhatsAppOrder(product)}
-          >
-            <MessageCircle className="w-4 h-4" />
-          </Button>
-          <Button 
-            className="flex-1 bg-primary hover:bg-primary-dark btn-glow group"
+        <CardFooter className="p-4 pt-0 flex flex-col gap-2">
+          <div className="flex gap-2 w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => handleViewDetails(product)}
+              title="Voir le produit"
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className={`flex-1 ${isFavorite ? "text-red-500 border-red-300 hover:bg-red-50" : ""}`}
+              onClick={() => handleToggleFavorite(product.id, isFavorite)}
+              title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            >
+              <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
+            </Button>
+          </div>
+          <Button
+            className="w-full bg-primary hover:bg-primary-dark btn-glow"
             onClick={() => handleAddToCart(product.id)}
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
@@ -448,12 +468,12 @@ export default function Products() {
       <div className="container mx-auto px-4 py-8 pt-24">
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Package className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl md:text-4xl font-bold">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
+            <Package className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
               Nos{" "}
-              <span className="bg-gradient-primary bg-clip-text text-transparent">
+              <span className="text-primary">
                 Produits
               </span>
             </h1>
@@ -517,7 +537,7 @@ export default function Products() {
                   value={selectedUniversityId || "all"}
                   onValueChange={(value) => setSelectedUniversityId(value === "all" ? null : value)}
                 >
-                  <SelectTrigger className="w-[280px] border-primary/50">
+                  <SelectTrigger className="w-full sm:w-[280px] border-primary/50">
                     <SelectValue placeholder="Sélectionner une université" />
                   </SelectTrigger>
                   <SelectContent>
@@ -541,8 +561,8 @@ export default function Products() {
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-card rounded-lg p-6 mb-8 shadow-card">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="bg-card rounded-lg p-3 sm:p-6 mb-6 sm:mb-8 shadow-card">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -603,7 +623,7 @@ export default function Products() {
           </div>
 
           {/* Price Range */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             <span className="text-sm text-muted-foreground">Prix:</span>
             <div className="flex items-center gap-2">
               <Input
@@ -611,7 +631,7 @@ export default function Products() {
                 placeholder="Min"
                 value={priceRange.min}
                 onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
-                className="w-20"
+                className="w-16 sm:w-20 h-8 sm:h-9 text-xs sm:text-sm"
               />
               <span className="text-muted-foreground">-</span>
               <Input
@@ -619,9 +639,9 @@ export default function Products() {
                 placeholder="Max"
                 value={priceRange.max}
                 onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
-                className="w-20"
+                className="w-16 sm:w-20 h-8 sm:h-9 text-xs sm:text-sm"
               />
-              <span className="text-sm text-muted-foreground">CFA</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">CFA</span>
             </div>
             {(priceRange.min || priceRange.max) && (
               <Button
@@ -635,20 +655,30 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Results Count */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-muted-foreground">
+        {/* Fallback notice */}
+        {isFallback && (
+          <div className="mb-4 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm flex items-center gap-2">
+            <Globe className="w-4 h-4 flex-shrink-0" />
+            <span>
+              Aucun produit disponible pour cette université. Voici tous les produits disponibles.
+            </span>
+          </div>
+        )}
+
+        {/* Results Count + Category Chips */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
+          <p className="text-sm text-muted-foreground">
             {sortedProducts.length} produit{sortedProducts.length > 1 ? 's' : ''} trouvé{sortedProducts.length > 1 ? 's' : ''}
           </p>
 
           {/* Category Chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             <Button
               variant={selectedCategory === "all" ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedCategory("all")}
             >
-              <Package className="w-4 h-4 mr-2" />
+              <Package className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Tous
             </Button>
             {categories.slice(0, 4).map((category) => {
@@ -660,7 +690,7 @@ export default function Products() {
                   size="sm"
                   onClick={() => setSelectedCategory(category.id)}
                 >
-                  <Icon className="w-4 h-4 mr-2" />
+                  <Icon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   {category.name}
                 </Button>
               );

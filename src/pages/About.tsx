@@ -30,7 +30,7 @@ export default function About() {
 
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
             Bienvenue sur{" "}
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
+            <span className="text-primary">
               CampusLink
             </span>
           </h1>

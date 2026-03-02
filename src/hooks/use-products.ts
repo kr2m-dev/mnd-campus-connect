@@ -10,9 +10,10 @@ import {
 // Backward compatibility - export old interface
 export interface Product extends EnhancedProduct {}
 
-export const useProducts = (filters?: ProductFilters) => {
+export const useProducts = (filters?: ProductFilters, enabled = true) => {
   return useQuery({
     queryKey: ["products", filters],
+    enabled,
     queryFn: async () => {
       let query = supabase
         .from("products")

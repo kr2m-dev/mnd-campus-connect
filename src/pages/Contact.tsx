@@ -57,7 +57,7 @@ export default function Contact() {
 
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
             Une question ?{" "}
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
+            <span className="text-primary">
               Contactez-nous
             </span>
           </h1>

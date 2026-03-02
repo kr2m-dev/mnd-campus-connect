@@ -66,15 +66,15 @@ export const PopularSuppliers = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-16 md:py-24 bg-muted/30">
+    <section className="py-10 md:py-24 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 sm:mb-12 gap-3 sm:gap-4">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
               Fournisseurs populaires
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-sm sm:text-lg text-muted-foreground">
               Découvrez nos fournisseurs de confiance et vérifiés
             </p>
           </div>
@@ -92,11 +92,11 @@ export const PopularSuppliers = () => {
           {suppliers.map((supplier) => (
             <Card
               key={supplier.id}
-              className="p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary/50 group"
+              className="p-4 sm:p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-primary/50 group"
               onClick={() => navigate("/products")}
             >
               {/* Supplier Image/Icon */}
-              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-5xl group-hover:scale-110 transition-transform duration-300">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-3xl sm:text-5xl group-hover:scale-110 transition-transform duration-300">
                 {supplier.image}
               </div>
 

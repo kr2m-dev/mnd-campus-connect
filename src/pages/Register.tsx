@@ -236,7 +236,7 @@ export default function Register() {
                 <img
                   src={authImage}
                   alt="Illustration d'inscription"
-                  className="w-64 h-auto object-contain drop-shadow-xl"
+                  className="w-40 sm:w-56 h-auto object-contain drop-shadow-xl"
                 />
               </div>
 
@@ -246,7 +246,7 @@ export default function Register() {
                 <CardContent className="p-6 md:p-8">
                   <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Name Fields */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName" className="text-sm font-semibold">Prénom</Label>
                         <div className="relative group">

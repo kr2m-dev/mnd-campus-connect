@@ -206,7 +206,7 @@ export default function Cart() {
             <ShoppingCart className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Mon Panier</h1>
+            <h1 className="text-xl sm:text-3xl font-bold">Mon Panier</h1>
             <p className="text-muted-foreground">
               {totalItems} article{totalItems > 1 ? 's' : ''} de {supplierGroups.length} fournisseur{supplierGroups.length > 1 ? 's' : ''}
             </p>
@@ -216,9 +216,9 @@ export default function Cart() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Cart Items grouped by supplier */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6 sm:space-y-8">
             {supplierGroups.map((group) => (
               <SupplierCartSection
                 key={group.supplierId}

@@ -50,7 +50,7 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
       </div>
 
       {/* Content */}
-      <div className="relative container mx-auto px-4 py-20 lg:py-32">
+      <div className="relative container mx-auto px-4 py-10 sm:py-16 lg:py-32">
         <div className="max-w-2xl">
           {/* Badge */}
           <Badge
@@ -62,18 +62,18 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
           </Badge>
 
           {/* Main Title */}
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-primary-foreground slide-up">
+          <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 text-primary-foreground slide-up">
             {user ? (
               <>
                 Bonjour {user.user_metadata?.first_name || 'étudiant'} !
-                <span className="block bg-gradient-primary bg-clip-text text-transparent">
+                <span className="block text-green-400">
                   Découvrez vos produits
                 </span>
               </>
             ) : (
               <>
                 Vos produits essentiels
-                <span className="block bg-gradient-primary bg-clip-text text-transparent">
+                <span className="block text-green-400">
                   livrés sur campus
                 </span>
               </>
@@ -81,7 +81,7 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 slide-up" style={{ animationDelay: '0.2s' }}>
+          <p className="text-sm sm:text-lg md:text-xl text-primary-foreground/90 mb-5 sm:mb-8 slide-up" style={{ animationDelay: '0.2s' }}>
             {user && userUniversity ? (
               <>
                 Explorez notre sélection de produits d'hygiène, soins et parfums
@@ -96,7 +96,7 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-12 bounce-in" style={{ animationDelay: '0.4s' }}>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-6 sm:mb-12 bounce-in" style={{ animationDelay: '0.4s' }}>
             {user ? (
               /* Buttons for authenticated users */
               <>
@@ -109,7 +109,7 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
                   Voir les produits
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
-
+{/* 
                 <Button
                   size="lg"
                   variant="outline"
@@ -118,7 +118,7 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
                 >
                   <GraduationCap className="w-5 h-5 mr-2" />
                   Mon Profil
-                </Button>
+                </Button> */}
               </>
             ) : (
               /* Buttons for anonymous users */
@@ -146,7 +146,7 @@ export const HeroSection = ({ onSelectUniversity, onSupplierAccess, user, userUn
           </div>
 
           {/* Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 fade-in" style={{ animationDelay: '0.6s' }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 fade-in" style={{ animationDelay: '0.6s' }}>
             <div className="flex items-center space-x-2 text-primary-foreground/80">
               <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
                 <Truck className="w-4 h-4 text-primary-foreground" />

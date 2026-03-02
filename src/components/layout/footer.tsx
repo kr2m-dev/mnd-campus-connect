@@ -28,7 +28,7 @@ export const Footer = () => {
   return (
     <footer className="bg-secondary text-secondary-foreground">
       {/* Main Footer */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="lg:col-span-1">
@@ -51,7 +51,7 @@ export const Footer = () => {
             {/* Newsletter */}
             <div>
               <h4 className="font-semibold mb-3">Newsletter</h4>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   placeholder="Votre email"
                   className="bg-secondary-foreground/10 border-secondary-foreground/20 text-secondary-foreground placeholder:text-secondary-foreground/60"

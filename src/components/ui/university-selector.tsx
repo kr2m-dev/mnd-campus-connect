@@ -38,7 +38,7 @@ export const UniversitySelector = ({ isOpen, onUniversitySelect, onClose }: Univ
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader className="text-center">
-          <DialogTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl font-bold text-primary">
             Choisissez votre université
           </DialogTitle>
           <p className="text-muted-foreground mt-2">

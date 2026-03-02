@@ -52,7 +52,6 @@ const Index = () => {
   useEffect(() => {
     if (!loading) {
       if (user && userUniversity) {
-        // User is logged in - use their university
         setSelectedUniversity({
           id: userUniversity.id,
           name: userUniversity.name,
@@ -61,11 +60,8 @@ const Index = () => {
           flag: userUniversity.flag
         });
         setIsUniversitySelectorOpen(false);
-      } else if (!user) {
-        // User is not logged in - show university selector by default
-        setIsUniversitySelectorOpen(true);
-        setSelectedUniversity(null);
       }
+      // Anonymous users: no popup, just show the home page normally
     }
   }, [user, userUniversity, loading]);
 
@@ -82,8 +78,9 @@ const Index = () => {
   }
 
   const handleUniversitySelect = (university: University) => {
-    setSelectedUniversity(university);
     setIsUniversitySelectorOpen(false);
+    // Redirect to products page filtered by the chosen university
+    navigate(`/products?university=${university.id}`);
   };
 
   const handleUniversityChange = () => {
@@ -139,22 +136,14 @@ const Index = () => {
         {/* 2. How It Works */}
         <HowItWorks />
 
-        {/* 3. Products Showcase - Conditional */}
-        {user && userUniversity ? (
-          <ProductsShowcase selectedUniversity={userUniversity.name} />
-        ) : selectedUniversity ? (
-          <ProductsShowcase selectedUniversity={selectedUniversity.name} />
-        ) : !loading && !user ? (
-          /* Anonymous user without university selection - encourage selection */
-          <div className="py-16 text-center bg-muted/30">
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-bold mb-4">Choisissez votre université</h2>
-              <p className="text-muted-foreground mb-8">
-                Sélectionnez votre campus pour découvrir les produits disponibles
-              </p>
-            </div>
-          </div>
-        ) : null}
+        {/* 3. Products Showcase */}
+        <ProductsShowcase
+          selectedUniversity={
+            user && userUniversity
+              ? userUniversity.name
+              : selectedUniversity?.name
+          }
+        />
 
         {/* 4. Why CampusLink */}
         <WhyCampusLink />
@@ -162,18 +151,15 @@ const Index = () => {
         {/* 5. Stats Section */}
         {/* <StatsSection /> */}
 
-        {/* 6. Student Exchange - Conditional */}
-        {user && userUniversity ? (
-          <StudentExchange
-            onAccessExchange={handleStudentExchange}
-            selectedUniversity={userUniversity.name}
-          />
-        ) : selectedUniversity ? (
-          <StudentExchange
-            onAccessExchange={handleStudentExchange}
-            selectedUniversity={selectedUniversity.name}
-          />
-        ) : null}
+        {/* 6. Student Exchange */}
+        <StudentExchange
+          onAccessExchange={handleStudentExchange}
+          selectedUniversity={
+            user && userUniversity
+              ? userUniversity.name
+              : selectedUniversity?.name
+          }
+        />
 
         {/* 7. Popular Suppliers */}
         {/* <PopularSuppliers /> */}
