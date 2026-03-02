@@ -300,11 +300,11 @@ export default function Products() {
                 {/* Price and Actions */}
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl font-bold text-primary">
+                    <span className="text-base sm:text-xl font-bold text-primary">
                       {product.price} CFA
                     </span>
                     {product.original_price && (
-                      <span className="text-sm text-muted-foreground line-through">
+                      <span className="hidden sm:inline text-sm text-muted-foreground line-through">
                         {product.original_price} CFA
                       </span>
                     )}
@@ -412,12 +412,12 @@ export default function Products() {
 
             {/* Price */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-primary">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className="text-sm sm:text-base lg:text-sm xl:text-base font-bold text-primary">
                   {product.price} CFA
                 </span>
                 {product.original_price && (
-                  <span className="text-sm text-muted-foreground line-through">
+                  <span className="hidden sm:inline text-xs text-muted-foreground line-through">
                     {product.original_price} CFA
                   </span>
                 )}

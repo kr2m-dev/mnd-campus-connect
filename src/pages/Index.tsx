@@ -134,7 +134,7 @@ const Index = () => {
         />
 
         {/* 2. How It Works */}
-        <HowItWorks />
+        {/* <HowItWorks /> */}
 
         {/* 3. Products Showcase */}
         <ProductsShowcase
@@ -146,7 +146,7 @@ const Index = () => {
         />
 
         {/* 4. Why CampusLink */}
-        <WhyCampusLink />
+        {/* <WhyCampusLink /> */}
 
         {/* 5. Stats Section */}
         {/* <StatsSection /> */}

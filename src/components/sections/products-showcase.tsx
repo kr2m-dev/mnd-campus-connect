@@ -103,7 +103,7 @@ const ProductCard = ({ product, discount, index, user, onAddToCart, onToggleFavo
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-3 h-3 ${
+                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${
                     i < Math.floor(product.rating)
                       ? "text-yellow-400 fill-current"
                       : "text-muted-foreground"
@@ -111,26 +111,26 @@ const ProductCard = ({ product, discount, index, user, onAddToCart, onToggleFavo
                 />
               ))}
             </div>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-[10px] sm:text-xs text-muted-foreground">
               {product.rating}
             </span>
           </div>
 
           {/* Supplier */}
           {product.suppliers && (
-            <p className="text-xs text-muted-foreground mb-2">
+            <p className="text-[10px] sm:text-xs text-muted-foreground mb-2">
               par {product.suppliers.business_name}
             </p>
           )}
 
           {/* Price */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm sm:text-lg font-bold text-primary">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              <span className="text-sm sm:text-base lg:text-sm xl:text-base font-bold text-primary">
                 {product.price} CFA
               </span>
               {product.original_price && (
-                <span className="text-sm text-muted-foreground line-through">
+                <span className="hidden sm:inline text-xs text-muted-foreground line-through">
                   {product.original_price} CFA
                 </span>
               )}
@@ -221,10 +221,10 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-12">
-          <Badge variant="secondary" className="mb-3 sm:mb-4 bg-primary/10 text-primary border-primary/20">
+          {/* <Badge variant="secondary" className="mb-3 sm:mb-4 bg-primary/10 text-primary border-primary/20">
             <Sparkles className="w-3 h-3 mr-1" />
             Produits essentiels
-          </Badge>
+          </Badge> */}
 
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
             Découvrez nos{" "}

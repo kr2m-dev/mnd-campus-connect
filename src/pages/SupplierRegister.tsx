@@ -285,7 +285,7 @@ export default function SupplierRegister() {
             <div className="w-full max-w-2xl space-y-6">
 
             {/* Mobile Image - Visible only on mobile */}
-            <div className="lg:hidden flex justify-center mb-6">
+            <div className="hidden flex justify-center mb-6">
               <img
                 src={authImage}
                 alt="Illustration d'inscription fournisseur"
@@ -742,7 +742,7 @@ export default function SupplierRegister() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gradient-primary hover:shadow-glow transition-all duration-300 text-base font-semibold"
+                  className="w-full h-12 bg-primary text-white hover:shadow-glow transition-all duration-300 text-base font-semibold"
                   disabled={loading}
                 >
                   {loading ? (

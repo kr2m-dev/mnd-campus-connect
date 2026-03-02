@@ -251,7 +251,7 @@ export default function Login() {
             <div className="w-full max-w-md space-y-6">
 
             {/* Mobile Image - Visible only on mobile */}
-            <div className="lg:hidden flex justify-center mb-6">
+            <div className="hidden flex justify-center mb-6">
               <img
                 src={authImage}
                 alt="Illustration de connexion"
