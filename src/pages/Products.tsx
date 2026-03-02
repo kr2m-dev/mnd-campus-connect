@@ -29,7 +29,10 @@ import {
   Grid3X3,
   List,
   MessageCircle,
-  Globe
+  Globe,
+  ChevronDown,
+  ChevronUp,
+  X
 } from "lucide-react";
 import { useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
@@ -66,6 +69,7 @@ export default function Products() {
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showFilters, setShowFilters] = useState(false);
   // If a university param is in the URL (from home page selector), pre-select it
   const urlUniversityId = searchParams.get("university");
   const [showAllUniversities, setShowAllUniversities] = useState(() => !!urlUniversityId);
@@ -465,7 +469,7 @@ export default function Products() {
         onUniversityChange={handleUniversityChange}
       />
 
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-4 pt-10">
 
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
@@ -484,83 +488,74 @@ export default function Products() {
             disponibles sur votre campus universitaire.
           </p>
 
-          <div className="mt-4 space-y-3">
-            {/* Status Badge */}
+          <div className="mt-3">
             <Badge variant="outline" className="text-sm">
               {userUniversity && !showAllUniversities ? (
-                <>
-                  <span className="mr-2">{userUniversity.flag}</span>
-                  Disponible sur {userUniversity.name}
-                </>
+                <><span className="mr-2">{userUniversity.flag}</span>Disponible sur {userUniversity.name}</>
               ) : showAllUniversities && selectedUniversityId ? (
-                <>
-                  <span className="mr-2">{getUniversityById(selectedUniversityId)?.flag}</span>
-                  Produits de {getUniversityById(selectedUniversityId)?.name}
-                </>
+                <><span className="mr-2">{getUniversityById(selectedUniversityId)?.flag}</span>Produits de {getUniversityById(selectedUniversityId)?.name}</>
               ) : showAllUniversities ? (
-                <>
-                  <Globe className="w-3 h-3 mr-2" />
-                  Produits de toutes les universités
-                </>
+                <><Globe className="w-3 h-3 mr-2" />Produits de toutes les universités</>
               ) : (
-                <>
-                  <Package className="w-3 h-3 mr-2" />
-                  Tous les produits disponibles
-                </>
+                <><Package className="w-3 h-3 mr-2" />Tous les produits disponibles</>
               )}
             </Badge>
-
-            {/* University Filter Toggle */}
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <div className="flex items-center space-x-2 bg-card p-3 rounded-lg shadow-sm border">
-                <Globe className="w-4 h-4 text-primary" />
-                <Switch
-                  id="show-all-universities"
-                  checked={showAllUniversities}
-                  onCheckedChange={(checked) => {
-                    setShowAllUniversities(checked);
-                    if (!checked) {
-                      setSelectedUniversityId(null);
-                    }
-                  }}
-                />
-                <Label htmlFor="show-all-universities" className="cursor-pointer text-sm font-medium">
-                  {userUniversity
-                    ? "Voir les produits d'autres universités"
-                    : "Filtrer par université"
-                  }
-                </Label>
-              </div>
-
-              {showAllUniversities && (
-                <Select
-                  value={selectedUniversityId || "all"}
-                  onValueChange={(value) => setSelectedUniversityId(value === "all" ? null : value)}
-                >
-                  <SelectTrigger className="w-full sm:w-[280px] border-primary/50">
-                    <SelectValue placeholder="Sélectionner une université" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">
-                      <div className="flex items-center">
-                        <Globe className="w-4 h-4 mr-2" />
-                        Toutes les universités
-                      </div>
-                    </SelectItem>
-                    {senegalUniversities.map((university) => (
-                      <SelectItem key={university.id} value={university.id}>
-                        <span className="mr-2">{university.flag}</span>
-                        {university.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
           </div>
         </div>
 
+        {/* Filters Toggle Button */}
+        {(() => {
+          const activeFiltersCount = [
+            selectedCategory !== "all",
+            priceRange.min !== "",
+            priceRange.max !== "",
+            sortBy !== "newest",
+            showAllUniversities,
+          ].filter(Boolean).length;
+
+          return (
+            <div className="flex items-center gap-3 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(v => !v)}
+                className="flex items-center gap-2 h-9"
+              >
+                <Filter className="w-4 h-4" />
+                Filtres
+                {activeFiltersCount > 0 && (
+                  <Badge className="h-5 w-5 p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground">
+                    {activeFiltersCount}
+                  </Badge>
+                )}
+                {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </Button>
+
+              {/* Active filter chips */}
+              {selectedCategory !== "all" && (
+                <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setSelectedCategory("all")}>
+                  {categories.find(c => c.id === selectedCategory)?.name}
+                  <X className="w-3 h-3" />
+                </Badge>
+              )}
+              {(priceRange.min || priceRange.max) && (
+                <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setPriceRange({ min: "", max: "" })}>
+                  {priceRange.min || "0"} – {priceRange.max || "∞"} CFA
+                  <X className="w-3 h-3" />
+                </Badge>
+              )}
+              {showAllUniversities && selectedUniversityId && (
+                <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => { setSelectedUniversityId(null); setShowAllUniversities(false); }}>
+                  {getUniversityById(selectedUniversityId)?.flag} {getUniversityById(selectedUniversityId)?.name.split(' ').slice(0, 2).join(' ')}
+                  <X className="w-3 h-3" />
+                </Badge>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Filters and Search */}
+        {showFilters && (
         <div className="bg-card rounded-lg p-3 sm:p-6 mb-6 sm:mb-8 shadow-card">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4">
             {/* Search */}
@@ -653,7 +648,51 @@ export default function Products() {
               </Button>
             )}
           </div>
+
+          {/* University Filter */}
+          <div className="border-t pt-3 mt-3 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-primary" />
+              <Switch
+                id="show-all-universities"
+                checked={showAllUniversities}
+                onCheckedChange={(checked) => {
+                  setShowAllUniversities(checked);
+                  if (!checked) setSelectedUniversityId(null);
+                }}
+              />
+              <Label htmlFor="show-all-universities" className="cursor-pointer text-sm font-medium">
+                {userUniversity ? "Autres universités" : "Filtrer par université"}
+              </Label>
+            </div>
+
+            {showAllUniversities && (
+              <Select
+                value={selectedUniversityId || "all"}
+                onValueChange={(value) => setSelectedUniversityId(value === "all" ? null : value)}
+              >
+                <SelectTrigger className="w-full sm:w-[260px] border-primary/50">
+                  <SelectValue placeholder="Sélectionner une université" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center">
+                      <Globe className="w-4 h-4 mr-2" />
+                      Toutes les universités
+                    </div>
+                  </SelectItem>
+                  {senegalUniversities.map((university) => (
+                    <SelectItem key={university.id} value={university.id}>
+                      <span className="mr-2">{university.flag}</span>
+                      {university.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
+        )}
 
         {/* Fallback notice */}
         {isFallback && (

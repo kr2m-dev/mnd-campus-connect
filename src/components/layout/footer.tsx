@@ -213,19 +213,19 @@ export const Footer = () => {
 
             <div className="space-y-3 text-sm">
               <a
-                href="mailto:contact@sencampuslink.com"
+                href="mailto:ismailandao51@gmail.com"
                 className="flex items-center space-x-2 text-secondary-foreground/80 hover:text-secondary-foreground transition-colors"
               >
                 <Mail className="w-4 h-4 text-primary" />
-                <span>contact@sencampuslink.com</span>
+                <span>ismailandao51@gmail.com</span>
               </a>
 
               <a
-                href="tel:+221771234567"
+                href="tel:+33766258974"
                 className="flex items-center space-x-2 text-secondary-foreground/80 hover:text-secondary-foreground transition-colors"
               >
                 <Phone className="w-4 h-4 text-primary" />
-                <span>+221 77 123 45 67</span>
+                <span>+33 7 66 25 89 74</span>
               </a>
 
               <div className="flex items-center space-x-2">
