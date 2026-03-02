@@ -177,7 +177,11 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("Tous");
+  const limit = user ? 5 : 12;
   const { data: products = [], isLoading } = useProducts(selectedUniversity ? { university: selectedUniversity } : undefined);
+  // Fallback: if not enough products for this university, load all products
+  const { data: allProducts = [] } = useProducts(undefined, !!selectedUniversity && products.length < limit && !isLoading);
+  const displayProducts = products.length >= limit ? products : [...products, ...allProducts.filter(p => !products.find(up => up.id === p.id))];
   const { data: categories = [] } = useCategories();
   const addToCart = useAddToCart();
   const toggleFavorite = useToggleFavorite();
@@ -203,8 +207,8 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
   };
 
   const filteredProducts = selectedCategory === "Tous"
-    ? products
-    : products.filter(product => product.categories?.name === selectedCategory);
+    ? displayProducts
+    : displayProducts.filter(product => product.categories?.name === selectedCategory);
 
   if (isLoading) {
     return (
@@ -278,7 +282,7 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
 
         {/* Products Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4 mb-8 sm:mb-12">
-          {filteredProducts.slice(0, 12).map((product, index) => {
+          {filteredProducts.slice(0, limit).map((product, index) => {
             const discount = product.original_price
               ? Math.round((1 - product.price / product.original_price) * 100)
               : 0;
