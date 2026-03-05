@@ -125,40 +125,14 @@ export default function SupplierPublicProfile() {
                     {supplier.address}
                   </span>
                 )}
-                {supplier.contact_phone && (
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3.5 h-3.5 flex-shrink-0" />
-                    {supplier.contact_phone}
-                  </span>
-                )}
-                {supplier.contact_email && (
-                  <a
-                    href={`mailto:${supplier.contact_email}`}
-                    className="flex items-center gap-1 hover:text-foreground transition-colors"
-                  >
-                    <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-                    {supplier.contact_email}
-                  </a>
-                )}
+                
+              
               </div>
             </div>
 
             {/* Boutons d'action */}
             <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
-              {supplier.contact_whatsapp && (
-                <Button
-                  className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() =>
-                    window.open(
-                      `https://wa.me/${supplier.contact_whatsapp?.replace(/[\s\-\+]/g, "")}`,
-                      "_blank"
-                    )
-                  }
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Contacter
-                </Button>
-              )}
+             
 
               <Button
                 variant="outline"
