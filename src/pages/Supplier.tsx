@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/utils";
-import { Trash2, Edit, Plus, BarChart3, Package, ShoppingCart, Star, Settings, Eye } from "lucide-react";
+import { Trash2, Edit, Plus, BarChart3, Package, ShoppingCart, Star, Settings, Eye, Copy, Share2, CheckCircle } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -25,6 +25,7 @@ export default function Supplier() {
   const [searchParams] = useSearchParams();
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Dummy handlers for Header component
   const handleUniversityChange = () => {};
@@ -249,7 +250,7 @@ export default function Supplier() {
 
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
             {supplier.logo_url && (
               <img
                 src={supplier.logo_url}
@@ -257,7 +258,7 @@ export default function Supplier() {
                 className="w-20 h-20 rounded-full object-cover border-2 border-primary shadow-lg"
               />
             )}
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold flex items-center gap-2">
                 Espace Fournisseur
                 {supplier.is_verified && <span className="text-2xl">(Verifié)</span>}
@@ -265,6 +266,56 @@ export default function Supplier() {
               </h1>
               <p className="text-muted-foreground text-lg">{supplier.business_name}</p>
             </div>
+
+            {/* Partager mon profil */}
+            {(() => {
+              const publicUrl = `${window.location.origin}/shop/${slugify(supplier.business_name)}`;
+              const handleCopy = () => {
+                navigator.clipboard.writeText(publicUrl);
+                setLinkCopied(true);
+                toast({ title: "Lien copié !" });
+                setTimeout(() => setLinkCopied(false), 2000);
+              };
+              const handleShareWA = () => {
+                const text = encodeURIComponent(`Découvrez ma boutique ${supplier.business_name} sur CampusLink : ${publicUrl}`);
+                window.open(`https://wa.me/?text=${text}`, "_blank");
+              };
+              return (
+                <div className="flex flex-col gap-2 sm:items-end">
+                  <p className="text-xs text-muted-foreground font-medium">Mon profil public</p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/shop/${slugify(supplier.business_name)}`)}
+                    >
+                      <Eye className="w-4 h-4 mr-1.5" />
+                      Voir
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopy}
+                    >
+                      {linkCopied
+                        ? <CheckCircle className="w-4 h-4 mr-1.5 text-green-600" />
+                        : <Copy className="w-4 h-4 mr-1.5" />
+                      }
+                      {linkCopied ? "Copié !" : "Copier"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleShareWA}
+                      title="Partager sur WhatsApp"
+                    >
+                      <Share2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate max-w-[200px]">{publicUrl}</p>
+                </div>
+              );
+            })()}
           </div>
         </div>
 

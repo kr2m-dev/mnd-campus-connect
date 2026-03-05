@@ -34,6 +34,7 @@ import OrderDetails from "./pages/OrderDetails";
 import SupplierOrders from "./pages/SupplierOrders";
 import AddProduct from "./pages/AddProduct";
 import AuthCallback from "./pages/AuthCallback";
+import SupplierPublicProfile from "./pages/SupplierPublicProfile";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const App = () => (
           <Route path="/legal-notice" element={<LegalNotice />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/shop/:slug" element={<SupplierPublicProfile />} />
 
           {/* Routes protégées - nécessitent authentification */}
           <Route path="/profile" element={
