@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useProducts } from "@/hooks/use-products";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useToggleFavorite, useIsFavorite } from "@/hooks/use-favorites";
-import { matchSlug } from "@/lib/utils";
+import { matchSlug, slugify } from "@/lib/utils";
 import { useState } from "react";
 import {
   Star,
@@ -230,12 +230,23 @@ export default function ProductDetails() {
                     <Store className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-medium">{product.suppliers.business_name}</span>
                   </div>
-                  {product.suppliers.contact_whatsapp && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Phone className="w-3 h-3" />
-                      {product.suppliers.contact_whatsapp}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {product.suppliers.contact_whatsapp && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Phone className="w-3 h-3" />
+                        {product.suppliers.contact_whatsapp}
+                      </div>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => navigate(`/shop/${slugify(product.suppliers!.business_name)}`)}
+                    >
+                      <Store className="w-3 h-3 mr-1" />
+                      Voir la boutique
+                    </Button>
+                  </div>
                 </div>
               )}
 
