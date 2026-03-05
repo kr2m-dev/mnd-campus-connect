@@ -57,8 +57,9 @@ const ProductCard = ({ product, discount, index, user, onAddToCart, onToggleFavo
 
   return (
     <Card
-      className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale"
+      className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale cursor-pointer"
       style={{ animationDelay: `${index * 0.1}s` }}
+      onClick={() => onViewDetails(product)}
     >
       <CardContent className="p-0">
         {/* Product Image Carousel */}
@@ -145,7 +146,7 @@ const ProductCard = ({ product, discount, index, user, onAddToCart, onToggleFavo
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => onViewDetails(product)}
+            onClick={(e) => { e.stopPropagation(); onViewDetails(product); }}
             title="Voir le produit"
           >
             <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -154,7 +155,7 @@ const ProductCard = ({ product, discount, index, user, onAddToCart, onToggleFavo
             variant="outline"
             size="sm"
             className={`flex-1 ${isFavorite ? "text-red-500 border-red-300 hover:bg-red-50" : ""}`}
-            onClick={() => onToggleFavorite(product.id, isFavorite)}
+            onClick={(e) => { e.stopPropagation(); onToggleFavorite(product.id, isFavorite); }}
             title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
           >
             <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? "fill-current" : ""}`} />
@@ -162,7 +163,7 @@ const ProductCard = ({ product, discount, index, user, onAddToCart, onToggleFavo
         </div>
         <Button
           className="w-full bg-primary hover:bg-primary-dark btn-glow"
-          onClick={() => onAddToCart(product.id)}
+          onClick={(e) => { e.stopPropagation(); onAddToCart(product.id); }}
         >
           <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           <span className="hidden sm:inline">Ajouter au panier</span>

@@ -222,7 +222,10 @@ export default function Products() {
 
     if (viewMode === "list") {
       return (
-        <Card className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300">
+        <Card
+          className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 cursor-pointer"
+          onClick={() => handleViewDetails(product)}
+        >
           <CardContent className="p-0">
             <div className="flex gap-4 p-4">
               {/* Product Images Carousel */}
@@ -250,12 +253,12 @@ export default function Products() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleToggleFavorite(product.id, isFavorite)}
+                      onClick={(e) => { e.stopPropagation(); handleToggleFavorite(product.id, isFavorite); }}
                       className={isFavorite ? "text-red-500 hover:text-red-600" : ""}
                     >
                       <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleViewDetails(product)}>
+                    <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleViewDetails(product); }}>
                       <Eye className="w-4 h-4" />
                     </Button>
                   </div>
@@ -314,17 +317,17 @@ export default function Products() {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Button 
+                    <Button
                       variant="outline"
                       size="sm"
                       className="bg-green-600 hover:bg-green-700 text-white border-green-600"
-                      onClick={() => handleWhatsAppOrder(product)}
+                      onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(product); }}
                     >
                       <MessageCircle className="w-4 h-4" />
                     </Button>
-                    <Button 
+                    <Button
                       className="bg-primary hover:bg-primary-dark"
-                      onClick={() => handleAddToCart(product.id)}
+                      onClick={(e) => { e.stopPropagation(); handleAddToCart(product.id); }}
                     >
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       Ajouter au panier
@@ -340,8 +343,9 @@ export default function Products() {
 
     return (
       <Card
-        className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale"
+        className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale cursor-pointer"
         style={{ animationDelay: `${index * 0.1}s` }}
+        onClick={() => handleViewDetails(product)}
       >
         <CardContent className="p-0">
           {/* Product Images Carousel */}
@@ -436,7 +440,7 @@ export default function Products() {
               variant="outline"
               size="sm"
               className="flex-1"
-              onClick={() => handleViewDetails(product)}
+              onClick={(e) => { e.stopPropagation(); handleViewDetails(product); }}
               title="Voir le produit"
             >
               <Eye className="w-4 h-4" />
@@ -445,7 +449,7 @@ export default function Products() {
               variant="outline"
               size="sm"
               className={`flex-1 ${isFavorite ? "text-red-500 border-red-300 hover:bg-red-50" : ""}`}
-              onClick={() => handleToggleFavorite(product.id, isFavorite)}
+              onClick={(e) => { e.stopPropagation(); handleToggleFavorite(product.id, isFavorite); }}
               title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
             >
               <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
@@ -453,7 +457,7 @@ export default function Products() {
           </div>
           <Button
             className="w-full bg-primary hover:bg-primary-dark btn-glow"
-            onClick={() => handleAddToCart(product.id)}
+            onClick={(e) => { e.stopPropagation(); handleAddToCart(product.id); }}
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
             Ajouter au panier
