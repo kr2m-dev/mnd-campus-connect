@@ -267,9 +267,9 @@ export default function Supplier() {
               <p className="text-muted-foreground text-lg">{supplier.business_name}</p>
             </div>
 
-            {/* Partager mon profil */}
-            {(() => {
-              const publicUrl = `${window.location.origin}/shop/${slugify(supplier.business_name)}`;
+            {/* Ma Boutique - only for verified suppliers */}
+            {supplier.is_verified && supplier.shop_slug ? (() => {
+              const publicUrl = `${window.location.origin}/shop/${supplier.shop_slug}`;
               const handleCopy = () => {
                 navigator.clipboard.writeText(publicUrl);
                 setLinkCopied(true);
@@ -282,12 +282,12 @@ export default function Supplier() {
               };
               return (
                 <div className="flex flex-col gap-2 sm:items-end">
-                  <p className="text-xs text-muted-foreground font-medium">Mon profil public</p>
+                  <p className="text-xs text-muted-foreground font-medium">Ma Boutique</p>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/shop/${slugify(supplier.business_name)}`)}
+                      onClick={() => navigate(`/shop/${supplier.shop_slug}`)}
                     >
                       <Eye className="w-4 h-4 mr-1.5" />
                       Voir
@@ -301,7 +301,7 @@ export default function Supplier() {
                         ? <CheckCircle className="w-4 h-4 mr-1.5 text-green-600" />
                         : <Copy className="w-4 h-4 mr-1.5" />
                       }
-                      {linkCopied ? "Copié !" : "Copier"}
+                      {linkCopied ? "Copié !" : "Copier mon lien"}
                     </Button>
                     <Button
                       variant="outline"
@@ -312,10 +312,17 @@ export default function Supplier() {
                       <Share2 className="w-4 h-4" />
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate max-w-[200px]">{publicUrl}</p>
+                  <p className="text-xs text-muted-foreground truncate max-w-[250px]">{publicUrl}</p>
                 </div>
               );
-            })()}
+            })() : !supplier.is_verified && (
+              <div className="flex flex-col gap-1 sm:items-end">
+                <p className="text-xs text-muted-foreground font-medium">Ma Boutique</p>
+                <p className="text-xs text-orange-600 dark:text-orange-400">
+                  Cette fonctionnalité est réservée aux comptes vérifiés
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

@@ -13,11 +13,10 @@ export const usePlatformStats = () => {
     queryKey: ["platform-stats"],
     queryFn: async (): Promise<PlatformStats> => {
       // Use SECURITY DEFINER RPC to safely bypass RLS for public counts
-      // (avoids the 500 from the recursive profiles RLS policy)
-      const { data, error } = await supabase.rpc("get_platform_stats");
+      const { data, error } = await supabase.rpc("get_platform_stats" as any);
 
-      if (!error && data && data.length > 0) {
-        const row = data[0];
+      if (!error && data && Array.isArray(data) && data.length > 0) {
+        const row = data[0] as any;
         return {
           universitiesCount: Number(row.universities_count) || 0,
           studentsCount: Number(row.students_count) || 0,
@@ -54,6 +53,6 @@ export const usePlatformStats = () => {
       }
     },
     staleTime: 5 * 60 * 1000,
-    retry: false, // Don't retry on 500 errors
+    retry: false,
   });
 };

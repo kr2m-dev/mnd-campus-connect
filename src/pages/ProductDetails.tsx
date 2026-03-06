@@ -224,7 +224,7 @@ export default function ProductDetails() {
 
             {/* Fournisseur + Stock + Catégorie en compact */}
             <div className="space-y-2">
-              {product.suppliers && (
+            {product.suppliers && (
                 <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
                   <div className="flex items-center gap-2">
                     <Store className="w-4 h-4 text-muted-foreground" />
@@ -237,15 +237,17 @@ export default function ProductDetails() {
                         {product.suppliers.contact_whatsapp}
                       </div>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={() => navigate(`/shop/${slugify(product.suppliers!.business_name)}`)}
-                    >
-                      <Store className="w-3 h-3 mr-1" />
-                      Voir la boutique
-                    </Button>
+                    {(product.suppliers as any).shop_slug && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => navigate(`/shop/${(product.suppliers as any).shop_slug}`)}
+                      >
+                        <Store className="w-3 h-3 mr-1" />
+                        Voir la boutique
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

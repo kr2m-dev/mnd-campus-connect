@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { useSupplierBySlug, useProductsBySupplier } from "@/hooks/use-supplier-public";
@@ -9,10 +10,7 @@ import { slugify } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import {
   Store,
-  Phone,
   MapPin,
-  Mail,
-  MessageCircle,
   Copy,
   Share2,
   CheckCircle,
@@ -20,15 +18,21 @@ import {
   Star,
   Loader2,
   ArrowLeft,
+  Search,
+  X,
 } from "lucide-react";
 
 export default function SupplierPublicProfile() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: supplier, isLoading: supplierLoading } = useSupplierBySlug(slug || "");
-  const { data: products = [], isLoading: productsLoading } = useProductsBySupplier(supplier?.id || "");
+  const { data: products = [], isLoading: productsLoading } = useProductsBySupplier(
+    supplier?.id || "",
+    searchQuery || undefined
+  );
 
   const profileUrl = window.location.href;
 
@@ -77,12 +81,33 @@ export default function SupplierPublicProfile() {
     );
   }
 
+  // Non-verified suppliers show a restricted message
+  if (!supplier.is_verified) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header onUniversityChange={() => {}} />
+        <div className="container mx-auto px-4 py-16 pt-28 text-center">
+          <Store className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Boutique non disponible</h2>
+          <p className="text-muted-foreground mb-6">
+            Cette boutique n'est pas encore vérifiée. Les vitrines sont réservées aux comptes vérifiés.
+          </p>
+          <Button onClick={() => navigate("/products")}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voir les produits
+          </Button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header onUniversityChange={() => {}} />
 
       <div className="container mx-auto px-4 pt-20 pb-8">
-        {/* Carte profil fournisseur */}
+        {/* Supplier profile card */}
         <div className="bg-card border border-border/50 rounded-xl shadow-card p-5 sm:p-6 mb-6 mt-4">
           <div className="flex flex-col sm:flex-row gap-4 items-start">
             {/* Logo */}
@@ -100,16 +125,14 @@ export default function SupplierPublicProfile() {
               )}
             </div>
 
-            {/* Informations */}
+            {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h1 className="text-xl sm:text-2xl font-bold">{supplier.business_name}</h1>
-                {supplier.is_verified && (
-                  <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400">
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Vérifié
-                  </Badge>
-                )}
+                <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Vérifié
+                </Badge>
               </div>
 
               {supplier.description && (
@@ -125,15 +148,11 @@ export default function SupplierPublicProfile() {
                     {supplier.address}
                   </span>
                 )}
-                
-              
               </div>
             </div>
 
-            {/* Boutons d'action */}
+            {/* Action buttons */}
             <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
-             
-
               <Button
                 variant="outline"
                 className="flex-1 sm:flex-none"
@@ -160,7 +179,28 @@ export default function SupplierPublicProfile() {
           </div>
         </div>
 
-        {/* Grille de produits */}
+        {/* Search bar */}
+        <div className="mb-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher dans cette boutique..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Products grid */}
         <div>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Package className="w-5 h-5 text-primary" />
@@ -174,7 +214,7 @@ export default function SupplierPublicProfile() {
           ) : products.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Aucun produit disponible pour le moment.</p>
+              <p>{searchQuery ? "Aucun produit trouvé pour cette recherche." : "Aucun produit disponible pour le moment."}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
