@@ -115,6 +115,80 @@ export type Database = {
         }
         Relationships: []
       }
+      commandes_whatsapp: {
+        Row: {
+          created_at: string
+          customer_location: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          product_id: string | null
+          product_name: string
+          product_price: number
+          quantity: number
+          statut: string
+          supplier_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_location: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          product_id?: string | null
+          product_name: string
+          product_price: number
+          quantity?: number
+          statut?: string
+          supplier_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_location?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          product_price?: number
+          quantity?: number
+          statut?: string
+          supplier_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commandes_whatsapp_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commandes_whatsapp_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commandes_whatsapp_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commandes_whatsapp_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers_with_contact"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string | null
@@ -850,6 +924,15 @@ export type Database = {
         Returns: {
           full_name: string
           phone: string
+        }[]
+      }
+      get_platform_stats: {
+        Args: never
+        Returns: {
+          active_listings_count: number
+          average_rating: number
+          students_count: number
+          universities_count: number
         }[]
       }
       get_supplier_contact: {
