@@ -646,6 +646,7 @@ export type Database = {
           id: string
           is_verified: boolean | null
           logo_url: string | null
+          shop_slug: string | null
           updated_at: string | null
           user_id: string
         }
@@ -660,6 +661,7 @@ export type Database = {
           id?: string
           is_verified?: boolean | null
           logo_url?: string | null
+          shop_slug?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -674,6 +676,7 @@ export type Database = {
           id?: string
           is_verified?: boolean | null
           logo_url?: string | null
+          shop_slug?: string | null
           updated_at?: string | null
           user_id?: string
         }
