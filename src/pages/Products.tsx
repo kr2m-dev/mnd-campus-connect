@@ -300,7 +300,14 @@ export default function Products() {
                 {/* Supplier */}
                 {product.suppliers && (
                   <p className="text-sm text-muted-foreground">
-                    par {product.suppliers.business_name}
+                    par {(product.suppliers as any).shop_slug && (product.suppliers as any).is_verified ? (
+                      <span
+                        className="text-primary hover:underline cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/shop/${(product.suppliers as any).shop_slug}`); }}
+                      >
+                        {product.suppliers.business_name}
+                      </span>
+                    ) : product.suppliers.business_name}
                   </p>
                 )}
 
@@ -414,7 +421,14 @@ export default function Products() {
             {/* Supplier */}
             {product.suppliers && (
               <p className="text-xs text-muted-foreground mb-2">
-                par {product.suppliers.business_name}
+                par {(product.suppliers as any).shop_slug && (product.suppliers as any).is_verified ? (
+                  <span
+                    className="text-primary hover:underline cursor-pointer"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/shop/${(product.suppliers as any).shop_slug}`); }}
+                  >
+                    {product.suppliers.business_name}
+                  </span>
+                ) : product.suppliers.business_name}
               </p>
             )}
 
