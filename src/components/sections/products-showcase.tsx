@@ -1,13 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { slugify } from "@/lib/utils";
 import {
   Star,
   ShoppingCart,
   Heart,
-  Eye,
   Sparkles,
   Droplets,
   Shirt,
@@ -15,7 +11,12 @@ import {
   Laptop,
   Book,
   Coffee,
-  Dumbbell
+  Dumbbell,
+  Plus,
+  Minus,
+  ArrowRight,
+  Tag,
+  MessageCircle,
 } from "lucide-react";
 import { useState } from "react";
 import { useProducts } from "@/hooks/use-products";
@@ -23,19 +24,12 @@ import { useCategories } from "@/hooks/use-categories";
 import { useAddToCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { useToggleFavorite, useIsFavorite } from "@/hooks/use-favorites";
-import { ProductImageCarousel } from "@/components/product-image-carousel";
+import { Button } from "@/components/ui/button";
+import { WhatsAppOrderDialog } from "@/components/whatsapp-order-dialog";
 import type { User } from "@supabase/supabase-js";
 
-// Map icon names to actual components
 const iconMap: Record<string, React.ElementType> = {
-  Laptop,
-  Shirt,
-  Book,
-  Coffee,
-  Dumbbell,
-  Sparkles,
-  Droplets,
-  Package
+  Laptop, Shirt, Book, Coffee, Dumbbell, Sparkles, Droplets, Package
 };
 
 interface ProductsShowcaseProps {
@@ -47,130 +41,134 @@ interface ProductCardProps {
   discount: number;
   index: number;
   user: User | null;
-  onAddToCart: (productId: string) => void;
+  onAddToCart: (productId: string, quantity: number) => void;
   onToggleFavorite: (productId: string, isFavorite: boolean) => void;
   onViewDetails: (product: any) => void;
+  onCommanderDirectement: (product: any) => void;
 }
 
-const ProductCard = ({ product, discount, index, user, onAddToCart, onToggleFavorite, onViewDetails }: ProductCardProps) => {
+const ProductCard = ({ product, discount, index, user, onAddToCart, onToggleFavorite, onViewDetails, onCommanderDirectement }: ProductCardProps) => {
   const { data: isFavorite = false } = useIsFavorite(user?.id, product.id);
+  const [qty, setQty] = useState(1);
+  const image = product.image_urls?.[0] || product.image_url;
+  const inStock = product.stock_quantity > 0;
 
   return (
-    <Card
-      className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale cursor-pointer"
+    <div
+      className="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-border/30 flex flex-col"
       style={{ animationDelay: `${index * 0.1}s` }}
-      onClick={() => onViewDetails(product)}
     >
-      <CardContent className="p-0">
-        {/* Product Image Carousel */}
-        <div className="relative">
-          <ProductImageCarousel
-            images={product.image_urls || (product.image_url ? [product.image_url] : [])}
-            productName={product.name}
-            aspectRatio="square"
+      {/* Image */}
+      <div
+        className="relative aspect-square bg-muted cursor-pointer overflow-hidden"
+        onClick={() => onViewDetails(product)}
+      >
+        {image ? (
+          <img
+            src={image}
+            alt={product.name}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
-
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-1 z-20">
-            {discount > 0 && (
-              <Badge variant="destructive" className="text-xs">
-                -{discount}%
-              </Badge>
-            )}
-            {product.stock_quantity < 5 && product.stock_quantity > 0 && (
-              <Badge variant="secondary" className="text-xs bg-orange-500 text-white">
-                Stock limité
-              </Badge>
-            )}
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Package className="w-12 h-12 text-muted-foreground/30" />
           </div>
+        )}
 
-          {/* Favorite Badge */}
-          {isFavorite && (
-            <div className="absolute top-3 right-3 z-20">
-              <Heart className="w-5 h-5 text-red-500 fill-current" />
-            </div>
-          )}
-        </div>
-
-        {/* Product Info */}
-        <div className="p-2 sm:p-4">
-          <h3 className="font-semibold text-xs sm:text-sm mb-1 sm:mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
-
-          {/* Rating */}
-          <div className="flex items-center gap-1 mb-3">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${
-                    i < Math.floor(product.rating)
-                      ? "text-yellow-400 fill-current"
-                      : "text-muted-foreground"
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-[10px] sm:text-xs text-muted-foreground">
-              {product.rating}
-            </span>
+        {/* Badge remise */}
+        {discount > 0 && (
+          <div className="absolute top-3 left-3 bg-foreground text-background text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 z-10">
+            <Tag className="w-2.5 h-2.5" />
+            -{discount}%
           </div>
-
-          {/* Supplier */}
-          {product.suppliers && (
-            <p className="text-[10px] sm:text-xs text-muted-foreground mb-2">
-              par {product.suppliers.business_name}
-            </p>
-          )}
-
-          {/* Price */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-              <span className="text-sm sm:text-base lg:text-sm xl:text-base font-bold text-primary">
-                {product.price} CFA
-              </span>
-              {product.original_price && (
-                <span className="hidden sm:inline text-xs text-muted-foreground line-through">
-                  {product.original_price} CFA
-                </span>
-              )}
-            </div>
+        )}
+        {!discount && product.stock_quantity < 5 && product.stock_quantity > 0 && (
+          <div className="absolute top-3 left-3 bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full z-10">
+            Stock limité
           </div>
-        </div>
-      </CardContent>
+        )}
 
-      <CardFooter className="p-2 sm:p-4 pt-0 flex flex-col gap-1.5 sm:gap-2">
-        <div className="flex gap-1.5 sm:gap-2 w-full">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={(e) => { e.stopPropagation(); onViewDetails(product); }}
-            title="Voir le produit"
-          >
-            <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className={`flex-1 ${isFavorite ? "text-red-500 border-red-300 hover:bg-red-50" : ""}`}
-            onClick={(e) => { e.stopPropagation(); onToggleFavorite(product.id, isFavorite); }}
-            title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-          >
-            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? "fill-current" : ""}`} />
-          </Button>
-        </div>
-        <Button
-          className="w-full bg-primary hover:bg-primary-dark btn-glow"
-          onClick={(e) => { e.stopPropagation(); onAddToCart(product.id); }}
+        {/* Favoris */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(product.id, isFavorite); }}
+          className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-colors z-10 ${
+            isFavorite
+              ? "bg-red-500 text-white"
+              : "bg-white/90 dark:bg-card/90 text-muted-foreground hover:text-red-400"
+          }`}
         >
-          <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Ajouter au panier</span>
-          <span className="sm:hidden">Ajouter</span>
-        </Button>
-      </CardFooter>
-    </Card>
+          <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
+        </button>
+      </div>
+
+      {/* Contenu */}
+      <div className="p-3 flex flex-col gap-2.5 flex-1">
+        {/* Nom */}
+        <p
+          className="text-sm font-medium line-clamp-2 cursor-pointer hover:text-primary transition-colors leading-snug"
+          onClick={() => onViewDetails(product)}
+        >
+          {product.name}
+        </p>
+
+        {/* Prix + Rating */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="text-base font-bold">{product.price.toLocaleString()} CFA</span>
+            {product.original_price && (
+              <span className="hidden sm:inline text-xs text-muted-foreground line-through">
+                {product.original_price.toLocaleString()}
+              </span>
+            )}
+          </div>
+          {product.rating > 0 && (
+            <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/30 rounded-full px-2 py-0.5 flex-shrink-0">
+              <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                {product.rating.toFixed(1)}
+              </span>
+              <Star className="w-3 h-3 text-amber-500 fill-current" />
+            </div>
+          )}
+        </div>
+
+        {/* Sélecteur quantité + panier */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-muted rounded-full px-3 h-9 flex-1 justify-between">
+            <button
+              onClick={() => setQty(q => Math.max(1, q - 1))}
+              disabled={qty <= 1}
+              className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <span className="text-sm font-semibold w-5 text-center">{qty}</span>
+            <button
+              onClick={() => setQty(q => q + 1)}
+              disabled={qty >= product.stock_quantity}
+              className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onAddToCart(product.id, qty); }}
+            disabled={!inStock}
+            className="w-9 h-9 flex-shrink-0 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-primary transition-colors disabled:opacity-40"
+          >
+            <ShoppingCart className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Bouton commander */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onCommanderDirectement(product); }}
+          className="w-full bg-foreground text-background rounded-full py-2.5 text-xs font-semibold flex items-center justify-center gap-2 hover:bg-primary transition-colors"
+        >
+          Commander directement
+          <MessageCircle className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
   );
 };
 
@@ -178,33 +176,33 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("Tous");
+  const [whatsappDialogOpen, setWhatsappDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const limit = user ? 5 : 12;
   const { data: products = [], isLoading } = useProducts(selectedUniversity ? { university: selectedUniversity } : undefined);
-  // Fallback: if not enough products for this university, load all products
   const { data: allProducts = [] } = useProducts(undefined, !!selectedUniversity && products.length < limit && !isLoading);
   const displayProducts = products.length >= limit ? products : [...products, ...allProducts.filter(p => !products.find(up => up.id === p.id))];
   const { data: categories = [] } = useCategories();
   const addToCart = useAddToCart();
   const toggleFavorite = useToggleFavorite();
 
-  const handleAddToCart = (productId: string) => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-    addToCart.mutate({ userId: user.id, productId, quantity: 1 });
+  const handleAddToCart = (productId: string, quantity: number = 1) => {
+    if (!user) { navigate("/login"); return; }
+    addToCart.mutate({ userId: user.id, productId, quantity });
   };
 
   const handleToggleFavorite = (productId: string, isFavorite: boolean) => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
+    if (!user) { navigate("/login"); return; }
     toggleFavorite.mutate({ userId: user.id, productId, isFavorite });
   };
 
   const handleViewDetails = (product: any) => {
     navigate(`/products/${slugify(product.name)}`);
+  };
+
+  const handleCommanderDirectement = (product: any) => {
+    setSelectedProduct(product);
+    setWhatsappDialogOpen(true);
   };
 
   const filteredProducts = selectedCategory === "Tous"
@@ -214,9 +212,7 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
   if (isLoading) {
     return (
       <section className="py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center">Chargement des produits...</div>
-        </div>
+        <div className="container mx-auto px-4 text-center">Chargement des produits...</div>
       </section>
     );
   }
@@ -226,39 +222,21 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-12">
-          {/* <Badge variant="secondary" className="mb-3 sm:mb-4 bg-primary/10 text-primary border-primary/20">
-            <Sparkles className="w-3 h-3 mr-1" />
-            Produits essentiels
-          </Badge> */}
-
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
             Découvrez nos{" "}
-              <span className="text-primary">
-              produits phares
-            </span>
+            <span className="text-primary">produits phares</span>
           </h2>
-
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Une sélection soigneusement choisie de produits d'hygiène, de soins et de parfums
-            disponibles sur votre campus universitaire.
+            Une sélection soigneusement choisie de produits disponibles sur votre campus universitaire.
           </p>
-
-          {selectedUniversity && (
-            <div className="mt-4">
-              <Badge variant="outline" className="text-sm">
-                Disponible sur {selectedUniversity}
-              </Badge>
-            </div>
-          )}
         </div>
 
-        {/* Categories */}
-        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 sm:mb-12">
+        {/* Catégories */}
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6 sm:mb-10">
           <Button
-            key="tous"
             variant={selectedCategory === "Tous" ? "default" : "outline"}
             size="sm"
-            className="interactive-scale"
+            className="rounded-full"
             onClick={() => setSelectedCategory("Tous")}
           >
             <Package className="w-4 h-4 mr-2" />
@@ -271,7 +249,7 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
                 key={category.id}
                 variant={selectedCategory === category.name ? "default" : "outline"}
                 size="sm"
-                className="interactive-scale"
+                className="rounded-full"
                 onClick={() => setSelectedCategory(category.name)}
               >
                 <Icon className="w-4 h-4 mr-2" />
@@ -281,13 +259,12 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
           })}
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4 mb-8 sm:mb-12">
+        {/* Grille produits */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 mb-8 sm:mb-12">
           {filteredProducts.slice(0, limit).map((product, index) => {
             const discount = product.original_price
               ? Math.round((1 - product.price / product.original_price) * 100)
               : 0;
-
             return (
               <ProductCard
                 key={product.id}
@@ -298,17 +275,18 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
                 onAddToCart={handleAddToCart}
                 onToggleFavorite={handleToggleFavorite}
                 onViewDetails={handleViewDetails}
+                onCommanderDirectement={handleCommanderDirectement}
               />
             );
           })}
         </div>
 
-        {/* View All Button */}
+        {/* Voir tous */}
         <div className="text-center">
           <Button
             size="lg"
             variant="outline"
-            className="interactive-scale hover:bg-primary hover:text-primary-foreground"
+            className="rounded-full hover:bg-primary hover:text-primary-foreground"
             onClick={() => navigate("/products")}
           >
             Voir tous les produits
@@ -317,6 +295,11 @@ export const ProductsShowcase = ({ selectedUniversity }: ProductsShowcaseProps) 
         </div>
       </div>
 
+      <WhatsAppOrderDialog
+        isOpen={whatsappDialogOpen}
+        onClose={() => { setWhatsappDialogOpen(false); setSelectedProduct(null); }}
+        product={selectedProduct}
+      />
     </section>
   );
 };

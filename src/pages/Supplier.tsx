@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useCurrentSupplier, useCreateSupplier, useUpdateSupplier } from "@/hooks/use-supplier";
 import { useProducts, useDeleteProduct, Product } from "@/hooks/use-products";
 import { useSupplierOrders } from "@/hooks/use-orders";
+import { useSupplierWhatsAppOrders, useUpdateCommandeStatut, CommandeStatut } from "@/hooks/use-whatsapp-orders";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { slugify } from "@/lib/utils";
-import { Trash2, Edit, Plus, BarChart3, Package, ShoppingCart, Star, Settings, Eye, Copy, Share2, CheckCircle } from "lucide-react";
+import { Trash2, Edit, Plus, BarChart3, Package, ShoppingCart, Star, Settings, Eye, Copy, Share2, CheckCircle, MessageCircle, Phone, MapPin, Clock, Ban } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -35,6 +38,8 @@ export default function Supplier() {
   const { data: supplier, isLoading: supplierLoading } = useCurrentSupplier();
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const { data: orders, isLoading: ordersLoading } = useSupplierOrders();
+  const { data: waOrders = [], isLoading: waOrdersLoading } = useSupplierWhatsAppOrders(supplier?.id || "");
+  const updateStatut = useUpdateCommandeStatut();
   const createSupplier = useCreateSupplier();
   const updateSupplier = useUpdateSupplier();
   const deleteProduct = useDeleteProduct();
@@ -327,22 +332,31 @@ export default function Supplier() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-6 mb-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              Vue d'ensemble
+              <span className="hidden sm:inline">Vue d'ensemble</span>
             </TabsTrigger>
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
-              Produits ({myProducts.length})
+              <span className="hidden sm:inline">Produits ({myProducts.length})</span>
             </TabsTrigger>
             <TabsTrigger value="orders" className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4" />
-              Commandes
+              <span className="hidden sm:inline">Commandes</span>
+            </TabsTrigger>
+            <TabsTrigger value="whatsapp-orders" className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">WhatsApp</span>
+              {waOrders.filter(o => o.statut === "en_cours").length > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">
+                  {waOrders.filter(o => o.statut === "en_cours").length}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="reviews" className="flex items-center gap-2">
               <Star className="w-4 h-4" />
-              Avis
+              <span className="hidden sm:inline">Avis</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
@@ -438,6 +452,87 @@ export default function Supplier() {
           {/* Onglet Commandes */}
           <TabsContent value="orders">
             <SupplierOrdersList orders={orders || []} loading={ordersLoading} />
+          </TabsContent>
+
+          {/* Onglet Commandes WhatsApp */}
+          <TabsContent value="whatsapp-orders">
+            <Card className="shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-green-600" />
+                  Commandes WhatsApp ({waOrders.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {waOrdersLoading ? (
+                  <div className="text-center py-8">Chargement...</div>
+                ) : waOrders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <MessageCircle className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground">Aucune commande WhatsApp pour le moment.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {waOrders.map((commande) => {
+                      const statutConfig: Record<CommandeStatut, { label: string; variant: "default" | "secondary" | "destructive"; icon: React.ElementType }> = {
+                        en_cours: { label: "En cours", variant: "secondary", icon: Clock },
+                        complet: { label: "Complété", variant: "default", icon: CheckCircle },
+                        annule: { label: "Annulé", variant: "destructive", icon: Ban },
+                      };
+                      const config = statutConfig[commande.statut];
+
+                      return (
+                        <div key={commande.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-3">
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-sm">{commande.product_name}</p>
+                              {commande.quantity > 1 && (
+                                <Badge variant="outline" className="text-xs">x{commande.quantity}</Badge>
+                              )}
+                              <Badge variant={config.variant} className="text-xs flex items-center gap-1">
+                                <config.icon className="w-3 h-3" />
+                                {config.label}
+                              </Badge>
+                            </div>
+                            <p className="text-sm font-bold text-primary">{(commande.product_price * commande.quantity).toLocaleString()} CFA</p>
+                            <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Phone className="w-3 h-3" />
+                                {commande.customer_name} — {commande.customer_phone}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {commande.customer_location}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {new Date(commande.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                          </div>
+
+                          <Select
+                            value={commande.statut}
+                            onValueChange={(val) =>
+                              updateStatut.mutate({ id: commande.id, statut: val as CommandeStatut })
+                            }
+                          >
+                            <SelectTrigger className="w-36 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="en_cours">En cours</SelectItem>
+                              <SelectItem value="complet">Complété</SelectItem>
+                              <SelectItem value="annule">Annulé</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Onglet Avis */}

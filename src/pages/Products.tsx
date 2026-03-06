@@ -32,7 +32,11 @@ import {
   Globe,
   ChevronDown,
   ChevronUp,
-  X
+  X,
+  Plus,
+  Minus,
+  ArrowRight,
+  Tag,
 } from "lucide-react";
 import { useProducts } from "@/hooks/use-products";
 import { useCategories } from "@/hooks/use-categories";
@@ -211,6 +215,7 @@ export default function Products() {
 
   const ProductCard = ({ product, index }: { product: any; index: number }) => {
     const { data: isFavorite = false } = useIsFavorite(user?.id, product.id);
+    const [qty, setQty] = useState(1);
     const discount = product.original_price
       ? Math.round((1 - product.price / product.original_price) * 100)
       : 0;
@@ -348,136 +353,146 @@ export default function Products() {
       );
     }
 
+    const image = productImages[0];
+    const inStock = product.stock_quantity > 0;
+
     return (
-      <Card
-        className="group overflow-hidden shadow-card hover:shadow-elegant transition-all duration-300 interactive-scale cursor-pointer"
+      <div
+        className="bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-border/30 flex flex-col"
         style={{ animationDelay: `${index * 0.1}s` }}
-        onClick={() => handleViewDetails(product)}
       >
-        <CardContent className="p-0">
-          {/* Product Images Carousel */}
-          <div className="relative">
-            <ProductImageCarousel
-              images={productImages}
-              productName={product.name}
-              aspectRatio="square"
+        {/* Image */}
+        <div
+          className="relative aspect-square bg-muted cursor-pointer overflow-hidden"
+          onClick={() => handleViewDetails(product)}
+        >
+          {image ? (
+            <img
+              src={image}
+              alt={product.name}
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
-
-            {/* Badges */}
-            <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
-              {discount > 0 && (
-                <Badge variant="destructive" className="text-xs">
-                  -{discount}%
-                </Badge>
-              )}
-              {product.stock_quantity < 5 && product.stock_quantity > 0 && (
-                <Badge variant="secondary" className="text-xs bg-orange-500 text-white">
-                  Stock limité
-                </Badge>
-              )}
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Package className="w-12 h-12 text-muted-foreground/30" />
             </div>
+          )}
 
-            {/* Favorite Badge */}
-            {isFavorite && (
-              <div className="absolute top-3 right-3 z-10">
-                <Heart className="w-5 h-5 text-red-500 fill-current" />
-              </div>
-            )}
-          </div>
-
-          {/* Product Info */}
-          <div className="p-4">
-            <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-              {product.name}
-            </h3>
-
-            {/* Rating */}
-            <div className="flex items-center gap-1 mb-3">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-3 h-3 ${
-                      i < Math.floor(product.rating)
-                        ? "text-yellow-400 fill-current"
-                        : "text-muted-foreground"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {product.rating}
-              </span>
+          {/* Badge remise */}
+          {discount > 0 && (
+            <div className="absolute top-3 left-3 bg-foreground text-background text-[11px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 z-10">
+              <Tag className="w-2.5 h-2.5" />
+              -{discount}%
             </div>
-
-            {/* University Badge - Only show when viewing products from other universities */}
-            {showAllUniversities && primaryUniversity && (
-              <Badge variant="secondary" className="text-xs mb-2">
-                {primaryUniversity.flag}{' '}
-                {primaryUniversity.name}
-              </Badge>
-            )}
-
-            {/* Supplier */}
-            {product.suppliers && (
-              <p className="text-xs text-muted-foreground mb-2">
-                par {(product.suppliers as any).shop_slug && (product.suppliers as any).is_verified ? (
-                  <span
-                    className="text-primary hover:underline cursor-pointer"
-                    onClick={(e) => { e.stopPropagation(); navigate(`/shop/${(product.suppliers as any).shop_slug}`); }}
-                  >
-                    {product.suppliers.business_name}
-                  </span>
-                ) : product.suppliers.business_name}
-              </p>
-            )}
-
-            {/* Price */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span className="text-sm sm:text-base lg:text-sm xl:text-base font-bold text-primary">
-                  {product.price} CFA
-                </span>
-                {product.original_price && (
-                  <span className="hidden sm:inline text-xs text-muted-foreground line-through">
-                    {product.original_price} CFA
-                  </span>
-                )}
-              </div>
+          )}
+          {!discount && product.stock_quantity < 5 && product.stock_quantity > 0 && (
+            <div className="absolute top-3 left-3 bg-orange-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full z-10">
+              Stock limité
             </div>
-          </div>
-        </CardContent>
+          )}
 
-        <CardFooter className="p-4 pt-0 flex flex-col gap-2">
-          <div className="flex gap-2 w-full">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={(e) => { e.stopPropagation(); handleViewDetails(product); }}
-              title="Voir le produit"
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className={`flex-1 ${isFavorite ? "text-red-500 border-red-300 hover:bg-red-50" : ""}`}
-              onClick={(e) => { e.stopPropagation(); handleToggleFavorite(product.id, isFavorite); }}
-              title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-            >
-              <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
-            </Button>
-          </div>
-          <Button
-            className="w-full bg-primary hover:bg-primary-dark btn-glow"
-            onClick={(e) => { e.stopPropagation(); handleAddToCart(product.id); }}
+          {/* Université */}
+          {showAllUniversities && primaryUniversity && (
+            <div className="absolute bottom-2 left-2 bg-background/80 text-[10px] font-medium px-2 py-0.5 rounded-full z-10">
+              {primaryUniversity.flag} {primaryUniversity.name}
+            </div>
+          )}
+
+          {/* Favoris */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleToggleFavorite(product.id, isFavorite); }}
+            className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-colors z-10 ${
+              isFavorite
+                ? "bg-red-500 text-white"
+                : "bg-white/90 dark:bg-card/90 text-muted-foreground hover:text-red-400"
+            }`}
           >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Ajouter au panier
-          </Button>
-        </CardFooter>
-      </Card>
+            <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
+          </button>
+        </div>
+
+        {/* Contenu */}
+        <div className="p-3 flex flex-col gap-2.5 flex-1">
+          {/* Fournisseur */}
+          {product.suppliers && (
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
+              {(product.suppliers as any).shop_slug && (product.suppliers as any).is_verified ? (
+                <span
+                  className="cursor-pointer hover:text-primary transition-colors"
+                  onClick={(e) => { e.stopPropagation(); navigate(`/shop/${(product.suppliers as any).shop_slug}`); }}
+                >
+                  {product.suppliers.business_name}
+                </span>
+              ) : product.suppliers.business_name}
+            </p>
+          )}
+
+          {/* Nom */}
+          <p
+            className="text-sm font-medium line-clamp-2 cursor-pointer hover:text-primary transition-colors leading-snug"
+            onClick={() => handleViewDetails(product)}
+          >
+            {product.name}
+          </p>
+
+          {/* Prix + Rating */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <span className="text-base font-bold">{product.price.toLocaleString()} CFA</span>
+              {product.original_price && (
+                <span className="hidden sm:inline text-xs text-muted-foreground line-through">
+                  {product.original_price.toLocaleString()}
+                </span>
+              )}
+            </div>
+            {product.rating > 0 && (
+              <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/30 rounded-full px-2 py-0.5 flex-shrink-0">
+                <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                  {product.rating.toFixed(1)}
+                </span>
+                <Star className="w-3 h-3 text-amber-500 fill-current" />
+              </div>
+            )}
+          </div>
+
+          {/* Sélecteur quantité + panier */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-muted rounded-full px-3 h-9 flex-1 justify-between">
+              <button
+                onClick={() => setQty(q => Math.max(1, q - 1))}
+                disabled={qty <= 1}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-sm font-semibold w-5 text-center">{qty}</span>
+              <button
+                onClick={() => setQty(q => q + 1)}
+                disabled={qty >= product.stock_quantity}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); handleAddToCart(product.id); }}
+              disabled={!inStock}
+              className="w-9 h-9 flex-shrink-0 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-primary transition-colors disabled:opacity-40"
+            >
+              <ShoppingCart className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Bouton commander */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(product); }}
+            className="w-full bg-foreground text-background rounded-full py-2.5 text-xs font-semibold flex items-center justify-center gap-2 hover:bg-primary transition-colors"
+          >
+            Commander directement
+            <MessageCircle className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
     );
   };
 
