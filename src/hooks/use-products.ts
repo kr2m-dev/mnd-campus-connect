@@ -20,7 +20,7 @@ export const useProducts = (filters?: ProductFilters, enabled = true) => {
         .select(`
           *,
           categories(name, icon_name),
-          suppliers(business_name, contact_whatsapp)
+          suppliers(business_name, contact_whatsapp, shop_slug, is_verified)
         `)
         .eq("is_active", filters?.is_active ?? true)
         .order("created_at", { ascending: false });
