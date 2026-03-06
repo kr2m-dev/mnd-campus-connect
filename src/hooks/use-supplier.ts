@@ -12,6 +12,7 @@ export interface Supplier {
   address?: string;
   logo_url?: string;
   is_verified: boolean;
+  shop_slug?: string;
   created_at: string;
   updated_at: string;
 }
@@ -39,7 +40,7 @@ export const useCreateSupplier = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (supplier: Omit<Supplier, "id" | "user_id" | "created_at" | "updated_at" | "is_verified">) => {
+    mutationFn: async (supplier: Omit<Supplier, "id" | "user_id" | "created_at" | "updated_at" | "is_verified" | "shop_slug">) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Vous devez être connecté");
       
