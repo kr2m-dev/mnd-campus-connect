@@ -489,7 +489,7 @@ export default function Products() {
             className="w-full bg-foreground text-background rounded-full py-2.5 text-xs font-semibold flex items-center justify-center gap-2 hover:bg-primary transition-colors"
           >
             Commander directement
-            <MessageCircle className="w-3.5 h-3.5" />
+            {/* <MessageCircle className="w-3.5 h-3.5" /> */}
           </button>
         </div>
       </div>

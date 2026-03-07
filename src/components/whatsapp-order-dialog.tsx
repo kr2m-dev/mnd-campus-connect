@@ -160,16 +160,30 @@ export const WhatsAppOrderDialog = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Infos identité */}
           {isConnected ? (
-            <div className="bg-muted/60 rounded-lg px-4 py-3 space-y-1">
-              <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-                <Lock className="w-3 h-3" />
-                Informations récupérées depuis votre compte
-              </p>
-              <p className="text-sm font-medium">{formData.firstName} {formData.lastName}</p>
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <Phone className="w-3.5 h-3.5" />
-                {formData.phone || "Téléphone non renseigné"}
-              </p>
+            <div className="space-y-3">
+              <div className="bg-muted/60 rounded-lg px-4 py-3 flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">Compte connecté</p>
+                  <p className="text-sm font-medium">{formData.firstName} {formData.lastName}</p>
+                </div>
+              </div>
+              {!formData.phone && (
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    Votre numéro WhatsApp
+                  </Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="77 123 45 67"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <>
